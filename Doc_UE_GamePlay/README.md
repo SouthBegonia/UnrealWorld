@@ -67,6 +67,28 @@
 
 ![image-20250507171839934](Pic/image-20250507171839934.png)
 
+#### Actor的生命周期
+
+[Actor的生命周期](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-actor-lifecycle) 包含生成及销毁
+
+**Actor生成：**
+
+1. 从磁盘加载（Load From Disk）：已经处在Level中的Actor，发生 [UEngine::LoadMap](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Engine/UEngine/LoadMap) 发生时，或当 [关卡流送](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/level-streaming-in-unreal-engine) 调用 [UWorld::AddToWorld](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Engine/UWorld/AddToWorld)
+2. 在编辑器中运行（Play in Editor）：也就是编辑器状态下运行
+3. 生成（Spawning）：也就是实例化Actor到世界
+4. 延迟生成（Deffered Spawn）：将Actor的任意成员的属性设置为 Expose on Spawn，即可延迟Actor的生成
+
+**Actor的销毁：**发生如下情形时将调用 [AActor::EndPlay](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/GameFramework/AActor/EndPlay)，后续进入GC流程
+
+- 显式调用 [AActor::Destroy](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/GameFramework/AActor/Destroy)
+- "在编辑器中运行（Play in Editor）"终结
+- 关卡过渡（无缝行程或加载地图）
+- 包含Actor的流送关卡被卸载
+- Actor的生命周期已过
+- 应用程序关闭（全部Actor被销毁）
+
+![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/e63c12cc-0186-4e34-a7bc-5ca774b0bce6/actorlifecycle1.png)
+
 
 
 ### Component
@@ -114,3 +136,5 @@
 - [UEGamePlay框架：UObject，Actor，Component ](https://zhuanlan.zhihu.com/p/15846253240)
 
 - [《InsideUE4》GamePlay架构（一）Actor和Component ](https://zhuanlan.zhihu.com/p/22833151)
+
+- [[浅析UE4 Actor&Actor生命周期](https://www.cnblogs.com/CatSevenMillion/p/16653763.html)](https://www.cnblogs.com/CatSevenMillion/p/16653763.html)
