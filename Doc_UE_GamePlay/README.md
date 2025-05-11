@@ -138,3 +138,16 @@
 - [《InsideUE4》GamePlay架构（一）Actor和Component ](https://zhuanlan.zhihu.com/p/22833151)
 
 - [[浅析UE4 Actor&Actor生命周期](https://www.cnblogs.com/CatSevenMillion/p/16653763.html)](https://www.cnblogs.com/CatSevenMillion/p/16653763.html)
+
+
+
+# GamePlay框架的 Runtime启动流程
+
+![image-20250510155149664](Pic/UE-GamePlay框架的Runtime流程.png)
+
+![image-20250510155149664](Pic/UE-GamePlay框架的Runtime流程2.png)
+
+## 参考文章
+
+- [Unreal Engine 的启动流程 - 放牛的星星 - 知乎](https://zhuanlan.zhihu.com/p/610523485)
+- [UE4 Gameplay之GameMode流程分析(一) - 孤傲雕 - 知乎](https://zhuanlan.zhihu.com/p/70045930)
