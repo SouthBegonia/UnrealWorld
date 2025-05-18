@@ -43,7 +43,7 @@
 
 ### IDE相关
 
-关闭UE代码优化以便Debug时查看变量信息：
+1. 关闭UE代码优化以便Debug时查看变量信息：
 
 - [UE 如何关闭代码优化 - 知乎](https://zhuanlan.zhihu.com/p/563164847)
 - [变量已被优化，因而不可用 - 虚幻社区知识库](https://ue5wiki.com/wiki/12876/)
@@ -51,6 +51,10 @@
 ![20250518_Debug_OptimizeCode_NotSet](Pic/20250518_Debug_OptimizeCode_NotSet.jpg)
 
 ![20250518_Debug_OptimizeCode_SetNever](Pic/20250518_Debug_OptimizeCode_SetNever.jpg)
+
+2. 新版本UE（更高或更低版本）创建C++工程失败，报错内容例如 [UE--VS2022编译UE项目出现 error C4668: 没有将“__has_feature”定义为预处理器宏，用“0”替换“#if/#elif”](https://blog.csdn.net/qq_59398646/article/details/144143000)：
+
+   根本原因是 不同UE版本所必需的MSVC版本不同（UE版本越高，MSVC通常也对应更高）。因此针对多UE版本的开发环境，需要用VS Installer安装多个版本的MSVC组件，参考：[UE5 5.1.1创建C++项目，显示error C4668和error C4067的解决方法 - CSDN](https://blog.csdn.net/cat_want_fly/article/details/143869347)
 
 
 
