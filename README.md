@@ -41,6 +41,17 @@
   - [如何使用rider调试UE引擎的源代码 - CSDN](https://blog.csdn.net/weixin_45685193/article/details/135372792)
   - [Rider 使用技巧总结 - 知乎](https://zhuanlan.zhihu.com/p/569938186)
 
+### IDE相关
+
+关闭UE代码优化以便Debug时查看变量信息：
+
+- [UE 如何关闭代码优化 - 知乎](https://zhuanlan.zhihu.com/p/563164847)
+- [变量已被优化，因而不可用 - 虚幻社区知识库](https://ue5wiki.com/wiki/12876/)
+
+![20250518_Debug_OptimizeCode_NotSet](Pic/20250518_Debug_OptimizeCode_NotSet.jpg)
+
+![20250518_Debug_OptimizeCode_SetNever](Pic/20250518_Debug_OptimizeCode_SetNever.jpg)
+
 
 
 ## 其他
