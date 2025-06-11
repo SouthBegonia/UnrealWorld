@@ -332,6 +332,29 @@ FText TestHUDText = FText::FromString(TEXT("ThisIsMyTestFText"));
 
 
 
+## 委托
+
+委托是一种泛型但类型安全的方式，可在C++对象上调用成员函数。UE常用的委托有3类：
+
+|    委托类型     |                          描述                          |                        备注                         |
+| :-------------: | :----------------------------------------------------: | :-------------------------------------------------: |
+|    单播委托     |        绑定在单个对象的单个函数上，一一映射触发        |                                                     |
+|    多播委托     | 可绑定到 多个 不同对象的不同函数，按照绑定顺序执行触发 |                                                     |
+| 动态单/多播委托 |           与单播、多播委托相比，多了蓝图交互           | 以 UPROPERTY(BlueprintAssignable) 标记 动态多播委托 |
+
+用法：
+
+- [单播委托的基本使用 - CSDN](https://zhichao.blog.csdn.net/article/details/144314544)
+- [多播委托的基本使用 - CSDN](https://zhichao.blog.csdn.net/article/details/144510562)
+- [动态单播/多播的基本使用 - CSDN](https://zhichao.blog.csdn.net/article/details/144543843)
+
+### 参考文章
+
+- [委托 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/delegates-and-lambda-functions-in-unreal-engine?application_version=5.5)
+- [动态委托基本用法（单播，多播） - 知乎](https://zhuanlan.zhihu.com/p/27732328690)
+
+
+
 # 输入
 
 UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输入：
