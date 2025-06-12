@@ -355,6 +355,29 @@ FText TestHUDText = FText::FromString(TEXT("ThisIsMyTestFText"));
 
 
 
+## 断言
+
+`assert` 可在 开发期间 帮助检测和诊断不正常或无效的运行时条件
+
+基本格式为：`assert(表达式)`，表达式=false=触发断言
+
+| 断言类型 |         当触发断言         |                     版本区别                     |                             备注                             |
+| :------: | :------------------------: | :----------------------------------------------: | :----------------------------------------------------------: |
+|  check   |          中断运行          |        发布版本内 不断言 且 不执行表达式         | USE_CHECKS_IN_SHIPPING宏 = 标识断言检查 在发布版本内是否执行，默认为0，可按需设置 |
+|  verify  |          中断运行          |         发布版本内 不断言 但 执行表达式          |                                                              |
+|  ensure  | 可继续运行，可打印堆栈信息 | 所有版本都执行表达式 但 非发布版本才打印堆栈信息 |                   会将检测结果以bool值返回                   |
+
+断言选择：
+
+![](https://picx.zhimg.com/v2-1f79888849ba93c3dfc12addbeb850a3_1440w.jpg)
+
+### 参考文章
+
+- [断言 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/asserts-in-unreal-engine?application_version=5.5)
+- [UE4断言总结 - 知乎](https://zhuanlan.zhihu.com/p/64462945)
+
+
+
 # 输入
 
 UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输入：
