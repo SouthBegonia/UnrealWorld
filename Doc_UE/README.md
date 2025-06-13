@@ -332,6 +332,80 @@ FText TestHUDText = FText::FromString(TEXT("ThisIsMyTestFText"));
 
 
 
+## 枚举
+
+```c++
+UENUM(BlueprintType)			// 标记蓝图可用
+enum class EMyEnum : uint8		// 不加默认为int
+{
+	None = 0 UMETA(DisplayName = "None"),	// 蓝图要求 必须含有val=0的枚举值
+
+	Enum1 = 1 UMETA(DisplayName = "MyEnum_1"),	// 修改显示名称
+	Enum2 = 2 UMETA(DisplayName = "MyEnum_2"),
+	Enum3 = 3 UMETA(DisplayName = "MyEnum_3"),
+	Enum4 = 4 UMETA(DisplayName = "MyEnum_4"),
+};
+
+// 用法
+EMyEnum MyEnum = EMyEnum::Enum1;
+const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EMyEnum"), true);
+if (EnumPtr != nullptr)
+{
+    // 获取 枚举值对应 枚举名（无效则返 空值）
+    EnumPtr->GetNameStringByValue(2);		// "Enum2"
+    // 获取 枚举名对应 枚举值（无效则返 -1）
+    EnumPtr->GetValueByNameString(FString("Enum3"));	// 3
+    // 判断 枚举值的 合法性
+    EnumPtr->IsValidEnumValue(4);		// true
+    EnumPtr->IsValidEnumValue(9999);	// false
+    // 获取 最大枚举值
+    EnumPtr->GetMaxEnumValue();
+}
+```
+
+![image-20250613141116553](Pic/image-20250613141116553.png)
+
+### 参考文章
+
+- [[UE C++] Enum的使用 - CSDN](https://blog.csdn.net/qq_52179126/article/details/129891590)
+
+
+
+## 结构体
+
+```c++
+USTRUCT(BlueprintType)				// 标记蓝图可用
+struct FMyStruct
+{
+	GENERATED_USTRUCT_BODY()		// 或 GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AActor* TargetActor;
+
+	FString GetStructName()			// 结构体的 成员函数 仅能在C++层用，蓝图无法使用
+	{
+		return StructName;
+	}
+
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess))
+	FString StructName = TEXT("MyStruct");
+};
+
+// 用法
+FMyStruct MyStruct = FMyStruct();
+UE_LOG(LogTemp, Warning, TEXT("StructName = %s"), *MyStruct.GetStructName());
+```
+
+![image-20250613161815851](Pic/image-20250613161815851.png)
+
+### 参考文章
+
+- [UE C++ Struct 的使用 - CSDN](https://blog.csdn.net/qq_52179126/article/details/129768456)
+
+
+
 ## 委托
 
 委托是一种泛型但类型安全的方式，可在C++对象上调用成员函数。UE常用的委托有3类：
