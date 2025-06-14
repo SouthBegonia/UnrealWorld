@@ -406,6 +406,142 @@ UE_LOG(LogTemp, Warning, TEXT("StructName = %s"), *MyStruct.GetStructName());
 
 
 
+## 数据表 DataTables
+
+数据表是一种表格，表中的数据字段可以是任何有效的 `UObject` 属性，包括资产引用。数据表可 导入/导出 为CSV或JSON
+
+### 创建数据表
+
+表格由列名组成，列名源自 `FTableRowBase` 的派生类，例如：
+
+```c++
+// 角色数据表
+USTRUCT(Blueprintable)
+struct FTableHeroStruct : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    FTableHeroStruct()
+    : HeroID(0)
+    , HeroName(TEXT("NONE"))
+    {}
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category= "BaseInfo", DisplayName="角色ID")
+    int32 HeroID;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category= "BaseInfo", DisplayName="角色名")
+    FName HeroName;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category= "BaseInfo", DisplayName="角色头像")
+    TSoftObjectPtr<UTexture> HeroHeadIcon;
+};
+```
+
+声明完 `FTableHeroStruct : FTableRowBase` 结构体后，就可创建 **数据表格** 资产（本例的表格类型为 `FTableHeroStruct`）：
+
+![image-20250614164909162](Pic/image-20250614164909162.png)
+
+打开 数据表格 资产后，即可进行表格项编辑：
+
+![image-20250614165621417](Pic/image-20250614165621417.png)
+
+注意：
+
+- 表格的 行命名（RowName）全表唯一，不可重复
+
+### 数据表操作
+
+加载数据表：
+
+```c++
+// 加载数据表
+UDataTable* MyHeroTable = LoadObject<UDataTable>(NULL, TEXT("DataTable'/Game/DT_Hero.DT_Hero'"));
+if (MyHeroTable != nullptr) {}
+```
+
+表内容读取：
+
+```c++
+UDataTable* MyHeroTable = LoadObject<UDataTable>(NULL, TEXT("DataTable'/Game/DT_Hero.DT_Hero'"));
+if (MyHeroTable != nullptr)
+{
+    // 读表 - GetRowMap()
+    for (TPair<FName, unsigned char*> it : MyHeroTable->GetRowMap())
+    {
+        FTableHeroStruct* RowPtr = (FTableHeroStruct*)it.Value;
+        UE_LOG(LogTemp, Log, TEXT("MyHeroTable - GetRowMap : it.Key = %s, HeroID = %d, HeroName = %s"), *it.Key.ToString(), RowPtr->HeroID, *RowPtr->HeroName.ToString());
+    }
+
+    // 读表 - GetAllRows()
+    TArray<FTableHeroStruct*> TableHeroArr;
+    MyHeroTable->GetAllRows("", TableHeroArr);
+    for (FTableHeroStruct* RowPtr : TableHeroArr)
+    {
+        UE_LOG(LogTemp, Log, TEXT("MyHeroTable - GetAllRows : HeroID = %d, HeroName = %s"), RowPtr->HeroID, *RowPtr->HeroName.ToString());
+    }
+
+    // 读表 - FindRow()
+    for (FName RowName : MyHeroTable->GetRowNames())
+    {
+        FTableHeroStruct* RowPtr = MyHeroTable->FindRow<FTableHeroStruct>(RowName, TEXT(""));
+        UE_LOG(LogTemp, Log, TEXT("MyHeroTable - FindRow : RowName = %s, HeroID = %d, HeroName = %s"), *RowName.ToString(), RowPtr->HeroID, *RowPtr->HeroName.ToString());
+    }
+
+    // 遍历
+    MyHeroTable->ForeachRow<FTableHeroStruct>(TEXT(""), [](const FName& Key, const FTableHeroStruct& RowRef)
+    {
+		UE_LOG(LogTemp, Log, TEXT("MyHeroTable - ForeachRow : Key = %s, HeroID = %d, HeroName = %s"), *Key.ToString(), RowRef.HeroID, *RowRef.HeroName.ToString());
+    });
+}
+```
+
+表内容 新加、移除：
+
+```c++
+UDataTable* MyHeroTable = LoadObject<UDataTable>(NULL, TEXT("DataTable'/Game/DT_Hero.DT_Hero'"));
+if (MyHeroTable != nullptr)
+{
+    // 写入表项：
+    FName RowName = FName(TEXT("NewRow_99"));
+    if (!MyHeroTable->FindRow<FTableHeroStruct>(RowName, TEXT("")))
+    {
+        FTableHeroStruct* DataTableRowInfo = new FTableHeroStruct();
+        DataTableRowInfo->HeroID = 999;
+        DataTableRowInfo->HeroName = TEXT("NewHero");
+
+        MyHeroTable->AddRow(RowName, *DataTableRowInfo);
+    }
+    else
+    {
+        //已有RowName，再AddRow会覆写内容
+        //MyHeroTable->AddRow(RowName, *DataTableRowInfo);
+    }
+
+    // 删除表项：
+    MyHeroTable->RemoveRow(RowName);
+}
+```
+
+### 数据表导入导出
+
+目前支持 数据表 到 CSV、JSON 的相互转换。例如 将 表格数据 资产 转换为CSV：
+
+![image-20250614173053274](Pic/image-20250614173053274.png)
+
+将 CSV 转换为 表格资产：
+
+（对于CSV、JSON内的 非匹配、缺失列字段，可设置表格资产内的 导入选项 的相关参数）
+
+![image-20250614172937923](Pic/image-20250614172937923.png)
+
+### 参考文章
+
+- [数据驱动的Gameplay元素 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/data-driven-gameplay-elements-in-unreal-engine?application_version=5.5)
+- [UE5中的数据表：UDataTable - 知乎](https://zhuanlan.zhihu.com/p/567901416)
+- [[UE C++] Data Table的使用 - CSDN](https://blog.csdn.net/qq_52179126/article/details/129800615)
+
+
+
 ## 委托
 
 委托是一种泛型但类型安全的方式，可在C++对象上调用成员函数。UE常用的委托有3类：
