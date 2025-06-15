@@ -588,6 +588,28 @@ if (MyHeroTable != nullptr)
 
 
 
+## DrawDebug
+
+DrawDebug 用于在 编辑器或开发环境下，于场景内绘制 图形或文字，以便直观查验信息
+
+相关绘制方法（C++或蓝图都有）均使用的 `UKismetSystemLibrary` 内的API：
+
+![image-20250615152652698](Pic/image-20250615152652698.png)
+
+效果示例：
+
+![](https://pic1.zhimg.com/v2-2c180bda58846fe93139fa3ceaee0ff4_1440w.jpg)
+
+![](https://pica.zhimg.com/v2-467275fb62cb6808081ec87521f88c9c_1440w.jpg)
+
+![](https://pic3.zhimg.com/v2-76d3f8d5d961e7f5b98a7807bfa2d41c_1440w.jpg)
+
+### 参考文章
+
+- [虚幻引擎中各种场景调试绘制指令（DrawDebug）的使用、效果和原理 - 知乎](https://zhuanlan.zhihu.com/p/718494965)
+
+
+
 # 输入
 
 UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输入：
