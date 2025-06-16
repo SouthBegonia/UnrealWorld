@@ -141,6 +141,96 @@
 
 
 
+## Pawn
+
+> [Pawn](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/pawn-in-unreal-engine) 是被玩家或AI所控制的 所有Actor的基类，是玩家或AI在游戏场景中的具化体现（表现+行为）
+
+### Pawn的核心功能
+
+1. 可被 `AController` 控制
+   - `APlayerController`：玩家控制
+   - `AAIController`：AI控制
+
+![image-20250510154033663](Pic/image-20250510154033663.png)
+
+2. 具有比 AActor 更强大的输入管理
+
+![image-20250510155149664](Pic/image-20250510155149664.png)
+
+### Pawn的派生类
+
+#### DefaultPawn
+
+派生自Pawn，带有 DefaultPawnMovementComponent、CollisionComponent和StaticMeshComponent等
+
+#### SpectatorPawn
+
+派生自DefaultPawn，不带重力并关闭了StaticMesh，常用于观战视角
+
+#### Character
+
+派生自Pawn，带有 CharacterMovementComponent、CapsuleComponent、USkeletalMeshComponent等，常用于人型单位
+
+![](https://pic2.zhimg.com/v2-e3e8606aa67344bf178fd9097d249693_1440w.png)
+
+
+### 参考文章
+
+- [《InsideUE4》GamePlay架构（四）Pawn](https://zhuanlan.zhihu.com/p/23321666?refer=insideue4)
+
+
+
+## Controller
+
+> AController 派生自Actor，负责将 玩家/AI控制 作为系列行为指令 传递到所操控的Pawn
+
+![](https://pic4.zhimg.com/v2-4151952d1f2ab74fcc78d7c3bd215e0d_1440w.jpg)
+
+### Controller的核心功能
+
+1. 接收、管理玩家/AI输入
+2. 传递行为指令 到所操控的Pawn上
+3. 协调网络同步：多人游戏中正确同步玩家状态
+
+### Controller的派生类
+
+#### APlayerController
+
+**玩家控制** 的控制器，从玩家的输入设备（键盘、鼠标、游戏手柄等）获取输入、转换指令、传递到Pawn
+
+涉及模块：
+
+- Camera管理：通过`PlayerCameraManager`类以控制玩家相机
+- Input系统
+- UPlayer关联
+- HUD显示：在控制器的相机前显示的UI
+- Level切换
+- Voice：网络语音
+
+![](https://pic3.zhimg.com/v2-88131e55febd8886e0f3c87b92c526e8_1440w.png)
+
+#### AAIController
+
+**AI控制** 的控制器，从决策树、行为树（Behavior Tree）或其他 AI 逻辑来控制Pawn
+
+涉及模块：
+
+- Navigation
+- AI组件
+- Task系统
+
+![](https://pic1.zhimg.com/v2-a0c2148ff8331da1b70ab4157e19f1c2_1440w.png)
+
+### 参考文章
+
+- [《InsideUE4》GamePlay架构（五）Controller](https://zhuanlan.zhihu.com/p/23480071)
+
+- [《InsideUE4》GamePlay架构（六）PlayerController和AIController](https://zhuanlan.zhihu.com/p/23649987)
+
+- [UEGamePlay框架：Pawn，Controller，APlayerState](https://zhuanlan.zhihu.com/p/16087843925)
+
+
+
 # GamePlay框架的 Runtime启动流程
 
 ![image-20250510155149664](Pic/UE-GamePlay框架的Runtime流程.png)
