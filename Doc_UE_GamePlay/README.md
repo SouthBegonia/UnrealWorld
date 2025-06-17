@@ -231,6 +231,35 @@
 
 
 
+## Level、World
+
+**Level** 是Actor的容器
+
+![](https://pic1.zhimg.com/v2-bca44e1f846c37b12f08bc0a6659b4ae_1440w.png)
+
+**World** 由至少一个Level组成，负责Level的管理
+
+Level在World内可分为2类：
+
+- **Persistent Level（持久关卡）**：核心关卡，始终加载，负责管理其他子关卡的动态加载/卸载。通常为 包含基础场景元素（关照、天空盒）的Level
+- **Streaming Levels（流送关卡）**：通过流送体积（Level Streaming Volumes）、蓝图或代码动态加载的子关卡，按需加载/卸载
+  - 流送体积：当玩家进入体积区域时触发加载，离开时卸载
+  - 蓝图/C++控制：使用`Load Stream Level`和`Unload Stream Level`函数控制
+  - 固定加载（Always Loaded）：某些子关卡可能与持久关卡同时加载，常用于多人协作开发的分层设计
+
+![](https://pic4.zhimg.com/v2-41963e6f39bcefb2d799d31bec703759_1440w.png)
+
+
+
+### 参考文章
+
+- [《InsideUE4》GamePlay架构（二）Level和World - 知乎](https://zhuanlan.zhihu.com/p/22924838)
+- [UE4 World, Level, LevelStreaming从入门到深入 - CSDN](https://blog.csdn.net/qq_29523119/article/details/145841523)
+- [UE4中Info、LevelScriptActor和Level - 博客园](https://www.cnblogs.com/hxhspace/p/16132483.html)
+- [关卡流送概述 - EnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/level-streaming-overview-in-unreal-engine)
+
+
+
 # GamePlay框架的 Runtime启动流程
 
 ![image-20250510155149664](Pic/UE-GamePlay框架的Runtime流程.png)
