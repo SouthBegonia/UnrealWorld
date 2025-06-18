@@ -260,6 +260,68 @@ Level在World内可分为2类：
 
 
 
+## GameMode
+
+**GameMode** 负责处理游戏的 **基础规则、逻辑、流程**
+
+![](https://pic4.zhimg.com/v2-df7c0a12f2b806dbb60e84a95ae9758d_1440w.png)
+
+涉及模块：
+
+1. 核心Class登记：
+
+![image-20250618161709640](Pic/image-20250618161709640.png)
+
+2. 游戏实体的Spawn：
+   - 玩家的Pawn，PlayerController，AIController
+3. 游戏进度控制：
+   - 游戏的暂停、重启
+4. Level的切换
+5. 多人游戏的同步
+
+
+### 创建及配置
+
+从 `AGameModeBase` 即可派生出 自定义的GameMode
+
+后可在C++层就登记Class；或是 又可派生出BP子类，在BP子类内登记Class（下图），优势在于 无需调整代码即可编辑
+
+```c++
+//AMyGameModeBase.cpp
+#include "MyGameModeBase.h"
+
+#include "MyGameStateBase.h"
+#include "GameFramework/HUD.h"
+
+AMyGameModeBase::AMyGameModeBase()
+{
+	GameStateClass = AMyGameStateBase::StaticClass();
+	HUDClass = AHUD::StaticClass();
+}
+```
+
+![image-20250618163340737](Pic/image-20250618163340737.png)
+
+在实现自定义的GameMode后，可将其指定为 **默认的GameMode**。作用是 Level未指定GameMode下 默认使用此GameMode
+
+![image-20250618163614379](Pic/image-20250618163614379.png)
+
+或将其指定为 **Level的 GameMode**。但注意 GameMode在World中仅存在唯一实例，在 Persistent Level+Streaming Levels 的情况下，仅会采用 Persistent Level 所指定的GameMode
+
+![image-20250618164352434](Pic/image-20250618164352434.png)
+
+
+### 参考文章
+
+- [《InsideUE4》GamePlay架构（七）GameMode和GameState](https://zhuanlan.zhihu.com/p/23707588)
+- [Unreal Engine的Gameplay框架和重点 - 放牛的星星 - 知乎](https://zhuanlan.zhihu.com/p/612837045)
+- [阿赵UE引擎C++编程学习笔记——GameMode和生命周期 - CSDN](https://blog.csdn.net/liweizhao/article/details/138141220)
+- [UE5中GameMode、玩家角色等的设置与获取 - 知乎](https://zhuanlan.zhihu.com/p/560971474)
+- [UEGamePlay框架：GameMode，GameState - 知乎](https://zhuanlan.zhihu.com/p/16089018768)
+- [Game Mode 和 Game State - EnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/game-mode-and-game-state-in-unreal-engine)
+
+
+
 # GamePlay框架的 Runtime启动流程
 
 ![image-20250510155149664](Pic/UE-GamePlay框架的Runtime流程.png)
