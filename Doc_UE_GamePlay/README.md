@@ -322,6 +322,21 @@ AMyGameModeBase::AMyGameModeBase()
 
 
 
+## GameState
+
+**GameState** 负责管理游戏的 **状态数据**。从概念上而言，GameState 应该管理所有已连接客户端已知的信息（特定于 Game Mode 但不特定于任何个体玩家）
+
+![](https://picx.zhimg.com/v2-336fd667fb674bf176fa198741eec129_1440w.png)
+
+### 参考文章
+
+- [《InsideUE4》GamePlay架构（七）GameMode和GameState](https://zhuanlan.zhihu.com/p/23707588)
+- [Unreal Engine的Gameplay框架和重点 - 放牛的星星 - 知乎](https://zhuanlan.zhihu.com/p/612837045)
+- [UEGamePlay框架：GameMode，GameState - 知乎](https://zhuanlan.zhihu.com/p/16089018768)
+- [Game Mode 和 Game State - EnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/game-mode-and-game-state-in-unreal-engine)
+
+
+
 # GamePlay框架的 Runtime启动流程
 
 ![image-20250510155149664](Pic/UE-GamePlay框架的Runtime流程.png)
