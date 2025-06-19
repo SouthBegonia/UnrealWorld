@@ -373,6 +373,25 @@ AMyGameModeBase::AMyGameModeBase()
 
 
 
+## GameInstance
+
+**GameInstance** 负责 管理游戏的生命周期、全局状态、跨Level数据的数据保存。其在整个游戏中 **全程唯一存在**，当游戏结束时才销毁
+
+主要功能：
+
+- 全局数据管理：例如 全局设置（分辨率、音量）、跨Level的数据（分数、存档）
+- 与 主菜单、游戏模式的交互：加载主菜单、初始化网络连接、保存设置等
+- 资源管理：管理全局资源（音频设置、网络设置、玩家设置等）
+
+![](https://pica.zhimg.com/v2-e3572a2d46608304109104e6174688d8_1440w.png)
+
+### 参考文章
+
+- [《InsideUE4》GamePlay架构（九）GameInstance](https://zhuanlan.zhihu.com/p/24005952)
+- [UEGamePlay框架：GameInstance - 知乎](https://zhuanlan.zhihu.com/p/16089742496)
+
+
+
 # GamePlay框架的 Runtime启动流程
 
 ![image-20250510155149664](Pic/UE-GamePlay框架的Runtime流程.png)
