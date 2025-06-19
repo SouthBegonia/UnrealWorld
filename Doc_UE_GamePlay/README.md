@@ -324,7 +324,7 @@ AMyGameModeBase::AMyGameModeBase()
 
 ## GameState
 
-**GameState** 负责管理游戏的 **状态数据**。从概念上而言，GameState 应该管理所有已连接客户端已知的信息（特定于 Game Mode 但不特定于任何个体玩家）
+**GameState** 负责管理、储存游戏的 **状态数据**。从概念上而言，GameState 应该管理所有已连接客户端已知的信息（特定于 Game Mode 但不特定于任何个体玩家）
 
 ![](https://picx.zhimg.com/v2-336fd667fb674bf176fa198741eec129_1440w.png)
 
@@ -334,6 +334,42 @@ AMyGameModeBase::AMyGameModeBase()
 - [Unreal Engine的Gameplay框架和重点 - 放牛的星星 - 知乎](https://zhuanlan.zhihu.com/p/612837045)
 - [UEGamePlay框架：GameMode，GameState - 知乎](https://zhuanlan.zhihu.com/p/16089018768)
 - [Game Mode 和 Game State - EnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/game-mode-and-game-state-in-unreal-engine)
+
+
+
+## UPlayer、ULocalPlayer
+
+**UPlayer** 是 管理、储存玩家信息的 辅助类，一个UPlayer可代表 一个玩家（本地或远程玩家）
+
+> 本地玩家：通过本地设备输入的玩家
+>
+> 远程玩家：通过网络连接的玩家
+
+主要功能：
+
+- 管理玩家输入：各玩家的输入都传递到UPlayer
+- 管理与玩家的连接：网络游戏内，UPlayer代表和管理各玩家的客户端连接
+- 持有PlayerController
+
+![](https://pica.zhimg.com/v2-f1fee0eaf2b5fea87085f71895f4e730_1440w.png)
+
+**ULocalPlayer** 派生自 UPlayer，负责处理 本地玩家 在单机游戏或本地多人游戏中的 输入、控制、会话管理等，一个ULoalPlayer代表 一个本地玩家
+
+主要功能：
+
+- 管理输入设备：从本地设备接收输入
+- 管理玩家会话：跟踪玩家的输入、角色和游戏状态
+- 区别开本地玩家与远程玩家：远程玩家由 UPlayer+APlayerController管理，本地玩家由ULocalPlayer管理
+- 游戏视角控制：控制玩家视角、相机、输入绑定
+
+
+![](https://pic4.zhimg.com/v2-0cdc26e0b66ec808197a76cb8b09350d_1440w.png)
+
+
+### 参考文章
+
+- [《InsideUE4》GamePlay架构（八）Player](https://zhuanlan.zhihu.com/p/23826859)
+- [UEGamePlay框架：UPlayer，ULocalPlayer，UNetConnection - 知乎](https://zhuanlan.zhihu.com/p/16089379054)
 
 
 
