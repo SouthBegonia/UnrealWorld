@@ -12,6 +12,37 @@
 
 # C++与蓝图
 
+## 反射
+
+反射（Reflection）是指一种机制，它允许程序 **在运行时 动态地查询或操作对象的属性、函数和其他元信息**
+
+**UE反射核心步骤：**
+
+1. 标记 UE反射宏：
+   - `UObject`：UE所有反射的基类
+   - `UClass` 标记类、`USTRUCT` 标记结构体、`UPROPERTY` 标记属性、`UFUNCTION` 标记函数 等
+2. 反射代码、元数据的生成：
+   - UHT（UnrealHeaderTool）在编译阶段解析 UE反射宏 标记的代码，生成 反射相关代码 及 元数据（记录类、属性、方法等信息）
+3. 运行时的反射：
+   - 运行时，反射系统通过 元数据及反射API 从而进行动态属性访问、方法调用
+
+**UE反射的应用：**
+
+- 序列化：使用反射来读取和写入对象的属性，以便保存和加载游戏状态、资源等
+- 编辑器支持：编辑器能够动态地显示和修改对象的属性，而无需调整代码
+- 蓝图支持：暴露类、属性、方法给蓝图使用
+- 动态操作：运行时根据名字修改属性、调用函数，或动态创建对象
+
+### 参考文章
+
+- [虚幻引擎反射系统 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/reflection-system-in-unreal-engine)
+- [UE反射的初步了解 - 知乎](https://zhuanlan.zhihu.com/p/15356040140)
+- [UE4 C++与蓝图 反射宏 - 知乎](https://zhuanlan.zhihu.com/p/435698880)
+- [UnrealEngine - 反射系统分析 - 博客园](https://www.cnblogs.com/lawliet12/p/17272835.html)
+- [【UE 反射】反射的原理是什么？如何使用机制？ - CSDN](https://blog.csdn.net/hhw_hhw/article/details/139287867)
+
+
+
 ## 标识符
 
 标识符介绍：[UE5标识符详解 - 知乎 - 大钊](https://zhuanlan.zhihu.com/p/717920216)
