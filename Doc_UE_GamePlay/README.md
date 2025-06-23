@@ -392,6 +392,86 @@ AMyGameModeBase::AMyGameModeBase()
 
 
 
+## SaveGame、LoadGame
+
+通过对 `USaveGame` 或其派生类进行 序列化/反序列化 到本地，实现存档/读档 机制
+
+存档文件 `XXX.sav`，默认位于 项目根目录/Saved/SaveGames 内
+
+|      类型       |              适用情景              | 备注 |
+| :-------------: | :--------------------------------: | :--: |
+|  同步保存/加载  |        数据量小、游戏暂停时        |      |
+|  异步保存/加载  | 数据量大、游戏非暂停、需要避免卡顿 |      |
+| 二进制保存/加载 |                                    |      |
+
+以 [UGameplayStatics::SaveGameToSlot](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Kismet/UGameplayStatics/SaveGameToSlot?application_version=5.5) 为例，存读档相关API的核心参数说明：
+
+- `FString & SlotName`：存档名，辨别此份存档的唯一名称，且本地存档文件`.sav`的前缀也同此。建议一个存档一个名字
+- `int32 UserIndex`：用户平台ID。可自行设置参数 以标识不同平台，但通常不用刻意设定
+
+```c++
+UFUNCTION (BlueprintCallable, Category="SaveGame")  
+static bool SaveGameToSlot  
+(  
+    USaveGame * SaveGameObject,  
+    const FString & SlotName,  
+    const int32 UserIndex  
+)
+```
+
+### 示例
+
+以 同步保存 为例，其在C++层或蓝图层的实现：
+
+```c++
+//UMySaveGame.h
+UCLASS()
+class [PROJECTNAME]_API UMySaveGame : public USaveGame
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Basic)
+	FString PlayerName;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Basic)
+	FString SaveSlotName;
+
+	UPROPERTY(VisibleAnywhere, Category = Basic)
+	uint32 UserIndex;
+
+	UMySaveGame();
+};
+
+//同步存档
+if (UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::CreateSaveGameObject(UMySaveGame::StaticClass())))
+{
+    // 修改存档实例的 数据
+    SaveGameInstance->PlayerName = TEXT("Player");
+    SaveGameInstance->SaveSlotName = TEXT("SaveSlot_00");
+    SaveGameInstance->UserIndex = 0;
+
+    // 保存
+    FString SlotNameString = TEXT("SaveSlot_00");
+    int32 UserIndexInt32 = 0;
+    if (UGameplayStatics::SaveGameToSlot(SaveGameInstance, SlotNameString, UserIndexInt32))
+    {
+        // 保存成功
+    }
+}
+```
+
+![image-20250623170726088](Pic/image-20250623170726088.png)
+
+### 参考文章
+
+- [保存和加载游戏 - UnRealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/saving-and-loading-your-game-in-unreal-engine?application_version=5.5)
+- [UGameplayStatics::SaveGameToSlot - UnrealEngineAPI](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Kismet/UGameplayStatics/SaveGameToSlot?application_version=5.5)
+- [Save Game - what User Index is for? - UnrealEngineDev](https://forums.unrealengine.com/t/save-game-what-user-index-is-for/319803)
+- [保存和加载游戏 - 博客园](https://www.cnblogs.com/CodeWithMe/p/13201689.html)
+
+
+
 # GamePlay框架的 Runtime启动流程
 
 ![image-20250510155149664](Pic/UE-GamePlay框架的Runtime流程.png)
