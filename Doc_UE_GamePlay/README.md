@@ -392,6 +392,106 @@ AMyGameModeBase::AMyGameModeBase()
 
 
 
+## Subsystems
+
+Subsystems是一套 可定义的类的框架，其能被UE 自动实例化 并 自动托管生命周期
+
+目前可从UE预定义的5个父类派生：
+
+- `UEngineSubsystem`
+
+- `UEditorSubsystem`
+
+- `UGameInstanceSubsystem`
+
+- `UWorldSubsystem`
+
+- `ULocalPlayerSubsystem`
+
+Subsystems的作用：
+
+- 实现类似 单例模式 的效果，同时 避免重复编写类似代码、避免自行管理生命周期
+- 模块化：例如全局性的游戏系统，以往可在`UGameInstance`的派生类内写，现可以转到 各`UGameInstanceSubsystem`里写
+
+### 示例
+
+以 `UGameInstanceSubsystem` 为例，派生出 `UMyScoreSubsystem`：
+
+```c++
+//UMyScoreSubsystem.h
+#include "CoreMinimal.h"
+#include "Subsystems/GameInstanceSubsystem.h"
+#include "MyScoreSubsystem.generated.h"
+
+UCLASS()
+class [PROJECTNAME]_API UMyScoreSubsystem : public UGameInstanceSubsystem
+{
+	GENERATED_BODY()
+
+public:
+	virtual bool ShouldCreateSubsystem(UObject* Outer) const override { return true; };
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
+
+	UFUNCTION(BlueprintCallable)
+	void AddScore(float delta);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Score;
+};
+```
+
+可通过C++或蓝图进行访问
+
+```c++
+// 方法1：
+UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(GetWorld());
+UMyScoreSubsystem* MyScoreSubsystem = GameInstance->GetSubsystem<UMyScoreSubsystem>();
+MyScoreSubsystem->AddScore(1);
+UE_LOG(LogTemp, Log, TEXT("MyScore = %f"), MyScoreSubsystem->Score);
+
+// 方法2：通过USubsystemBlueprintLibrary内的API
+UGameInstanceSubsystem* GameInstanceSySubsystem = USubsystemBlueprintLibrary::GetGameInstanceSubsystem(GetWorld(), UMyScoreSubsystem::StaticClass());
+MyScoreSubsystem = Cast<UMyScoreSubsystem>(GameInstanceSySubsystem);
+if (MyScoreSubsystem != nullptr)
+{
+    MyScoreSubsystem->AddScore(5);
+    UE_LOG(LogTemp, Log, TEXT("MyScore = %f"), MyScoreSubsystem->Score);
+}
+```
+
+![image-20250624153523499](Pic/image-20250624153523499.png)
+
+其他几类Subsystem的访问例如下：
+
+```c++
+// UMyEngineSubsystem
+UMyEngineSubsystem* MySubsystem = GEngine->GetEngineSubsystem<UMyEngineSubsystem>();
+
+// UMyEditorSubsystem
+UMyEditorSubsystem* MySubsystem = GEditor->GetEditorSubsystem<UMyEditorSubsystem>();
+
+// UMyGameInstanceSubsystem
+UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(...);
+UMyGameInstanceSubsystem* MySubsystem = GameInstance->GetSubsystem<UMyGameInstanceSubsystem>();
+
+// UMyWorldSubsystem
+UWorld* World = MyActor->GetWorld();
+UMyWorldSubsystem* MySubsystem=World->GetSubsystem<UMyWorldSubsystem>();
+
+// UMyLocalPlayerSubsystem
+ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(PlayerController->Player)
+UMyLocalPlayerSubsystem * MySubsystem = LocalPlayer->GetSubsystem<UMyLocalPlayerSubsystem>();
+```
+
+![image-20250624154215497](Pic/image-20250624154215497.png)
+
+### 参考文章
+
+- [《InsideUE4》GamePlay架构（十一）Subsystems](https://zhuanlan.zhihu.com/p/158717151)
+
+
+
 ## SaveGame、LoadGame
 
 通过对 `USaveGame` 或其派生类进行 序列化/反序列化 到本地，实现存档/读档 机制
