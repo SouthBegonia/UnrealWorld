@@ -680,6 +680,57 @@ UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输�
 
 
 
+# UMG
+
+## Widget的生命周期
+
+涉及方法主要有：
+
+```c++
+bool Initialize()
+void NativeOnInitialized()
+    
+void AddToScreen(ULocalPlayer* LocalPlayer, int32 ZOrder)
+    
+void NativePreConstruct()
+void NativeConstruct()
+    
+void NativeTick()
+    
+void RemoveFromParent()
+void NativeDestruct()
+```
+
+但在 编辑器 及 Game/PIE 下，会有调用区别：
+
+- Game/PIE：
+  - 运行：`bool Initialize()` -> `void NativeOnInitialized()` -> `void AddToScreen(ULocalPlayer* LocalPlayer, int32 ZOrder)` -> `void NativePreConstruct()` -> `void NativeConstruct()` -> `void NativeTick()` -> `void RemoveFromParent()` -> `void NativeDestruct()`
+
+- 编辑器下：
+  - 打开预览UMG：`bool Initialize()` -> `void NativePreConstruct()`
+  - 保存UMG：`bool Initialize()`
+  - UMG内控件调整：`bool Initialize()` -> `void NativePreConstruct()`
+
+基于上述区别，在控件初始化、绑定时，需要区分处理：
+
+```c++
+// 若是在 编辑器 下就绑定、预览控件的：
+bool Initialize()	//控件绑定
+void NativePreConstruct()   //控件使用（设置文字颜色、按钮事件绑定...）
+
+// 若是在 Game 下才绑定、预览控件的：
+void NativeConstruct()	//控件绑定、控件使用
+// 也可以 void NativeOnInitialized() 进行控件绑定，void NativeConstruct() 使用控件
+```
+
+### 参考文章
+
+- [UMG生命周期 - 博客园](https://www.cnblogs.com/sin998/p/15490311.html)
+- [[UEC++]UMG的构建函数 - CSDN](https://blog.csdn.net/q757745037/article/details/143270863)
+- [UE4 UMG中C++成员变量绑定蓝图Widget - 知乎](https://zhuanlan.zhihu.com/p/337908390)
+
+
+
 # 规范
 
 ## 资产规范
