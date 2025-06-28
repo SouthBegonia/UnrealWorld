@@ -582,3 +582,70 @@ if (UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::CreateSa
 
 - [Unreal Engine 的启动流程 - 放牛的星星 - 知乎](https://zhuanlan.zhihu.com/p/610523485)
 - [UE4 Gameplay之GameMode流程分析(一) - 孤傲雕 - 知乎](https://zhuanlan.zhihu.com/p/70045930)
+
+
+
+# GAS
+
+>  **Gameplay技能系统（Gameplay Ability System）** 是一种框架，用于编译`Actor`可以拥有和触发的属性、技能和交互
+>
+> 该系统可适应各种各样的[Gameplay驱动型](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/data-driven-gameplay-elements-in-unreal-engine?application_version=5.4)项目，例如 **角色扮演游戏** （RPG）、 **动作冒险（Action-Adventure）** 游戏和 **多玩家在线战术竞技** 游戏（MOBA）
+>
+> 通过GAS，可以快速制作游戏内的 主动/被动技能、Buff效果、伤害计算、战斗状态逻辑等
+
+GAS核心模块：
+
+- Ability System Component 技能系统组件
+
+
+
+## Ability System Component（ASC）
+
+ASC本质是一个 `UActorComponent`，用于处理 GAS框架下的 交互逻辑：
+
+- 使用技能（GamePlayAbility）
+- 属性设置（AttributeSet）
+- 效果处理（GamePlayEffect）
+
+任何需要使用GAS的Actor对象，都必须拥有ASC组件（可将其放到Actor或PlayerState上）
+
+ASC所附着的Actor称为 ASC的`OwnerActor`，ASC实际作用的Actor称为 ASC的`AvatarActor`
+
+### 用法-基本配置
+
+首先确保项目启用了GAS插件，后即可配置ASC组件：例如 在目标Actor上添加ASC组件，并继承实现`IAbilitySystemInterface`接口
+
+```c++
+// AGASSampleCharacter.h
+class AGASSampleCharacter : public ACharacter, public IAbilitySystemInterface
+{
+    // 申明ASC
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = GameplayAbilities, meta = (AllowPrivateAccess = "true"))
+	class UAbilitySystemComponent* AbilitySystem;
+    
+    // 实现IAbilitySystemInterface接口
+	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+}
+```
+
+```c++
+// AGASSampleCharacter.cpp
+AGASSampleCharacter::AGASSampleCharacter()
+{
+	// 实例化ASC
+	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
+}
+
+UAbilitySystemComponent* AGASSampleCharacter::GetAbilitySystemComponent() const
+{
+    // 实现IAbilitySystemInterface接口，返回ASC实例
+	return AbilitySystem;
+}
+```
+
+![image-20250628172718541](Pic/image-20250628172718541.png)
+
+## 参考文章
+
+- [Gameplay技能系统 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/gameplay-ability-system-for-unreal-engine?application_version=5.4)
+- [虚幻引擎游戏技能系统文档 - CSDN](https://blog.csdn.net/pirate310/article/details/106311256)
