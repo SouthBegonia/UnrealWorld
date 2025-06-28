@@ -641,6 +641,44 @@ DrawDebug 用于在 编辑器或开发环境下，于场景内绘制 图形或�
 
 
 
+## TObjectPtr
+
+UE5 引入了 `TObjectPtr<T>`以替代原始指针`T*`，目的在于：
+
+- 提供 编辑器 下的 动态解析 和 访问追踪功能
+- 非编辑器模式下 `TObjectPtr<T>` 会退化为 `T*` ，无性能影响
+
+```c++
+// UE 4
+class ENGINE_API AActor : public UObject
+{
+	USceneComponent* RootComponent;
+}
+
+// UE 5
+class ENGINE_API AActor : public UObject
+{
+	TObjectPtr<USceneComponent> RootComponent;
+}
+```
+
+因此在开发中，建议对 `UOject`指针属性、`UClass`及`USTRUCT`内的容器类等 使用 `TObjectPtr<T>`以替代原始指针
+
+```c++
+UPROPERTY()
+TObjectPtr<AActor> MyActor;
+UPROPERTY()
+TArray<TObjectPtr<AActor>> MyActorArr;
+```
+
+### 参考文章
+
+- [C++ Object Pointer Properties - UnrealEngine](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-migration-guide?application_version=5.0#c++objectpointerproperties)
+- [简析UE5的对象指针FObjectPtr与TObjectPtr - 知乎](https://zhuanlan.zhihu.com/p/504115127)
+- [ue 为啥要用TObjectPtr＜T＞ - CSDN](https://blog.csdn.net/u013768914/article/details/144094068)
+
+
+
 # 输入
 
 UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输入：
