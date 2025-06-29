@@ -597,6 +597,7 @@ GAS核心模块：
 
 - Ability System Component 技能系统组件
 - GameplayTags 游戏标签
+- Gameplay Ability
 
 
 
@@ -656,7 +657,95 @@ GameplayTags的管理位于 项目设置->项目->GameplayTags 内，对应配�
 
 ![image-20250629154748694](Pic/image-20250629154748694.png)
 
+
+
+## Gameplay Ability（GA）
+
+`UGameplayAbility` 表示 **一段可被 激活触发的 游戏逻辑**
+
+GA可用于表示 攻击、被攻击、技能等，甚至于 角色跳跃、物品交互等
+
+![image-20250629164241509](Pic/image-20250629164241509.png)
+
+### 用法
+
+#### 1. 创建GA
+
+以从 `UGamePlayAbility` 派生GA蓝图为例，GA蓝图的基本结构如下：
+
+![image-20250629171246560](Pic/image-20250629171246560.png)
+
+GA的职责：
+
+- 生命周期事件：
+
+  - `事件ActivateAbility`：激活触发此GA后，通知到此事件，相当于GA逻辑的入口
+
+  - `事件OnEndAbility`：GA结束事件
+  - `EndAbility`：结束GA的方法
+
+- 配置 GameplayTags、Cost、CoolDowns等属性
+
+- 业务逻辑：视觉表现、应用GE等
+
+#### 2. 添加GA到ASC
+
+常规方法是 在C++层 把GA添加到ASC组件内、初始化ASC，则后续ASC就可使用此GA
+
+```c++
+// AGASSampleCharacter.h
+class AGASSampleCharacter : public ACharacter, public IAbilitySystemInterface
+{
+    // ASC
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = GameplayAbilities, meta = (AllowPrivateAccess = "true"))
+	class UAbilitySystemComponent* AbilitySystem;
+
+    // 声明Ability数组
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilities)
+	TArray<TSubclassOf<UGameplayAbility>> MyAbilities;
+}
+```
+
+```c++
+// AGASSampleCharacter.cpp
+void AGASSampleCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (nullptr != AbilitySystem)
+	{
+		// 把GA添加到ASC
+		if (MyAbilities.Num() > 0)
+		{
+			for (auto i = 0; i < MyAbilities.Num(); i++)
+			{
+				if (MyAbilities[i] == nullptr)
+					continue;
+
+				AbilitySystem->GiveAbility(FGameplayAbilitySpec(MyAbilities[i].GetDefaultObject(), 1, 0));
+			}
+		}
+
+		// 初始化ASC
+		AbilitySystem->InitAbilityActorInfo(this, this);
+	}
+}
+```
+
+![image-20250629172722366](Pic/image-20250629172722366.png)
+
+#### 3. GA的激活
+
+激活某个GA的方式有：
+
+A. 主动调用ASC组件提供的 `TryActivateAbilityByClass`、`TryActivateAbilitiesByTag` 方法
+
+B. GA自身配置Trigger条件，当ASC收到Trigger后将触发激活 其拥有的、满足Trigger条件的 GA。常用方法是 `UAbilitySystemBlueprintLibrary::SendGameplayEventToActor`
+
+![image-20250629174728912](Pic/image-20250629174728912.png)
+
 ## 参考文章
 
 - [Gameplay技能系统 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/gameplay-ability-system-for-unreal-engine?application_version=5.4)
 - [虚幻引擎游戏技能系统文档 - CSDN](https://blog.csdn.net/pirate310/article/details/106311256)
+- [【Unreal】虚幻GAS系统快速入门 - 知乎](https://zhuanlan.zhihu.com/p/486808688)
