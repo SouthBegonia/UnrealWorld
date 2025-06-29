@@ -596,6 +596,7 @@ if (UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::CreateSa
 GAS核心模块：
 
 - Ability System Component 技能系统组件
+- GameplayTags 游戏标签
 
 
 
@@ -644,6 +645,16 @@ UAbilitySystemComponent* AGASSampleCharacter::GetAbilitySystemComponent() const
 ```
 
 ![image-20250628172718541](Pic/image-20250628172718541.png)
+
+## Gameplay Tags
+
+`FGameplayTags` 是一种 **树状层级标签**，用于表示GAS内的 **某一种或某一类 状态/效果**
+
+其基本结构例如 `Parent.Child.GrandChild`，其每一层都是一种标签，可粗略可细化，替代了常规的 `Bool`、`Enum`等多重嵌套、结合的结构
+
+GameplayTags的管理位于 项目设置->项目->GameplayTags 内，对应配置亦被保存在 DefaultGameplayTags.ini 文件内
+
+![image-20250629154748694](Pic/image-20250629154748694.png)
 
 ## 参考文章
 
