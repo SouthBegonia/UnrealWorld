@@ -744,8 +744,22 @@ B. GA自身配置Trigger条件，当ASC收到Trigger后将触发激活 其拥有
 
 ![image-20250629174728912](Pic/image-20250629174728912.png)
 
+### GA - Triggers触发器
+
+触发器用于 配置系列触发条件、当达成触发条件后 就激活此GA
+
+**TriggerTag**：即 触发激活此GA的 标识GameplayTag
+
+**Triggers Source**：
+
+- Gameplay Event：当`OwnerActor`收到 配置TriggerTag的Gameplay Event时（例如 `UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(AActor* Actor, FGameplayTag EventTag, FGameplayEventData Payload)`）激活一次此GA
+- Owned Tag Added：当`OwnerActor`获得 配置TriggerTag的时候 激活一次此GA，当`OwnerActor`失去此Tag时 不会移除此GA，需要自行移除
+- Owned Tag Present：当`OwnerActor`获得 配置TriggerTag的时候 激活一次此GA，当`OwnerActor`失去此Tag时 会自动移除此GA（GA若执行未完成会被Cancel）
+
+
 ## 参考文章
 
 - [Gameplay技能系统 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/gameplay-ability-system-for-unreal-engine?application_version=5.4)
 - [虚幻引擎游戏技能系统文档 - CSDN](https://blog.csdn.net/pirate310/article/details/106311256)
 - [【Unreal】虚幻GAS系统快速入门 - 知乎](https://zhuanlan.zhihu.com/p/486808688)
+- [UE5 GAS Base - CSDN](https://blog.csdn.net/qq_52179126/article/details/131860252)
