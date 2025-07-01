@@ -744,6 +744,73 @@ B. GA自身配置Trigger条件，当ASC收到Trigger后将触发激活 其拥有
 
 ![image-20250629174728912](Pic/image-20250629174728912.png)
 
+### GA - Tags标签
+
+GA上可配置系列 GameplayTags，使其进行 预设的逻辑处理
+
+![image-20250701160404864](Pic/image-20250701160404864.png)
+
+|           名称            |                             描述                             |                        备注                        |
+| :-----------------------: | :----------------------------------------------------------: | :------------------------------------------------: |
+|       Ability Tags        |              此GA 的 Tags（即 描述GA用的标签）               |                                                    |
+| Cancel Abilities with Tag |      当此GA激活时 打断其他所有 拥有配置AbilityTags的GA       |           此类Tag是 某个GA的AbilityTags            |
+| Block Abilities with Tag  | 当此GA激活时 其他所有 拥有配置AbilityTags的GA 禁止激活（已激活了的不会被打断） |           此类Tag是 某个GA的AbilityTags            |
+|   Activation Owned Tags   | 当此GA激活时 GA的 `AvatarActor` 的ASC 将获取 配置的Tags，反之 当GA结束时 将对应移除 | 此类Tag是附属于ASC上的，而不是 某个GA的AbilityTags |
+| Activation Required Tags  | 当GA的 `AvatarActor` 的ASC上 拥有全部 配置的Tags，则此GA才允许被激活 | 此类Tag是附属于ASC上的，而不是 某个GA的AbilityTags |
+|  Activation Blocked Tags  | 若此GA的 `AvatarActor` 的ASC上 拥有任意个 配置的Tags，则此GA禁止激活 | 此类Tag是附属于ASC上的，而不是 某个GA的AbilityTags |
+|   Source Required Tags    | 当`FGameplayEventData.InstigatorTags` 内 包含全部 配置的Tags，则此GA才允许被激活 |                                                    |
+|    Source Blocked Tags    | 当`FGameplayEventData.InstigatorTags` 内 拥有任意个 配置的Tags，则此GA禁止激活 |                                                    |
+|   Target Required Tags    | 当`FGameplayEventData.TargetTags` 内 包含全部 配置的Tags，则此GA才允许被激活 |                                                    |
+|    Target Blocked Tags    | 当`FGameplayEventData.TargetTags` 内 拥有任意个 配置的Tags，则此GA禁止激活 |                                                    |
+
+#### 关于 Source XXX Tags、Target XXX Tags
+
+当我们采用 **[GameplayEvent的形式激活GA](https://dev.epicgames.com/documentation/en-us/unreal-engine/using-gameplay-abilities-in-unreal-engine?application_version=5.4#triggeringwithgameplayevents)**（例如调用方法 `UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(AActor* Actor, FGameplayTag EventTag, FGameplayEventData Payload)`，其中的形参 `FGameplayEventData Payload` 其内的下列2成员参数，即对应 Source XXX Tags、Target XXX Tags
+
+```c++
+/** Metadata for a tag-based Gameplay Event, that can activate other abilities or run ability-specific logic */
+USTRUCT(BlueprintType)
+struct GAMEPLAYABILITIES_API FGameplayEventData
+{
+    // ...
+    
+	/** Tags that the instigator has */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GameplayAbilityTriggerPayload)
+	FGameplayTagContainer InstigatorTags;
+
+    /** Tags that the target has */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GameplayAbilityTriggerPayload)
+	FGameplayTagContainer TargetTags;
+    
+    // ...
+}
+```
+
+而当 **非GameplayEvent的形式激活GA的情况**，例如常用的 `UAbilitySystemComponent::TryActivateAbilityByClass()` 其内部流程中 未创建使过`FGameplayEventData`类型的数据，因此这类方法 **会跳过对 Source XXX Tags、Target XXX Tags 的判断**，核心代码位于：
+
+```c++
+//AbilitySystemComponent_Abilities.cpp
+bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHandle Handle, FPredictionKey InPredictionKey, UGameplayAbility** OutInstancedAbility, FOnGameplayAbilityEnded::FDelegate* OnGameplayAbilityEndedDelegate, const FGameplayEventData* TriggerEventData)
+{
+    // Core ...
+}
+```
+
+一个例子：
+
+1. 已有一个目标GA：TargetBlockedTags=`Ability.Test.A`，其带有GameplayEvent的Trigger（TriggerTag=`Ability.Test.C`）
+2. 现通过 GameplayEvent的形式 尝试激活目标GA：激活的EventTag对应为`Ability.Test.C`，其将传递 `FGameplayEventData Payload` 参数（其TargetTags配置为`Ability.Test.B`）
+3. 执行结果为 因TargetTags内配置的Tags，均不在 GA的TargetBlockedTags列表内，故 成功激活GA
+4. 若将 TargetTags从`Ability.Test.B`改配置为`Ability.Test.A`，则执行结果为 因TargetTags内配置的Tags，有存在于 GA的TargetBlockedTags列表内，故 将被阻止激活GA。其余同理
+
+![image-20250701225905311](Pic/image-20250701225905311.png)
+
+总结：
+
+- Source XXX Tags、Target XXX Tags 仅在 通过GameplayEvent激活GA 且有对应非空`Payload`配置下 才可能生效，否则GA的配置无需关心这2项目的内容
+
+
+
 ### GA - Triggers触发器
 
 触发器用于 配置系列触发条件、当达成触发条件后 就激活此GA
