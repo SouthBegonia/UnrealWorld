@@ -744,7 +744,7 @@ B. GA自身配置Trigger条件，当ASC收到Trigger后将触发激活 其拥有
 
 ![image-20250629174728912](Pic/image-20250629174728912.png)
 
-### GA - Tags标签
+### GA细节面板 - Tags标签
 
 GA上可配置系列 GameplayTags，使其进行 预设的逻辑处理
 
@@ -809,9 +809,7 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
 
 - Source XXX Tags、Target XXX Tags 仅在 通过GameplayEvent激活GA 且有对应非空`Payload`配置下 才可能生效，否则GA的配置无需关心这2项目的内容
 
-
-
-### GA - Triggers触发器
+### GA细节面板 - Triggers触发器
 
 触发器用于 配置系列触发条件、当达成触发条件后 就激活此GA
 
@@ -822,6 +820,17 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
 - Gameplay Event：当`OwnerActor`收到 配置TriggerTag的Gameplay Event时（例如 `UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(AActor* Actor, FGameplayTag EventTag, FGameplayEventData Payload)`）激活一次此GA
 - Owned Tag Added：当`OwnerActor`获得 配置TriggerTag的时候 激活一次此GA，当`OwnerActor`失去此Tag时 不会移除此GA，需要自行移除
 - Owned Tag Present：当`OwnerActor`获得 配置TriggerTag的时候 激活一次此GA，当`OwnerActor`失去此Tag时 会自动移除此GA（GA若执行未完成会被Cancel）
+
+
+
+### GA - AbilityTask
+
+[UAbilityTask](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/gameplay-ability-tasks-in-unreal-engine?application_version=5.4) 是指GA蓝图专用的 **一段异步处理逻辑**
+
+UE已内置诸多常用节点（节点功能可参考 [AbilityTask原生类盘点 - 知乎](https://zhuanlan.zhihu.com/p/431081292)），亦可自行从 `UAbilityTask` 派生实现（可参考 [UE5 GAS RPG创建自定义的Ability Task - CSDN](https://blog.csdn.net/qq_30100043/article/details/137859611)
+
+![image-20250702113549438](Pic/image-20250702113549438.png)
+
 
 
 ## 参考文章
