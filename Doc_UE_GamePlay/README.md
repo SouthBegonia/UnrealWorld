@@ -598,6 +598,7 @@ GAS核心模块：
 - Ability System Component 技能系统组件
 - GameplayTags 游戏标签
 - Gameplay Ability
+- Gameplay Attributes
 
 
 
@@ -830,6 +831,121 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
 UE已内置诸多常用节点（节点功能可参考 [AbilityTask原生类盘点 - 知乎](https://zhuanlan.zhihu.com/p/431081292)），亦可自行从 `UAbilityTask` 派生实现（可参考 [UE5 GAS RPG创建自定义的Ability Task - CSDN](https://blog.csdn.net/qq_30100043/article/details/137859611)
 
 ![image-20250702113549438](Pic/image-20250702113549438.png)
+
+
+
+## Gameplay Attributes
+
+`FGameplayAttributeData ` 即 **Attribute**，是 **描述 一项属性 的结构体**，用于表示游戏的某项数值属性（例如 HP、MP等）。其核心成员为：
+
+- `float BaseValue`：基础值。例如 升级后MP永久性的提升
+- `float CurrentValue`：当前值。较常用。例如 使用技能会消耗MP，MP也可用药品恢复或随时间自动恢复等
+
+`UAttributeSet` 即 **AS**，负责 **定义和持有 Attribute**，并 **管理Attribute的变化**，包括网络同步。挂载到ASC组件上
+
+### AS用法
+
+#### 1. 创建Attribute及AS
+
+先从 `UAttributeSet` 派生出所需AS，并声明所需Attribute：
+
+```c++
+// SampleAttributeSet.h
+#include "CoreMinimal.h"
+#include "AttributeSet.h"
+#include "AbilitySystemComponent.h"
+#include "SampleAttributeSet.generated.h"
+
+// 定义一个增加各种Getter和Setter方法的宏（必要）
+#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
+	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
+	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
+	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
+	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
+
+UCLASS()
+class [PROJECTNAME]_API USampleAttributeSet : public UAttributeSet
+{
+	GENERATED_BODY()
+
+public:
+	USampleAttributeSet();
+
+public:
+	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	FGameplayAttributeData Health;
+	ATTRIBUTE_ACCESSORS(USampleAttributeSet, Health);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	FGameplayAttributeData MaxHealth;
+	ATTRIBUTE_ACCESSORS(USampleAttributeSet, MaxHealth)
+
+public:
+	// 属性修改前回调
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+
+	// GE执行后属性回调
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+};
+```
+
+```c++
+// SampleAttributeSet.cpp
+void USampleAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+{
+    // CurrentValue 被改变前调用
+	if (Attribute == GetHealthAttribute())
+	{
+        // NewValue的边界处理
+		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHealth());
+	}
+}
+
+void USampleAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+{
+	// 注意：仅在instant GameplayEffect使Attribute的 BaseValue改变时触发
+	Super::PostGameplayEffectExecute(Data);
+
+    if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+    {
+        SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
+    }
+}
+```
+
+若想单纯 **监听 Attribute的变化**，则可以用 ASC注册监听：
+
+```c++
+// AGASSampleCharacter.cpp
+void AGASSampleCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (nullptr != AbilitySystem)
+	{
+        // ASC 初始化
+        
+        // 向ASC注册Attribute变化事件
+		AbilitySystem->GetGameplayAttributeValueChangeDelegate(USampleAttributeSet::GetHealthAttribute()).AddUObject(this, &AGASSampleCharacter::OnHealthChanged);
+	}
+}
+
+void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
+{
+    // 获取最新值 Data.NewValue
+	// 自行Notify
+}
+```
+
+最后将创建的AS挂载到 ASC组件上：
+
+![image-20250703174938577](Pic/image-20250703174938577.png)
+
+#### 2. AS的初始化
+
+#### 3. AS的使用
+
+![image-20250703174705572](Pic/image-20250703174705572.png)
 
 
 
