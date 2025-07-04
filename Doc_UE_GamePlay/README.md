@@ -599,6 +599,7 @@ GAS核心模块：
 - GameplayTags 游戏标签
 - Gameplay Ability
 - Gameplay Attributes
+- Gameplay Effect
 
 
 
@@ -948,6 +949,72 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 ![image-20250703174705572](Pic/image-20250703174705572.png)
 
 
+
+## Gameplay Effect（GE）
+
+`UGameplayEffect` 即 GE，是**Ability对自己或他人产生影响的途径**。可理解为游戏内的 一段伤害、一个Buff等 **一项游戏效果**，其注重于 效果的结果表现，而不是 效果的实现流程（这是GA的职责），因此其 **不可添加逻辑、相当于一个配置各类效果的配置表**
+
+![image-20250704204529992](Pic/image-20250704204529992.png)
+
+### GE的功能
+
+#### 修改Attribute
+
+通过配置GE细节面板->GameplayEffect->Modifier，可修改Attribute：
+
+![image-20250704174546020](Pic/image-20250704174546020.png)
+
+#### 赋予GameplayTag
+
+当此GE Apply成功时，会赋予目标ASC 配置的GameplayTag：
+
+![image-20250704180912409](Pic/image-20250704180912409.png)
+
+#### 赋予GA
+
+当此GE Apply成功时，会赋予目标ASC 配置的GA：
+
+- Removal Policy：GE移除时 目标GA的处理
+
+  - Cancel Ability Immediately：移除，并触发事件EndAbility
+
+  - Remove Ability on End：移除，但是不触发EndAbility
+
+  - Do Nothing：GA不会被移除
+
+![image-20250704181210460](Pic/image-20250704181210460.png)
+
+#### 嵌套应用GE
+
+当此GE Apply成功时，Apply配置的GE：
+
+![image-20250704174447542](Pic/image-20250704174447542.png)
+
+当此GE 的Duration被打断或结束时，Apply配置的GE：
+
+（备注：适用情况为 DurationPolicy=HasDuration）
+
+![image-20250704180213438](Pic/image-20250704180213438.png)
+
+当此GE 的Stacking溢出时，Apply配置的GE：
+
+（备注：Stacking溢出仅适用于 DurationPolicy=Infinite/HasDuration）
+
+![image-20250704175840562](Pic/image-20250704175840562.png)
+
+#### 调用GC
+
+当此GE Apply成功时，触发配置的GC：
+
+![image-20250704181859613](Pic/image-20250704181859613.png)
+
+### GE的使用
+
+从 `UGameplayEffect` 即可派生出GE蓝图，后就可 **从ASC 或 GA 内Apply指定类型的GE**：
+
+![ASC内应用GE](Pic/image-20250704204038864.png)
+
+![GA内应用GE](Pic/image-20250704204158308.png)
 
 ## 参考文章
 
