@@ -600,6 +600,7 @@ GAS核心模块：
 - Gameplay Ability
 - Gameplay Attributes
 - Gameplay Effect
+- Gameplay Cue
 
 
 
@@ -1015,6 +1016,43 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 ![ASC内应用GE](Pic/image-20250704204038864.png)
 
 ![GA内应用GE](Pic/image-20250704204158308.png)
+
+## Gameplay Cue（GC）
+
+GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的业务**，例如 粒子特效、音效、震动等 **交互反馈表现**
+
+目前GC分为2类：
+
+- `UGameplayCueNotify_Static`：适用于 一次性播放的特效。其不会在Level内生成实例。对应Instant和Periodic的GE
+- `AGameplayCueNotify_Actor`：适用于 持久性/不定时长的特效。每次触发会在Level内生成对应实例。对应Infinity和Has Duration的GE
+
+### 用法
+
+#### 1. 创建GC
+
+打开GameplayCue编辑器（UE5位于 工具栏内），为所需GC创建一个Tag，后点击 处理器->新增，就显示为此Tag创建GC的蓝图的界面：
+
+![image-20250705113603476](Pic/image-20250705113603476.png)
+
+#### 2. GC蓝图设置
+
+若是 Static类型的GC，则需要在蓝图内 重载`OnExecute`方法，并对 类默认值->细节面板->Gameplay Cue进行相关设置：
+
+![image-20250705174816951](Pic/image-20250705174816951.png)
+
+若是 Actor类型的GC，则需要在蓝图内 重载`OnActive`、`OnRemove`方法，并对 细节面板->Gameplay Cue、Clean Up 进行相关设置：
+
+![image-20250705171754483](Pic/image-20250705171754483.png)
+
+#### 3. GC的使用
+
+可通过GE触发 目标Gameplay Cue Tags 的GC：
+
+![image-20250705172452344](Pic/image-20250705172452344.png)
+
+也可在GA内调用触发GC：
+
+![image-20250705173205714](Pic/image-20250705173205714.png)
 
 ## 参考文章
 
