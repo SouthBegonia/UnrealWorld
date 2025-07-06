@@ -682,10 +682,13 @@ GA的职责：
 
 - 生命周期事件：
 
-  - `事件ActivateAbility`：激活触发此GA后，通知到此事件，相当于GA逻辑的入口
+  - `事件ActivateAbility`：成功激活此GA后调用，无传入参数。适用于 任意激活途径（`TryActivateAbilityByClass`或`SendGameplayEventToActor`）
+
+  - `事件ActivateAbilityFromEvent`：在未使用 `事件ActivateAbility` 且 通过 `SendGameplayEventToActor`形式 成功激活此GA后调用，携带传入了`Event Data`。源码逻辑位于 `void UGameplayAbility::ActivateAbility`
 
   - `事件OnEndAbility`：GA结束事件
   - `EndAbility`：结束GA的方法
+  - `CommitAbility`：执行应用Cost、Cooldown（如果GA有配置Cost或Cooldown、且使用了 `事件ActivateAbility` 或 `事件ActivateAbilityFromEvent` 则必须主动调用一次，源码逻辑位于 `void UGameplayAbility::ActivateAbility`）
 
 - 配置 GameplayTags、Cost、CoolDowns等属性
 
@@ -824,7 +827,27 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
 - Owned Tag Added：当`OwnerActor`获得 配置TriggerTag的时候 激活一次此GA，当`OwnerActor`失去此Tag时 不会移除此GA，需要自行移除
 - Owned Tag Present：当`OwnerActor`获得 配置TriggerTag的时候 激活一次此GA，当`OwnerActor`失去此Tag时 会自动移除此GA（GA若执行未完成会被Cancel）
 
+### GA细节面板 - Cooldowns
 
+Cooldown 用于 限制GA的触发间隔，配置项为 GE。其本质为 Cooldown的GE激活期间 添加Tag到ASC，通过此Tag进行限制、实现冷却
+
+Cooldown GE的配置要求：
+
+- Duration Policy = Has Duration类型，并对应配置有效时长
+- Granted Tags->Added 配置 Cooldown相关的Tag
+
+![image-20250706175722358](Pic/image-20250706175722358.png)
+
+### GA细节面板 - Costs
+
+Costs 用于 消耗目标Attribute以激活GA，配置项为 GE
+
+Costs GE的配置要求：
+
+- Duration Policy = Instant
+- 一个或多个Modifier
+
+![image-20250706180450910](Pic/image-20250706180450910.png)
 
 ### GA - AbilityTask
 
