@@ -872,7 +872,7 @@ UE已内置诸多常用节点（节点功能可参考 [AbilityTask原生类盘�
 
 #### 1. 创建Attribute及AS
 
-先从 `UAttributeSet` 派生出所需AS，并声明所需Attribute：
+先从 `UAttributeSet` 派生出所需AS，头部添加 [Defining Attributes](https://github.com/tranek/GASDocumentation/tree/master?tab=readme-ov-file#concepts-as-attributes)，并声明所需Attribute：
 
 ```c++
 // SampleAttributeSet.h
@@ -881,7 +881,7 @@ UE已内置诸多常用节点（节点功能可参考 [AbilityTask原生类盘�
 #include "AbilitySystemComponent.h"
 #include "SampleAttributeSet.generated.h"
 
-// 定义一个增加各种Getter和Setter方法的宏（必要）
+// Defining Attributes : 增加各种Getter和Setter方法的宏（必要）
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
 	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
@@ -967,6 +967,18 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 ![image-20250703174938577](Pic/image-20250703174938577.png)
 
 #### 2. AS的初始化
+
+方法1（不推荐）：为目标AS配置对应的 DataTable，挂载到ASC上的Default Starting Table项：
+
+![image-20250709195207309](Pic/image-20250709195207309.png)
+
+方法2（官方推荐）：新建GE专用于初始化目标AS，运行态时自行Apply以进行初始化：
+
+![image-20250709195748391](Pic/image-20250709195748391.png)
+
+参考文章：
+
+- [【UE】记录GAS中AttributeSet初始化流程 - 知乎](https://zhuanlan.zhihu.com/p/687390022)
 
 #### 3. AS的使用
 
