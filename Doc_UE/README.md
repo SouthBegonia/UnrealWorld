@@ -619,6 +619,19 @@ if (MyHeroTable != nullptr)
 
 
 
+## 事件、函数、宏
+
+**事件** 侧重于 逻辑触发，**函数** 侧重于 即时的逻辑执行及结果返回，**宏** 侧重于 逻辑分流处理
+
+![](https://picx.zhimg.com/v2-a5bcc77391e47dd2e117c99634153ae9_1440w.jpg)
+
+### 参考文章
+
+- [【UE4】函数、宏和事件的区别 - 知乎](https://zhuanlan.zhihu.com/p/527787878)
+- [UE5 ＜事件、函数、宏＞ - CSDN](https://blog.csdn.net/CandyU2/article/details/147124582)
+
+
+
 ## DrawDebug
 
 DrawDebug 用于在 编辑器或开发环境下，于场景内绘制 图形或文字，以便直观查验信息
