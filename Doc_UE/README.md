@@ -711,6 +711,45 @@ UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输�
 
 ![image-20250607175659814](Pic/image-20250607175659814.png)
 
+### 参考文章
+
+- [UE5 -- EnhancedInput(增强输入系统) - 知乎](https://zhuanlan.zhihu.com/p/470949422)
+- [虚幻5新特性之EnhancedInput - CSDN](https://blog.csdn.net/xcinkey/article/details/124755202)
+- [虚幻引擎5：增强输入的使用方法 - CSDN](https://blog.csdn.net/chai_tian/article/details/133818478)
+- [增强输入 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/enhanced-input-in-unreal-engine?application_version=5.5)
+- [虚幻UE 增强输入-触发器 - CSDN](https://blog.csdn.net/weixin_45865901/article/details/135407105)
+
+
+
+## 按键映射修改
+
+实现例如 **游戏运行中** 修改目标 **操作映射/轴映射/InputAction 的键**，并保留设置配置以供重启后使用
+
+![](https://dev.epicgames.com/community/api/learning/image/8eb6f845-509b-4820-8fc5-88cdedc8cb55?resizing_type=fit)
+
+### Enhanced Input的方案
+
+示例1（官方推荐，[Lyra](https://github.com/EpicGames/UnrealEngine/tree/ue5-main/Samples/Games/Lyra)同款）：[Player Mappable Keys using Enhanced Input - UnrealDev](https://dev.epicgames.com/community/learning/tutorials/Vp69/unreal-engine-player-mappable-keys-using-enhanced-input)。其核心流程：
+
+1. 启用Enhanced Input设置内的 Enable User Settings (Experimental)，并配置 `UEnhancedInputUserSettings`、`UEnhancedPlayerMappableKeyProfile`
+2. 对各 `InputAction` 配置PlayerMappableKeySetting（逻辑层与表现层所需的数据）
+3. 正常使用 Enhanced Input功能的基础上，设置启用上文的UserSetting功能（在 `AddMapping Context` 方法内勾选 `bNotifyUserSettings` 或 自行调用 `Register Input Mapping Context`）
+4.  在运行态时 执行 Remapping Key（`UEnhancedInputUserSettings::MapPlayerKey()`）是实现重映射。保存映射修改数据到本地后，重启后 读取存档再重复Remapping Key
+
+
+示例2：[EnhancedInput - Github](https://github.com/LethalInsect/EnhancedInput)。具有 独立完整示例工程。实现方案同 示例1
+
+![](https://github.com/user-attachments/assets/1391e2dc-d435-469a-96cf-0a9aed83827e)
+
+
+示例3：[虚幻-UE5增强输入按键设置教程2.0 - BiliBili](https://www.bilibili.com/video/BV1aySiYpErL)。具有 独立完整示例工程。实现方案为 修改 `UInputMappingContext`资产的数据，对 新旧 `InputAction` 进行 `UInputMappingContext::UnmapKey()`/`UInputMappingContext::MapKey()`
+
+![image-20250727175824610](Pic/image-20250727175824610.png)
+
+![image-20250727175951133](Pic/image-20250727175951133.png)
+
+
+
 ## 手柄适配
 
 ### 手柄映射
@@ -720,14 +759,6 @@ UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输�
 摇杆的2D轴 = X、Y两个轴向上的 `FVector2D` 值
 
 ![image-20250608144608000](Pic/image-20250608144608000.png)
-
-## 参考文章
-
-- [UE5 -- EnhancedInput(增强输入系统) - 知乎](https://zhuanlan.zhihu.com/p/470949422)
-- [虚幻5新特性之EnhancedInput - CSDN](https://blog.csdn.net/xcinkey/article/details/124755202)
-- [虚幻引擎5：增强输入的使用方法 - CSDN](https://blog.csdn.net/chai_tian/article/details/133818478)
-- [增强输入 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/enhanced-input-in-unreal-engine?application_version=5.5)
-- [虚幻UE 增强输入-触发器 - CSDN](https://blog.csdn.net/weixin_45865901/article/details/135407105)
 
 
 
