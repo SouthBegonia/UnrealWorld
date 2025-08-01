@@ -860,6 +860,83 @@ void NativeConstruct()	//控件绑定、控件使用
 - [虚幻引擎(UE5)-大世界分区WorldPartition教程(三) - LevelInstance的用法 - CSDN](https://blog.csdn.net/oFengtingwano/article/details/131433627)
 - [虚幻引擎(UE5)-大世界分区WorldPartition教程(四) - DataLayers的用法 - CSDN](https://blog.csdn.net/oFengtingwano/article/details/131433981)
 
+
+
+# 动画
+
+## Sequencer
+
+[Sequencer](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/how-to-make-movies-in-unreal-engine) 是虚幻引擎的过场动画编辑器，允许用户为动画角色、摄像机、各种属性以及其他Actor制作动画。它提供了一个非线性的编辑环境，允许你按时间轴创建、修改轨道和关键帧
+
+![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/97597671-45c7-4afe-9088-4ec48cb554c6/whatis.gif)
+
+### Sequencer的功能
+
+可以在一个Sequencer资产内 创建不同特定功能轨道 或是 添加成员到轨道Key动画。常用的功能有：
+
+- 相机的创建、切换、表现处理
+- [SkeletalMesh](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/skeletal-mesh-assets-in-unreal-engine)的动画播放
+- Actor对象（Level内既有/新生成/重绑定）的关键帧动画
+- 音频轨道、事件轨道等
+
+### Sequencer的分类
+
+UE内常见的Sequencer资产有：
+
+- **Level Sequence**：是Sequencer的基本文件。Level Sequence 的内部由 **轨道(Tracks)** 构成，各轨道具备独立功能
+- **Master Sequence**：实质也是LevelSequence，主要用于 拼接组合多个Level Sequence
+
+![](https://pic1.zhimg.com/v2-a0ce5c61aff418b2a737c8830da09d4a_1440w.jpg)
+
+![image-20250801211212359](Pic/image-20250801211212359.png)
+
+### Sequencer的基本用法
+
+首先创建Sequencer资产，以 Level Sequence为例：
+
+在内容浏览器中点击右键空白区域，选择 **过场动画（Cinematics） > 关卡序列（Level Sequence）** 即可创建，双击后就可打开Sequencer编辑器进行编辑，注意：Play时建议把Sequencer编辑窗口关闭、避免运行时显示异常
+
+![image-20250801193535590](Pic/image-20250801193535590.png)
+
+后就可以在逻辑层对这个Sequence进行Play播放了：核心API是 `ULevelSequencePlayer::CreateLevelSequencePlayer()`、`UMovieSceneSequencePlayer::Play()`，同时也可以 设置播放参数、监听播放事件等
+
+![image-20250801194038593](Pic/image-20250801194038593.png)
+
+![image-20250801193952902](Pic/image-20250801193952902.png)
+
+![20250801_163229](Pic/20250801_163229.gif)
+
+### Sequencer的功能示例
+
+#### 轨道 - 相机剪切轨道
+
+主要功能为 处理多个相机下、相互切换混合 **最终呈现镜头**。直白点就是 多个相机能拍多个各自的画面，可以是筛选所需画面、陈列于所需时间轴节点上。官方文档：[创建摄像机动画 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/how-to-animate-cinematic-cameras-in-unreal-engine)
+
+首先需要创建 相机剪切轨道：可人为在Sequencer编辑窗口 添加->相机切换轨道，或是 首次新建相机或把现有相机拖入，会自动创建 相机切换轨道
+
+![image-20250801195523238](Pic/image-20250801195523238.png)
+
+我们可以对目标相机Key动画等，但若是想要把此相机的画面呈现于 最终画面，则需要将其添加到 相机切换轨道内，那此段相机的镜头才能被呈现、剪辑、混合
+
+![image-20250801201459204](Pic/image-20250801201459204.png)
+
+![20250801_202433](Pic/20250801_202433.gif)
+
+当然也可以把Character身上的相机加入轨道进行编辑：
+
+（同时建议设置此相机的 属性->完成时->保持状态，以便在Sequence播放完后 恢复此相机的原有状态）
+
+![20250801_205521](Pic/20250801_205521.gif)
+
+![image-20250801210200179](Pic/image-20250801210200179.png)
+
+### 参考文章
+
+- [过场动画和Sequencer - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/cinematics-and-movie-making-in-unreal-engine)
+- [UE4中的动画编辑器 —— Sequencer in UE4 - 知乎](https://zhuanlan.zhihu.com/p/386200585)
+
+
+
 # 规范
 
 ## 资产规范
