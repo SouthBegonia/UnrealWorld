@@ -872,23 +872,22 @@ void NativeConstruct()	//控件绑定、控件使用
 
 ### Sequencer的功能
 
-可以在一个Sequencer资产内 创建不同特定功能轨道 或是 添加成员到轨道Key动画。常用的功能有：
+可以在一个Sequencer资产内 创建不同特定功能的 [轨道](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/sequencer-track-list-in-unreal-engine) 或是 添加成员到轨道Key动画。常用的功能有：
 
 - 相机的创建、切换、表现处理
 - [SkeletalMesh](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/skeletal-mesh-assets-in-unreal-engine)的动画播放
 - Actor对象（Level内既有/新生成/重绑定）的关键帧动画
-- 音频轨道、事件轨道等
 
 ### Sequencer的分类
 
 UE内常见的Sequencer资产有：
 
 - **Level Sequence**：是Sequencer的基本文件。Level Sequence 的内部由 **轨道(Tracks)** 构成，各轨道具备独立功能
-- **Master Sequence**：实质也是LevelSequence，主要用于 拼接组合多个Level Sequence
+- **Master Sequence**：实质也是LevelSequence（默认自动创建了镜头轨道），主要用于 拼接组合多个Level Sequence
 
 ![](https://pic1.zhimg.com/v2-a0ce5c61aff418b2a737c8830da09d4a_1440w.jpg)
 
-![image-20250801211212359](Pic/image-20250801211212359.png)
+![LevelSequence轨道](Pic/image-20250801211212359.png)
 
 ### Sequencer的基本用法
 
@@ -908,7 +907,7 @@ UE内常见的Sequencer资产有：
 
 ### Sequencer的功能示例
 
-#### 轨道 - 相机剪切轨道
+#### 轨道 - [镜头切换轨道](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/cinematic-camera-cut-track-in-unreal-engine)
 
 主要功能为 处理多个相机下、相互切换混合 **最终呈现镜头**。直白点就是 多个相机能拍多个各自的画面，可以是筛选所需画面、陈列于所需时间轴节点上。官方文档：[创建摄像机动画 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/how-to-animate-cinematic-cameras-in-unreal-engine)
 
@@ -929,6 +928,14 @@ UE内常见的Sequencer资产有：
 ![20250801_205521](Pic/20250801_205521.gif)
 
 ![image-20250801210200179](Pic/image-20250801210200179.png)
+
+#### 轨道 - [镜头轨道](https://dev.epicgames.com/documentation/en-us/unreal-engine/sequences-shots-and-takes-in-unreal-engine?application_version=5.5#shots)
+
+主要功能为 承载多个Level Sequence片段，并可再次进行剪辑、混合
+
+![20250802_213531](Pic/20250802_213531.gif)
+
+
 
 ### 参考文章
 
