@@ -905,7 +905,46 @@ UE内常见的Sequencer资产有：
 
 ![20250801_163229](Pic/20250801_163229.gif)
 
-### Sequencer的功能示例
+### Sequencer的功能介绍
+
+#### 轨道内的Actor对象
+
+我们可以在轨道内 添加Actor对象并对其Key动画等，针对此Actor对象的来源，可将其分为2类：
+
+- [可持有对象（Possessable）](https://dev.epicgames.com/documentation/en-us/unreal-engine/spawn-temporary-actors-in-unreal-engine-cinematics#possessable)：
+  - 含义：即 把**Level内已有的对象** 添加到轨道的的Actor。其原本Actor的生命周期 不受Sequencer影响
+  - 适用范围：针对Level内持久性Actor的过场动画
+- [可生成对象（Spawnable）](https://dev.epicgames.com/documentation/en-us/unreal-engine/spawn-temporary-actors-in-unreal-engine-cinematics#spawnable)：
+  - 含义：即 **因Sequencer所需而生成的临时性Actor**。其Actor的创建、显示、销毁等生命周期 受到Sequencer控制，关闭Sequencer编辑窗口后将连带消失、不存在于Level
+  - 适用范围：不会在Level内持久存在、仅需Sequencer临时Actor的过场动画
+  - 辨别：Actor图标上带黄色闪电的
+
+![PossessableActor](Pic/image-20250803163452038.png)
+
+![SpawnableActor](Pic/image-20250803163738104.png)
+
+#### 轨道内Actor对象的重绑定
+
+一种常见情况例如：CharacterActor 不是在Level内预先放置、而是运行时人为放置的，而制作过场动画Sequence时，用的是 美术Map下的同CharacterActor，那这样的情况下就需要 **设置Sequence内CharacterActor重绑定为运行态时的CharacterActor**，即为 **Sequence内Actor的重绑定**
+
+
+Sequence内Actor重绑定的基本流程为：
+
+1. Actor放置于所需轨道，设定其绑定方式：
+   - Sequencer编辑窗口内，直接设置Actor的绑定端点：即 蓝图内创建绑定函数，返值重绑定对象
+   - Sequence播放前，执行`ALevelSequenceActor::AddBinding()`等方法，直接对 目标Sequence资产内的目标可绑端点，进行绑定操作，才播放Sequence。具体可参阅 [用Sequencer在蓝图中重新绑定Actor - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/change-cinematic-track-bindings-in-unreal-engine)
+2. 绑定完成后方可正常播放，后续亦可 移除绑定、重设绑定等
+
+
+一个重绑定CharacterActor的示例如：Sequence内制作CharacterActor的序列帧动画，设置其为 **可持有对象**，且设置 其绑定端点为 PlayerPawn（[UE内设方法](https://dev.epicgames.com/documentation/en-us/unreal-engine/dynamic-binding-in-sequencer#quickbind)）。则当 运行游戏、播放Sequence时，根据方法获取到 PlayerPawn、进行重绑定节点、正式开播Sequence
+
+![image-20250803180941620](Pic/image-20250803180941620.png)
+
+![20250803_185034](Pic/20250803_185034.gif)
+
+除此之外，针对普通的Actor，也可进行重绑定：[用Sequencer在蓝图中重新绑定Actor - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/change-cinematic-track-bindings-in-unreal-engine)（原理同上）
+
+TODO：针对 可生成对象类型的Actor的重绑定？是否能绑定到指定Asset
 
 #### 轨道 - [镜头切换轨道](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/cinematic-camera-cut-track-in-unreal-engine)
 
@@ -949,6 +988,8 @@ UE内常见的Sequencer资产有：
 对于绑定的事件，有UE提供的 快速绑定事件，或自行在 Sequence的蓝图（即 [导演蓝图](https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematic-event-track-in-unreal-engine#directorblueprint)）内创建Event提供绑定
 
 ![image-20250803155512545](Pic/image-20250803155512545.png)
+
+
 
 ### 参考文章
 
