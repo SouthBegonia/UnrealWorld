@@ -935,7 +935,20 @@ UE内常见的Sequencer资产有：
 
 ![20250802_213531](Pic/20250802_213531.gif)
 
+#### 轨道 - [事件轨道](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/cinematic-event-track-in-unreal-engine)
 
+主要功能为 在轨道上触发绑定的事件。针对事件的触发方式 又分为2类事件轨道：
+
+- [触发器 Trigger](https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematic-event-track-in-unreal-engine#triggerevents)：绑定事件后，在目标 **关键帧节点 单次触发事件**。轨道内各节点可绑定各自事件
+- [重复器 Repeater](https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematic-event-track-in-unreal-engine#repeaterevents)：绑定事件后，在目标 **轨道片段内 每帧触发事件**。轨道内各片段可绑定各自事件
+
+![触发器](Pic/image-20250803153723424.png)
+
+![重复器](Pic/image-20250803154843398.png)
+
+对于绑定的事件，有UE提供的 快速绑定事件，或自行在 Sequence的蓝图（即 [导演蓝图](https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematic-event-track-in-unreal-engine#directorblueprint)）内创建Event提供绑定
+
+![image-20250803155512545](Pic/image-20250803155512545.png)
 
 ### 参考文章
 
