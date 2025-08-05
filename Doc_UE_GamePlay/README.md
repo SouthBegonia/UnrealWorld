@@ -105,21 +105,23 @@
 
 ![image-20250507173608498](Pic/image-20250507173608498.png)
 
-#### 常用的Component
+#### UActorComponent的派生类
 
-##### SceneComponent 场景组件
+`UActorComponent` 是所有组件的基类，根据使用场景，常分为3类组件：
 
-> SceneComponent 派生自 UActorComponent，具备 空间变换（位置、缩放、旋转）、SceneComponent嵌套功能
+- **Actor组件**（`UActorComponent`类）：处理 非物理相关、不需要几何表现的 抽象行为
+  - 使用示例：移动、物品栏或属性管理等
+- **场景组件**（`USceneComponent`、`UActorComponent` 的子类）：处理 物理相关、不需要几何表现的 行为
+  - 使用示例：弹簧臂、摄像机、物理力、约束、音频等
+- **Primitive组件**（`UPrimitiveComponent`、`USceneComponent` 的子类）：处理 几何表现相关的 行为
+  - 使用示例：静态/骨骼网格体、球体碰撞体积、粒子系统等
 
-常见的 `SceneComponent`的派生类由：
 
-- `UStaticMeshComponent`：显示静态网络模型
-- `USkeletalMeshComponent`：显示骨骼网络模型
-- `UCameraComponent`：相机
-- `USpringArmComponent`：弹簧臂
-- `UBoxComponent` / `USphereComponent `/ `UCapsuleComponent`：碰撞/触发器
 
-##### UActorComponent的派生类
+常见的组件有：
+
+- [`USceneComponent`](https://dev.epicgames.com/documentation/en-us/unreal-engine/components-in-unreal-engine#scenecomponents)：具备 空间变换（位置、缩放、旋转）、SceneComponent嵌套功能
+- [`UPrimitiveComponent`](https://dev.epicgames.com/documentation/en-us/unreal-engine/components-in-unreal-engine#primitivecomponents)：基元组件，包含或生成某类几何的场景组件，通常用于渲染或碰撞
 
 - `UAudioComponent`：播放音效
 
@@ -129,7 +131,14 @@
 
 - `UPostProcessComponent`：实现后期处理效果
 
-  
+- `UStaticMeshComponent`：显示静态网络模型
+
+- `USkeletalMeshComponent`：显示骨骼网络模型
+- `UCameraComponent`：相机
+- `USpringArmComponent`：弹簧臂
+- `UBoxComponent` / `USphereComponent `/ `UCapsuleComponent`：碰撞/触发器
+
+
 
 ### 参考文章
 
@@ -139,6 +148,7 @@
 
 - [[浅析UE4 Actor&Actor生命周期](https://www.cnblogs.com/CatSevenMillion/p/16653763.html)](https://www.cnblogs.com/CatSevenMillion/p/16653763.html)
 
+- [Actor组件 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/components-in-unreal-engine)
 
 
 ## Pawn
@@ -582,6 +592,7 @@ if (UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::CreateSa
 
 - [Unreal Engine 的启动流程 - 放牛的星星 - 知乎](https://zhuanlan.zhihu.com/p/610523485)
 - [UE4 Gameplay之GameMode流程分析(一) - 孤傲雕 - 知乎](https://zhuanlan.zhihu.com/p/70045930)
+- [UE5 -- 引擎运行流程（从main到BeginPlay） - 易米八一 - 知乎](https://zhuanlan.zhihu.com/p/577433224)
 
 
 
