@@ -949,7 +949,7 @@ void USampleAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 }
 ```
 
-若想单纯 **监听 Attribute的变化**，则可以用 ASC注册监听：
+若想单纯 **监听 Attribute的变化**，则可以用 ASC注册监听（常用于 通知表现层等外部业务）：
 
 ```c++
 // AGASSampleCharacter.cpp
@@ -1106,3 +1106,4 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 - [虚幻引擎游戏技能系统文档 - CSDN](https://blog.csdn.net/pirate310/article/details/106311256)
 - [【Unreal】虚幻GAS系统快速入门 - 知乎](https://zhuanlan.zhihu.com/p/486808688)
 - [UE5 GAS Base - CSDN](https://blog.csdn.net/qq_52179126/article/details/131860252)
+- [UE4 GAS/ActionRPG学习导图——AttributeSet（Gameplay Ability System）- CSDN](https://blog.csdn.net/jk_chen_acmer/article/details/115309073)
