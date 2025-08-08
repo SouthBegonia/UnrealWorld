@@ -12,6 +12,10 @@
 
 # C++与蓝图
 
+## C++ VS 蓝图
+
+广义上，游戏内容可分为 逻辑与数据。在实践中，C++或蓝图均可实现二者内容，因此可以根据C++及蓝图的各自优势，选择合适的实现方案：[C++ VS 蓝图 - UnrealEngine](https://dev.epicgames.com/documentation/en-us/unreal-engine/balancing-blueprint-and-cplusplus?application_version=4.27#c++vsblueprints)
+
 ## 反射
 
 反射（Reflection）是指一种机制，它允许程序 **在运行时 动态地查询或操作对象的属性、函数和其他元信息**
