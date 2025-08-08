@@ -671,6 +671,82 @@ GameplayTags的管理位于 项目设置->项目->GameplayTags 内，对应配�
 
 ![image-20250629154748694](Pic/image-20250629154748694.png)
 
+### Tags的定义
+
+Tags可以通过如下方式进行定义、修改：
+
+- [直接 项目设置->项目->GameplayTags 内手动进行修改](https://dev.epicgames.com/documentation/en-us/unreal-engine/using-gameplay-tags-in-unreal-engine?application_version=5.4#addingtagsinprojectsettings)
+- [从 DataTable 导入](https://dev.epicgames.com/documentation/en-us/unreal-engine/using-gameplay-tags-in-unreal-engine?application_version=5.4#importingtagsfromdatatableassets)
+- [C++内定义](https://dev.epicgames.com/documentation/en-us/unreal-engine/using-gameplay-tags-in-unreal-engine?application_version=5.4#definingtagswithc++)
+
+#### 从DataTable导入Tags
+
+使用数据表进行Tags导入，更方便 重复利用、项目移植。基本用法为：
+
+在 项目设置->项目->GameplayTags->Gameplay标签表列表（Gameplay Tag Table List）内 创建、指定数据表（行类型为 `GameplayTagTableRow`）
+
+![image-20250807144218835](Pic/image-20250807144218835.png)
+
+后即可进行Tags配置，配置后生效的Tags就能在 Gameplay标签列表 内看到
+
+![image-20250807144326996](Pic/image-20250807144326996.png)
+
+### Tags的规划
+
+因Tags可能会用于不同的业务模块（例如 技能功能、数值计算、特效表现、冷却等），因此需要Tags的规划尽量 分层合理、维护成本低、可移植性好
+
+#### ARPG类的Tags规划
+
+以 [ActionRPG - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/action-rpg-game?application_version=4.27) 为例，适用于ARPG类游戏的Tags规划可例如：
+
+```
+Ability（能力类型：使用物品、技能等）
+|   |──Item
+|   |──Jump
+|   |──Sprint
+|   |──Melee（普攻）
+|   |	|──Close
+|   |	└──Far
+|   └──Skill（技能）
+|   	└──Skill_A
+|
+Cooldown（技能冷却：存在即代表技能处于冷却状态）
+|   └──Skill
+|   	└──Skill_A
+|
+Event（事件）
+|   └──Montage 
+|        |──Player
+|        |   |──Combo
+|        |   |──BurstPound
+|        |   |──ChestKick
+|        |   |──FrontalAttack
+|        |   |──GroundPound
+|        |   └──JumpSlam
+|        └──Shared
+|            |──UseItem
+|            |──UseSkill
+|            └──WeaponHit
+|
+GameplayCue（表现处理：特效、音效、震动等）
+|   |──Player
+|   |	└──Sprint
+|   └──Shared
+|   	└──Stun
+|
+Status（状态）
+    |──Dead
+    |──Sprinting
+    |──DamageImmune
+    └──Debuff
+        └──Stun
+```
+
+#### 参考文章
+
+- [UE4 Gameplay Tags怎么划分合理？ - 知乎](https://www.zhihu.com/question/377026014/answer/1068575405)
+- [GASDocumentation - Github](https://github.com/tranek/GASDocumentation)
+
 
 
 ## Gameplay Ability（GA）
