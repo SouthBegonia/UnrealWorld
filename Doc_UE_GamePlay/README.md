@@ -1183,3 +1183,52 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 - [【Unreal】虚幻GAS系统快速入门 - 知乎](https://zhuanlan.zhihu.com/p/486808688)
 - [UE5 GAS Base - CSDN](https://blog.csdn.net/qq_52179126/article/details/131860252)
 - [UE4 GAS/ActionRPG学习导图——AttributeSet（Gameplay Ability System）- CSDN](https://blog.csdn.net/jk_chen_acmer/article/details/115309073)
+
+
+
+# Behavior Tree
+
+![](https://dev.epicgames.com/community/api/documentation/image/3971fbea-64ae-4764-a4c6-8704f7440584?resizing_type=fill&width=1920&height=335)
+
+[行为树](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/behavior-trees-in-unreal-engine?application_version=5.5) 是UE内 **非玩家角色单位的 行为指导**
+
+根据 黑板（BlackBoard）存储、提供的必要数据，行为树蓝图内部 **[通过事件驱动](https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---overview?application_version=5.5#behaviortreesareevent-driven)** 进行系列 **流程决策、执行**
+
+![20250809_184606](Pic/20250809_184606.gif)
+
+## 黑板（BlackBoard）
+
+**黑板** 是一项独立资源，用于存储记录 行为树所需的信息（名为 **黑板键**）
+
+![image-20250809183540927](Pic/image-20250809183540927.png)
+
+## 行为树
+
+行为树与蓝图相似，皆是以一种**可视化**方式创建，将一系列具备功能的节点添加并连接至行为树图表
+
+执行逻辑时，行为树会使用 **黑板** 来存储它需要知道的信息（名为 **黑板键**），从而做出有根据的决策：
+
+![image-20250809183824642](Pic/image-20250809183824642.png)
+
+### 行为树 - 基本用法
+
+在创建完一个行为树后，可在 AIController内的 `OnPossess`事件中，选择执行目标行为树：
+
+![image-20250809184255645](Pic/image-20250809184255645.png)
+
+### 行为树节点 - 装饰器
+
+[装饰器节点（Decorator）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-decorators?application_version=5.5)：在其他行为树系统中也称为 **条件语句**，附着于另一个节点，**决定了树中的 分支或节点 是否能够被执行**
+
+装饰器节点含诸多 [预设类型](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-decorators?application_version=5.5)，也可以[自定义装饰器](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-decorators?application_version=5.5#customdecorators)：
+
+![image-20250809172418520](Pic/image-20250809172418520.png)
+
+以 [黑板节点](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-decorators?application_version=5.5#blackboard) （检查给定的 **黑板键（Blackboard Key）** 上是否设置了值）为例：
+
+1. 有 **"Hash Line of Sight？"**装饰器节点：
+   - 当 黑板键 **HasLineOfSight** 的数值为 **已设置** （或为true）时，条件达成，才允许进入 **追逐玩家（Chase Player）** 分支
+   - 通知观察者=结果改变时+观察者终止=Both，则表示 当黑板键 **HasLineOfSight** 布尔值相互变化时（即 条件判断结果变化），自身分支（**Chase Player**）及 同层右侧分支 都将停止。最终回到 **AI Root**根节点
+2. 例如 初始时 **HasLineOfSight**=false，不进入**Chase Player**分支，按顺序进入 **Patrol**分支。而当 **HasLineOfSight**->true 时，则中断**Chase Player**及右侧全部分支（正在执行**Patrol**分支的话 也将被中断）。最终回到 **AI Root**根节点，又顺序进入 **Chase Player**分支、又进行  **HasLineOfSight** 的条件判断为达成，成功进入 **Chase Player**分支
+
+![image-20250809172827877](Pic/image-20250809172827877.png)
