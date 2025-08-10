@@ -1216,7 +1216,44 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 
 ![image-20250809184255645](Pic/image-20250809184255645.png)
 
-### 行为树节点 - 装饰器
+### 行为树节点
+
+行为树节点（`UBTNode`）执行行为树的主要工作，实现各类特定业务，例如 任务、逻辑流程控制、数据更新等
+
+除 [根节点](https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-node-reference-in-unreal-engine?application_version=5.5#behaviortreenodetypes) 外，行为树节点可分为 4种类型：
+
+|                           节点类型                           |                             说明                             |
+| :----------------------------------------------------------: | :----------------------------------------------------------: |
+| [合成节点](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-composites?application_version=5.5) |            定义分支的根以及执行该分支的 基本规则             |
+| [装饰器节点](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-decorators?application_version=5.5) | 也称为**条件**。它们连接到另一节点，并**决定树中的分支、甚至单个节点能否被执行** |
+| [任务节点](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-tasks?application_version=5.5) |                   是某段 **可执行的操作**                    |
+| [服务节点](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-services?application_version=5.5) | 此类节点附接至合成节点，而且只要其分支正在执行，它们就会按照定义的频率执行。它们通常用于**检查和更新黑板**。它们取代了其他行为树系统中的传统并行节点 |
+
+#### 根节点
+
+即 **行为树的起始点**，特殊节点（不可挂载 装饰器或服务节点）。点选后可 查看、修改 此行为树使用的 黑板资源（Blackboard Asset）
+
+![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/673ec171-08fc-4af8-b66e-118b7a6aaa22/root-node-1.png)
+
+#### 合成节点
+
+[合成节点（Composite）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-composites?application_version=5.5)：是 定义分支的根，确定了**执行该分支的基本规则**
+
+合成节点仅有官方提供的3种：
+
+1. [选择器（Selector）](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-composites?application_version=5.5#selector)：**子节点按 从左到右顺序执行**，当某个子节点执行成功 则选择器执行成功 且 停止执行，而当全部子节点执行失败，则选择器执行失败。即 **顺序执行，直到子节点成功 才停止**
+
+![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/ac747ade-ed8c-405a-a526-732b2c3827f7/selector-01.png)
+
+2. [序列（Sequence）](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-composites?application_version=5.5#sequence)：**子节点按 从左到右顺序执行**，当全部子节点执行成功，则序列执行成功，而当某个子节点实行失败 则序列执行失败 且 停止执行。即 **顺序执行，有子节点失败 就停止**
+
+![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/20747362-bf02-42ae-ac01-16eab3624a1b/sequence-01.png)
+
+3. [简单平行节点（SimpleParallel）](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-composites?application_version=5.5#simpleparallel)：左侧为 任务节点（称为 主任务），右侧为 后台树，**两边 并发执行**。当 主任务执行完成时，根据节点设置的结束模式（FinishMode）不同，后台树可能 被立即终止 或 等待执行完成
+
+![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/89bead9d-67de-4aa7-99e2-c59f7202bb1a/simple-parallel-01.png)
+
+#### 装饰器节点
 
 [装饰器节点（Decorator）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-decorators?application_version=5.5)：在其他行为树系统中也称为 **条件语句**，附着于另一个节点，**决定了树中的 分支或节点 是否能够被执行**
 
@@ -1232,3 +1269,51 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 2. 例如 初始时 **HasLineOfSight**=false，不进入**Chase Player**分支，按顺序进入 **Patrol**分支。而当 **HasLineOfSight**->true 时，则中断**Chase Player**及右侧全部分支（正在执行**Patrol**分支的话 也将被中断）。最终回到 **AI Root**根节点，又顺序进入 **Chase Player**分支、又进行  **HasLineOfSight** 的条件判断为达成，成功进入 **Chase Player**分支
 
 ![image-20250809172827877](Pic/image-20250809172827877.png)
+
+#### 任务节点
+
+[任务节点（Tasks）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-tasks?application_version=5.5)：**实现某项功能操作，并最终产生执行结果**，例如 移动AI到目标位置、修改黑板值、自定义功能等
+
+任务节点含诸多 [预设类型](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-tasks?application_version=5.5)，也可以[自定义任务节点](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-tasks?application_version=5.5#customtasks)：
+
+![image-20250810203051750](Pic/image-20250810203051750.png)
+
+以 [移动至（MoveTo）节点](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-tasks?application_version=5.5#moveto)为例：设定 黑板键 为 Actor类型的关键帧 `EnemyActor`，则执行MoveTo节点时，所属的 AI Pawn会移动到目标位置
+
+![image-20250810203905169](Pic/image-20250810203905169.png)
+
+##### 基本用法
+
+任务节点的基本使用流程为：开始触发、自定义逻辑处理、产生执行结果
+
+以 [官方案例](https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---quick-start-guide?application_version=5.5)内的 [Task-ChasePlayer节点](https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---quick-start-guide?application_version=5.5#4-tasksetup-chaseplayer)为例：
+
+1. 新建自定义任务节点，接收到 `Event Receive Execute AI` 时即代表 开始执行任务节点
+2. 后执行自定义逻辑处理（修改AIPawn的追逐速度）
+3. 最终 产生执行结果（`Finish Execute(bool isSuccess)`），即代表 此节点的执行结果
+
+![image-20250810221030083](Pic/image-20250810221030083.png)
+
+C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode` ：
+
+![image-20250810223152216](Pic/image-20250810223152216.png)
+
+#### 服务节点
+
+[服务节点（Service）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-services?application_version=5.5)：通常挂载到 合成节点或任务节点上，只要其分支被执行，它们就会 **以定义的频率执行**，没有返回值 且 不直接影响执行流程。常用于 **检查和更新黑板**
+
+预设的服务节点有 [默认聚焦](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-services?application_version=5.5#defaultfocus) 和 [运行EQS](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-services?application_version=5.5#runeqs)，也可以 [自定义服务节点](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-services?application_version=5.5#customservices)
+
+##### 基本用法
+
+基于 [官方案例](https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---quick-start-guide?application_version=5.5) ，新建一个 自定义服务节点，挂载到 合成节点Patrol上，则
+
+- 当 进入Patrol子树后，触发一次 `Event Receive Search Start`（备注：仅限 挂载于合成节点上 的情况）
+- 当 Patrol子树 成功运行，触发一次 `Event Receive Activation`，此服务节点 处于激活态。激活态期间 根据配置间隔和随机偏差 周期性触发 `Event Receive Tick`
+- 当 Patrol子树全部完成运行或被中断 且 服务节点处于激活态，触发一次 `Event Receive Deactivation`
+
+![image-20250810231821702](Pic/image-20250810231821702.png)
+
+##### 参考文章
+
+- [[UE4][C++][AI]自定义行为树节点——Service(服务节点) - 知乎](https://zhuanlan.zhihu.com/p/296462878)
