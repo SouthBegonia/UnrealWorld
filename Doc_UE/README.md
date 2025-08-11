@@ -235,7 +235,7 @@ TSubclassOf<AWeapon> WeaponClass;
 
 ### `TSoftObjectPtr<T>`
 
-`TSoftObjectPtr<T>` 是 `UObject`对象的 软引用指针。其本质上只是存储的 对象的`FSoftObjectPath`资产路径
+`TSoftObjectPtr<T>` 是 `UObject`对象的 软引用指针。其本质上只是存储的 对象的`FSoftObjectPath`资产路径。常用于 加载纹理模型等
 
 ```c++
 TSoftObjectPtr<UTexture2D> MyTexture;
@@ -268,10 +268,11 @@ else
 - [C++ Object Pointer Properties - UnrealEngine](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-migration-guide?application_version=5.0#c++objectpointerproperties)
 - [【UE5基础】HardRef&SoftRef（TSoftObjectPtr源码浅析） - 知乎](https://zhuanlan.zhihu.com/p/718103181)
 - [UE 的常用指针简析 - 知乎](https://zhuanlan.zhihu.com/p/1938026370019099180)
-- [简析UE5的对象指针FObjectPtr与TObjectPtr - 知乎](https://zhuanlan.zhihu.com/p/504115127)
 - [ue 为啥要用TObjectPtr＜T＞ - CSDN](https://blog.csdn.net/u013768914/article/details/144094068)
+- [简析UE5的对象指针FObjectPtr与TObjectPtr - 知乎](https://zhuanlan.zhihu.com/p/504115127)
 - [如何理解UE中的TSubclassOf - CSDN](https://blog.csdn.net/ttod/article/details/136112588)
 - [Unreal 浅谈TWeakObjectPtr - 知乎](https://zhuanlan.zhihu.com/p/671665600)
+- [UE5中TSoftObjectPtr的使用详解 - CSDN](https://blog.csdn.net/m0_45371381/article/details/147018736)
 - [UE5里的TObjectPtr TSharedPtr TWeakPtr TSoftObjectPtr 有什么区别 - CSDN](https://blog.csdn.net/qq_30100043/article/details/143108384)
 - [UE4/5 中的TSoftObjectPtr＜＞、TSoftClassPtr＜＞和TSubclassOf＜＞ - CSDN](https://blog.csdn.net/weixin_41130251/article/details/131602636)
 
