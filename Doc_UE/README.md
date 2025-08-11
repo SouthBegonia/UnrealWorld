@@ -138,6 +138,145 @@ Int32 BlueprintPureFalseFunction() const
 |   UPROPERTY    |    标记属性     |  被UE反射识别，进而反映到 编辑器、蓝图  |
 |   UFUNCTION    |    标记函数     |  被UE反射识别，进而反映到 编辑器、蓝图  |
 
+
+
+## 指针与引用
+
+### 硬引用与软引用
+
+**硬引用**：
+
+- 含义：直接引用一个对象，引用对象会在初始化时就加载进内存
+- 示例：`T*`、`TObjectPtr<T>`、`TSubClassOf<T>`
+- 适用情况：
+  - 目标对象始终存在，且必须保证可访问。例如 `UWorld`内的 `TObjectPtr<class AGameModeBase> AuthorityGameMode`
+
+**软引用**：
+
+- 含义：通过间接机制（例如字符串形式的对象路径）来引用对象，需自行控制资产的加载流程
+- 示例：`TSoftObjectPtr`、`TSoftClassPtr`、`TSoftAssetPtr`
+- 适用情况：
+  - 可按需动态加载的对象，不需要的时候又卸载
+
+### `TObjectPtr<T>`
+
+`TObjectPtr<T>` 是UE5引入的 替代原始指针`T*` 的 `UObject`指针类型，目的在于：
+
+- 提供 编辑器 下的 动态解析 和 访问追踪功能
+- 非编辑器模式下 `TObjectPtr<T>` 会退化为 `T*` ，无性能影响
+
+```c++
+// UE 4
+class ENGINE_API AActor : public UObject
+{
+	USceneComponent* RootComponent;
+}
+
+// UE 5
+class ENGINE_API AActor : public UObject
+{
+	TObjectPtr<USceneComponent> RootComponent;
+}
+```
+
+因此在开发中，建议对 `UOject`指针属性、`UClass`及`USTRUCT`内的容器类等 使用 `TObjectPtr<T>`以替代原始指针
+
+```c++
+UPROPERTY()
+TObjectPtr<AActor> MyActor;
+UPROPERTY()
+TArray<TObjectPtr<AActor>> MyActorArr;
+```
+
+此外，`TObjectPtr<T>` + `UPROPERTY()` 的用法，使变量会被UE识别为 **强引用**
+
+### `TWeakObjectPtr<T>`
+
+`TWeakObjectPtr<T>` 是 `UObject`对象的 弱引用指针，其不对`UObject`对象产生引用计数、不阻止其进入GC流程被销毁，常用在：
+
+- 避免 循环引用
+- 需要访问对象，但不希望 因此引用而导致对象永远无法被销毁
+
+```c++
+AMyActor* Actor
+TWeakObjectPtr<AMyActor> ActorReference = Actor;
+.......
+
+if (ActorReference.IsValid())
+{
+    // 使用Get()方法获取对象指针
+    AMyActor* ValidActor = ActorReference.Get();
+    // 在有效的Actor上执行操作
+    ValidActor->SomeMethod();
+}
+else
+{
+    // TWeakObjectPtr无效，可能是因为对象已被销毁
+    UE_LOG(LogTemp, Warning, TEXT("Actor reference is invalid!"));
+}
+```
+
+### `TSubClassOf<T>`
+
+`TSubclassOf<T>` 是某个特定 类对象（`UClass`） 的硬引用，用途有：
+
+- 类引用的储存：储存 某个类（或其子类）的引用
+- 类的实例化：在运行态时 才实例化某个类（或其子类）的对象
+- 蓝图作用：变量在蓝图内可指定 某个类（或其子类）作为节点输入值
+
+```c++
+TSubclassOf<AActor> MyActorClass;
+
+AActor* MyNewActor = GetWorld()->SpawnActor<AActor>(MyActorClass, SpawnLocation, SpawnRotation);
+
+UPROPERTY(EditAnywhere, Category = "MyCategory") 
+TSubclassOf<AWeapon> WeaponClass;
+```
+
+### `TSoftObjectPtr<T>`
+
+`TSoftObjectPtr<T>` 是 `UObject`对象的 软引用指针。其本质上只是存储的 对象的`FSoftObjectPath`资产路径
+
+```c++
+TSoftObjectPtr<UTexture2D> MyTexture;
+
+// 通过路径赋值
+MyTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/Textures/MyTexture.MyTexture")));
+
+if (MyTexture.IsValid())	// IsValid() = 检查 资源已加载（且资产路径有效）   IsNull() = 单检查资产路径是否有效
+{
+    // 资源已经加载
+    UTexture2D* Texture = MyTexture.Get();	// 使用已加载资源
+}
+else
+{
+    // 资源未加载
+    UTexture2D* LoadedTexture = MyTexture.LoadSynchronous();  // 同步加载资源
+    if (LoadedTexture)
+    {
+        // 使用加载后的资源
+    }
+    
+    // 异步加载纹理
+    //FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
+    //Streamable.RequestAsyncLoad(MyTexture.ToSoftObjectPath(),FStreamableDelegate::CreateUObject(this, &XXXXXXExample::OnTextureLoaded));
+}
+```
+
+### 参考文章
+
+- [C++ Object Pointer Properties - UnrealEngine](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-migration-guide?application_version=5.0#c++objectpointerproperties)
+- [【UE5基础】HardRef&SoftRef（TSoftObjectPtr源码浅析） - 知乎](https://zhuanlan.zhihu.com/p/718103181)
+- [UE 的常用指针简析 - 知乎](https://zhuanlan.zhihu.com/p/1938026370019099180)
+- [简析UE5的对象指针FObjectPtr与TObjectPtr - 知乎](https://zhuanlan.zhihu.com/p/504115127)
+- [ue 为啥要用TObjectPtr＜T＞ - CSDN](https://blog.csdn.net/u013768914/article/details/144094068)
+- [如何理解UE中的TSubclassOf - CSDN](https://blog.csdn.net/ttod/article/details/136112588)
+- [Unreal 浅谈TWeakObjectPtr - 知乎](https://zhuanlan.zhihu.com/p/671665600)
+- [UE5里的TObjectPtr TSharedPtr TWeakPtr TSoftObjectPtr 有什么区别 - CSDN](https://blog.csdn.net/qq_30100043/article/details/143108384)
+- [UE4/5 中的TSoftObjectPtr＜＞、TSoftClassPtr＜＞和TSubclassOf＜＞ - CSDN](https://blog.csdn.net/weixin_41130251/article/details/131602636)
+
+
+
 ## 容器
 
 |  容器  |           描述           |      |
@@ -655,44 +794,6 @@ DrawDebug 用于在 编辑器或开发环境下，于场景内绘制 图形或�
 ### 参考文章
 
 - [虚幻引擎中各种场景调试绘制指令（DrawDebug）的使用、效果和原理 - 知乎](https://zhuanlan.zhihu.com/p/718494965)
-
-
-
-## TObjectPtr
-
-UE5 引入了 `TObjectPtr<T>`以替代原始指针`T*`，目的在于：
-
-- 提供 编辑器 下的 动态解析 和 访问追踪功能
-- 非编辑器模式下 `TObjectPtr<T>` 会退化为 `T*` ，无性能影响
-
-```c++
-// UE 4
-class ENGINE_API AActor : public UObject
-{
-	USceneComponent* RootComponent;
-}
-
-// UE 5
-class ENGINE_API AActor : public UObject
-{
-	TObjectPtr<USceneComponent> RootComponent;
-}
-```
-
-因此在开发中，建议对 `UOject`指针属性、`UClass`及`USTRUCT`内的容器类等 使用 `TObjectPtr<T>`以替代原始指针
-
-```c++
-UPROPERTY()
-TObjectPtr<AActor> MyActor;
-UPROPERTY()
-TArray<TObjectPtr<AActor>> MyActorArr;
-```
-
-### 参考文章
-
-- [C++ Object Pointer Properties - UnrealEngine](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-migration-guide?application_version=5.0#c++objectpointerproperties)
-- [简析UE5的对象指针FObjectPtr与TObjectPtr - 知乎](https://zhuanlan.zhihu.com/p/504115127)
-- [ue 为啥要用TObjectPtr＜T＞ - CSDN](https://blog.csdn.net/u013768914/article/details/144094068)
 
 
 
