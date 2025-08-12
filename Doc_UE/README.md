@@ -164,7 +164,7 @@ Int32 BlueprintPureFalseFunction() const
 
 ![image-20250813002554247](Pic/image-20250813002554247.png)
 
-我们可以通过 [引用查看器（[Reference Viewer](https://forums.unrealengine.com/t/reference-viewer-and-size-map/1507376)）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/reference-viewer-in-unreal-engine) 查看某个资产的引用情况，图里的 **白线条=硬引用**，**粉色线条=软引用**，还可以通过 [尺寸贴图（SizeMap）](https://dev.epicgames.com/community/learning/tutorials/r4y7/unreal-engine-size-map) 查看因硬引用而影响的 资产内存大小
+我们可以通过 [引用查看器（Reference Viewer）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/reference-viewer-in-unreal-engine) 查看某个资产的引用情况，图里的 **白线条=硬引用**，**粉色线条=软引用**，还可以通过 [尺寸贴图（SizeMap）](https://dev.epicgames.com/community/learning/tutorials/r4y7/unreal-engine-size-map) 查看因硬引用而影响的 资产内存大小
 
 例如下图示例：含有一个 软对象引用的变量，且变量默认指向了目标资产，则通过引用查看器可看到其引用关系，且因其为软引用，故不占有资产内存
 
