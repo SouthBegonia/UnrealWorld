@@ -146,7 +146,7 @@ Int32 BlueprintPureFalseFunction() const
 
 **硬引用**：
 
-- 含义：直接引用一个对象，引用对象会在初始化时就加载进内存
+- 含义：直接引用一个对象，引用对象会在初始化时就加载进内存（同理将嵌套引用下去），易造成内存浪费
 - 示例：`T*`、`TObjectPtr<T>`、`TSubClassOf<T>`
 - 适用情况：
   - 目标对象始终存在，且必须保证可访问。例如 `UWorld`内的 `TObjectPtr<class AGameModeBase> AuthorityGameMode`
@@ -156,7 +156,40 @@ Int32 BlueprintPureFalseFunction() const
 - 含义：通过间接机制（例如字符串形式的对象路径）来引用对象，需自行控制资产的加载流程
 - 示例：`TSoftObjectPtr`、`TSoftClassPtr`、`TSoftAssetPtr`
 - 适用情况：
-  - 可按需动态加载的对象，不需要的时候又卸载
+  - 可按需动态加载的对象
+
+
+
+蓝图内的 对象引用（`TObjectPtr`）、类引用（`TSubClassOf`）= 硬引用，软对象引用（`TSoftObjectPtr`）、软类引用（`TSoftClassPtr`） = 软引用
+
+![image-20250813002554247](Pic/image-20250813002554247.png)
+
+我们可以通过 [引用查看器（[Reference Viewer](https://forums.unrealengine.com/t/reference-viewer-and-size-map/1507376)）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/reference-viewer-in-unreal-engine) 查看某个资产的引用情况，图里的 **白线条=硬引用**，**粉色线条=软引用**，还可以通过 [尺寸贴图（SizeMap）](https://dev.epicgames.com/community/learning/tutorials/r4y7/unreal-engine-size-map) 查看因硬引用而影响的 资产内存大小
+
+例如下图示例：含有一个 软对象引用的变量，且变量默认指向了目标资产，则通过引用查看器可看到其引用关系，且因其为软引用，故不占有资产内存
+
+![image-20250813004018477](Pic/image-20250813004018477.png)
+
+![image-20250813004750983](Pic/image-20250813004750983.png)
+
+#### 使用注意事项
+
+即便我们将变量声明为 软引用，但对其不当操作的话，可能会导致其变为 硬引用 或 被计入资产内存，诊断方法还是 引用查看器+SizeMap。以下罗列可能遇到的情况：
+
+1. `Cast<T>` 类型转变问题：
+
+将软引用对象Load后，对返回的 类引用对象 进行Cast转换，则 Cast目标对象 将变为此资源的 硬引用
+
+![image-20250813010909838](Pic/image-20250813010909838.png)
+
+解决方法为：不用Cast，Load后已经有所需对象了，直接使用即可
+
+![image-20250813011506609](Pic/image-20250813011506609.png)
+
+#### 参考文章
+
+- [UE5 Understanding hard and soft references - LeafBrainGames - Youtube](https://www.youtube.com/watch?v=aUG54KCP89M&ab_channel=LeafBranchGames)
+- [SOFT Object References in Unreal Engine EXPLAINED - The Game Dev Cave - Youtube](https://www.youtube.com/watch?v=BazkY5aqoig&ab_channel=TheGameDevCave)
 
 ### `TObjectPtr<T>`
 
