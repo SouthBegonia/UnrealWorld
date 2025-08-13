@@ -852,11 +852,31 @@ UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输�
 
 ## Enhanced Input 增强输入
 
+### 基本用法
+
 基础用法示例：[虚幻5新特性之EnhancedInput - CSDN](https://blog.csdn.net/xcinkey/article/details/124755202)、[虚幻引擎5：增强输入的使用方法 - CSDN](https://blog.csdn.net/chai_tian/article/details/133818478)
 
 通过配置目标InputAction的触发器，可实现不同输入行为的 各类触发事件（见下图）。对于触发器的配置可参阅：[虚幻UE 增强输入-触发器 - CSDN](https://blog.csdn.net/weixin_45865901/article/details/135407105)
 
 ![image-20250607175659814](Pic/image-20250607175659814.png)
+
+#### 用法 - 输入优先级问题
+
+常规用法中，往EnhanceInputSubSystem添加某套InputMappingContext，其核心方法为`IEnhancedInputSubsystemInterface::AddMappingContext()`，可以看到 此套IMC储在类型为 `Map<MappingContext, Priority>` 的 `AppliedInputContexts` 变量内
+
+![image-20250813223630822](Pic/image-20250813223630822.png)
+
+这就是EnhancedInputSystem的功能之一：叠加挂载InputMappingContext + 优先级触发
+
+![](https://picx.zhimg.com/v2-ab4413f64d640d093af8340e26fdd19b_r.jpg)
+
+![](https://pic1.zhimg.com/v2-1c34c42da17e01492e1307f10c55a2ee_r.jpg)
+
+下图示例如：PlayerCharacter上默认挂载添加了 `IMC_EnhancedTest`（其内 keyCode=Y键，对应触发 `IA_Y`），现又添加 `IMC_EnhancedTest2`（其内 keyCode=Y键，对应触发 `IA_Y_GetItem`）。则 根据对`IMC_EnhancedTest2`进行`AddMappingContext`时的Priority=1 大于 `IMC_EnhancedTest`的Priority=0，当输入keyCode=Y键时，将只会触发 `IMC_EnhancedTest2`内的 `IA_Y_GetItem` ，其余键正常触发 `IMC_EnhancedTest`内的IA。也就实现了 同按键在不同环境下的 不同交互结果
+
+总结也就是 **多IMC下，KeyAction键入而引发的IA 将根据各IMC的Priority 进行优先级触发**
+
+![image-20250813222633198](Pic/image-20250813222633198.png)
 
 ### 参考文章
 
