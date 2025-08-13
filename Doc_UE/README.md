@@ -186,6 +186,14 @@ Int32 BlueprintPureFalseFunction() const
 
 ![image-20250813011506609](Pic/image-20250813011506609.png)
 
+又继续可能有问题：SpawnActor的返值为 `Actor`，但我想访问 其特定子类（`BP_Box01: Actor`）内的成员，就又不免不了Cast、就又会造成硬引用问题
+
+![image-20250813150330345](Pic/image-20250813150330345.png)
+
+解决方法为：目标子类（`BP_Box01`）实现一个蓝图接口，外部想访问的话走接口、蓝图接口又访问目标子类的内部成员。这样的话虽然会造成 对蓝图接口资源的硬引用，但其大小远远不及 目标子类硬引用所造成的资源占用，几乎可忽略
+
+![image-20250813150954197](Pic/image-20250813150954197.png)
+
 #### 参考文章
 
 - [UE5 Understanding hard and soft references - LeafBrainGames - Youtube](https://www.youtube.com/watch?v=aUG54KCP89M&ab_channel=LeafBranchGames)
