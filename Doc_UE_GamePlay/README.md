@@ -827,7 +827,7 @@ void AGASSampleCharacter::BeginPlay()
 
 ![image-20250629172722366](Pic/image-20250629172722366.png)
 
-#### 3. GA的激活
+#### 3.1 GA的激活
 
 激活某个GA的方式有：
 
@@ -836,6 +836,246 @@ A. 主动调用ASC组件提供的 `TryActivateAbilityByClass`、`TryActivateAbil
 B. GA自身配置Trigger条件，当ASC收到Trigger后将触发激活 其拥有的、满足Trigger条件的 GA。常用方法是 `UAbilitySystemBlueprintLibrary::SendGameplayEventToActor`
 
 ![image-20250629174728912](Pic/image-20250629174728912.png)
+
+#### 3-2. GA的激活 - Input触发
+
+GA的激活，还可以通过绑定Input输入进行触发，触发将直接进入GA的 `事件ActivateAbility`。Input方式则可以用 **常规Input输入** 或 **EnhancedInput增强输入**
+
+##### 常规Input输入以激活GA
+
+以 [GASDocumentation - Github](https://github.com/tranek/GASDocumentation#462-binding-input-to-the-asc) 为例子，其基本用法为：
+
+1. 项目设置内添加操作映射
+
+![image-20250815221500561](Pic/image-20250815221500561.png)
+
+2. 声明 Ability对应触发的InputID的 枚举列表（注意 枚举名和上面的操作映射名字 必须一致）
+
+```c++
+// GASDocumentation.h
+UENUM(BlueprintType)
+enum class EGDAbilityInputID : uint8
+{
+	// 0 None
+	None			UMETA(DisplayName = "None"),
+	// 1 Confirm
+	Confirm			UMETA(DisplayName = "Confirm"),
+	// 2 Cancel
+	Cancel			UMETA(DisplayName = "Cancel"),
+	// 3 LMB
+	Ability1		UMETA(DisplayName = "Ability1"),
+	// 4 RMB
+	Ability2		UMETA(DisplayName = "Ability2"),
+	// 5 Q
+	Ability3		UMETA(DisplayName = "Ability3"),
+	// 6 E
+	Ability4		UMETA(DisplayName = "Ability4"),
+	// 7 R
+	Ability5		UMETA(DisplayName = "Ability5"),
+	// 8 Sprint
+	Sprint			UMETA(DisplayName = "Sprint"),
+	// 9 Jump
+	Jump			UMETA(DisplayName = "Jump")
+};
+```
+后 建立 `UGameplayAbility` 和上述 `EGDAbilityInputID` 的关联。示例为 从 `UGameplayerAbility` 派生子类，添加成员`AbilityInputID : EGDAbilityInputID`，则各功能GA 就可唯一对应各自的 `EGDAbilityInputID`
+
+```c++
+UCLASS()
+class GASDOCUMENTATION_API UGDGameplayAbility : public UGameplayAbility
+{
+	GENERATED_BODY()
+	
+public:
+	UGDGameplayAbility();
+
+	// Abilities with this set will automatically activate when the input is pressed
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
+	EGDAbilityInputID AbilityInputID = EGDAbilityInputID::None;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
+	EGDAbilityInputID AbilityID = EGDAbilityInputID::None;
+};
+```
+
+![image-20250815222837342](Pic/image-20250815222837342.png)
+
+
+3. 运行态时 对 ASC组件执行 绑定Input激活Ability方法：`UGDAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputComponent* InputComponent, FGameplayAbilityInputBinds BindInfo)`。这使得 `EGDAbilityInputID` 枚举内的InputID在触发时 可响应到ASC组件内
+
+```c++
+// AGDHeroCharacter.cpp
+void AGDHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	// Bind player input to the AbilitySystemComponent.
+	BindASCInput();
+}
+
+void AGDHeroCharacter::BindASCInput()
+{
+	if (!ASCInputBound && AbilitySystemComponent.IsValid() && IsValid(InputComponent))
+	{
+		FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/GASDocumentation"), FName("EGDAbilityInputID"));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, FGameplayAbilityInputBinds(FString("ConfirmTarget"),
+			FString("CancelTarget"), AbilityEnumAssetPath, static_cast<int32>(EGDAbilityInputID::Confirm), static_cast<int32>(EGDAbilityInputID::Cancel)));
+
+		ASCInputBound = true;
+	}
+}
+```
+
+4. 运行态时 在添加GA时 绑定激活此GA的InputID，以最终实现 触发InputAction->相应到ASC->ASC激活符合绑定的GA 整个流程
+
+```c++
+// AGDCharacterBase.cpp
+void AGDCharacterBase::AddCharacterAbilities()
+{
+	for (TSubclassOf<UGDGameplayAbility>& StartupAbility : CharacterAbilities)
+	{
+		int32 AbilityInputID = static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputID);
+		int32 AbilityLevel = GetAbilityLevel(StartupAbility.GetDefaultObject()->AbilityID);
+
+		FGameplayAbilitySpec GameplayAbilitySpec = FGameplayAbilitySpec(StartupAbility, AbilityLevel, AbilityInputID, this);
+
+		AbilitySystemComponent->GiveAbility(GameplayAbilitySpec);
+	}
+}
+
+// GameplayAbilityTypes.cpp
+FGameplayAbilitySpec::FGameplayAbilitySpec(UGameplayAbility* InAbility, int32 InLevel, int32 InInputID, UObject* InSourceObject)
+	: Ability(InAbility)
+	, Level(InLevel)
+	, InputID(InInputID)
+	, SourceObject(InSourceObject)
+	, ActiveCount(0)
+	, InputPressed(false)
+	, RemoveAfterActivation(false)
+	, PendingRemove(false)
+	, bActivateOnce(false) 
+{
+	Handle.GenerateNewHandle();
+}
+```
+
+##### EnhancedInput增强输入以激活GA
+
+1. 按常规EnhancedInput用法创建IMC、IA、接入使用
+2. 复用上例1、2内的 `EGDAbilityInputID`枚举 和 自行派生的`UGDGameplayAbility : UGameplayAbility`。后需新创建 `EGDAbilityInputID` 与 `UInputAction` 的映射关系，例如 创建一个 `TMap<EGDAbilityInputID, TObjectPtr<UInputAction>> AbilityEnumToAction` 
+
+```c++
+// AGDCharacterBase.cpp
+class GASDOCUMENTATION_API AGDCharacterBase : public ACharacter, public IAbilitySystemInterface
+{
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "GASDocumentation|Abilities")
+	TMap<EGDAbilityInputID, TObjectPtr<UInputAction>> AbilityEnumToAction;
+
+	virtual TMap<EGDAbilityInputID, TObjectPtr<UInputAction>> GetAbilityEnumMap();
+}
+```
+
+![image-20250815230413771](Pic/image-20250815230413771.png)
+
+3. 重写改造 ASC组件执行 绑定Input激活Ability方法：`UGDAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputComponent* InputComponent, FGameplayAbilityInputBinds BindInfo)` 。因为其内部绑定逻辑是针对 常规Input输入，即 `UInputComponent`，而我们则是需要对 `UEnhancedInputComponent` 进行绑定
+
+```c++
+// UGDAbilitySystemComponent.cpp
+void UGDAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputComponent* InputComponent, FGameplayAbilityInputBinds BindInfo)
+{
+	Super::BindAbilityActivationToInputComponent(InputComponent, BindInfo);
+
+    AGDCharacterBase* Character = Cast<AGDCharacterBase>(GetAvatarActor());
+	if(!Character) { return; }
+    
+    // 换为处理 EnhancedInput
+	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+	if(EnhancedInputComponent)
+	{
+        // 获取 InputID与InputAction的映射表
+        TMap<EGDAbilityInputID, TObjectPtr<UInputAction>> CurrentMap = Character->GetAbilityEnumMap();
+        
+		UEnum* EnumBinds = BindInfo.GetBindEnum();
+		SetBlockAbilityBindingsArray(BindInfo);
+		for(int32 idx=0; idx < EnumBinds->NumEnums(); ++idx)
+		{
+			UInputAction* InputAction = CurrentMap.FindRef(static_cast<EGDAbilityInputID>(idx));
+			if(InputAction)
+			{
+				// Pressed event
+				{
+					EnhancedInputComponent->BindAction(InputAction, ETriggerEvent::Started,this, &UAbilitySystemComponent::AbilityLocalInputPressed, idx);
+				}
+
+				// Released event
+				{
+					EnhancedInputComponent->BindAction(InputAction, ETriggerEvent::Completed,this, &UAbilitySystemComponent::AbilityLocalInputReleased, idx);
+				}
+			}
+		}
+	}
+}
+
+// AbilitySystemComponent_Abilities.cpp
+void UAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputComponent* InputComponent, FGameplayAbilityInputBinds BindInfo)
+{
+	UEnum* EnumBinds = BindInfo.GetBindEnum();
+
+	SetBlockAbilityBindingsArray(BindInfo);
+
+	for(int32 idx=0; idx < EnumBinds->NumEnums(); ++idx)
+	{
+		const FString FullStr = EnumBinds->GetNameStringByIndex(idx);
+		
+		// Pressed event
+		{
+			FInputActionBinding AB(FName(*FullStr), IE_Pressed);
+			AB.ActionDelegate.GetDelegateForManualSet().BindUObject(this, &UAbilitySystemComponent::AbilityLocalInputPressed, idx);
+			InputComponent->AddActionBinding(AB);
+		}
+
+		// Released event
+		{
+			FInputActionBinding AB(FName(*FullStr), IE_Released);
+			AB.ActionDelegate.GetDelegateForManualSet().BindUObject(this, &UAbilitySystemComponent::AbilityLocalInputReleased, idx);
+			InputComponent->AddActionBinding(AB);
+		}
+	}
+
+	// Bind Confirm/Cancel. Note: these have to come last!
+	if (BindInfo.ConfirmTargetCommand.IsEmpty() == false)
+	{
+		FInputActionBinding AB(FName(*BindInfo.ConfirmTargetCommand), IE_Pressed);
+		AB.ActionDelegate.GetDelegateForManualSet().BindUObject(this, &UAbilitySystemComponent::LocalInputConfirm);
+		InputComponent->AddActionBinding(AB);
+	}
+	
+	if (BindInfo.CancelTargetCommand.IsEmpty() == false)
+	{
+		FInputActionBinding AB(FName(*BindInfo.CancelTargetCommand), IE_Pressed);
+		AB.ActionDelegate.GetDelegateForManualSet().BindUObject(this, &UAbilitySystemComponent::LocalInputCancel);
+		InputComponent->AddActionBinding(AB);
+	}
+
+	if (BindInfo.CancelTargetInputID >= 0)
+	{
+		GenericCancelInputID = BindInfo.CancelTargetInputID;
+	}
+	if (BindInfo.ConfirmTargetInputID >= 0)
+	{
+		GenericConfirmInputID = BindInfo.ConfirmTargetInputID;
+	}
+}
+```
+
+4. 同上例步骤4：运行态时 在添加GA时 绑定激活此GA的InputID
+
+##### 参考文章
+
+- [GASDocumentation - Github](https://github.com/tranek/GASDocumentation)
+- [UE5中GAS接入增强输入(EnhancedInput)](https://mytechplayer.com/archives/ue5中gas接入增强输入enhancedinput)
+
+
 
 ### GA细节面板 - Tags标签
 
