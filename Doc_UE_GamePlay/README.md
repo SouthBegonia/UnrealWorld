@@ -10,7 +10,7 @@
 
 > UObject是所有UE内物体的基类，其提供了系列基础功能（对象管理、序列化、反射、GC、BP支持、编辑器支持等）供派生类使用
 
-![image-20250507145353403](Pic/image-20250507145353403.png)
+![image-20250507145353403](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250507145353403.png)
 
 #### UObject的核心功能
 
@@ -26,7 +26,7 @@
 
 例如 创建一个UObject的派生类 UMyObject 后，其代码结构如下：
 
-![image-20250507154822558](Pic/image-20250507154822558.png)
+![image-20250507154822558](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250507154822558.png)
 
 其中的 `UCLASS()`宏用于标记此为UObject的派生类、划归UE进行管理
 
@@ -51,21 +51,21 @@
   - EndPlay：游戏结束或Actor销毁调用
   - Tick：每帧调用
 
-![image-20250507170836682](Pic/image-20250507170836682.png)
+![image-20250507170836682](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250507170836682.png)
 
 - 组件搭载：不同功能的Component可附着到Actor上
   - Actor在场景内的位置、缩放等，就是由 `USceneComponent`类型的`RootComponent`成员实现
 
-![image-20250507171131596](Pic/image-20250507171131596.png)
+![image-20250507171131596](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250507171131596.png)
 
-![image-20250507171519058](Pic/image-20250507171519058.png)
+![image-20250507171519058](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250507171519058.png)
 
 - 各类交互：
   - 碰撞、触发事件
   - 玩家输入
   - 蓝图控制
 
-![image-20250507171839934](Pic/image-20250507171839934.png)
+![image-20250507171839934](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250507171839934.png)
 
 #### Actor的生命周期
 
@@ -99,11 +99,11 @@
 
 - 附着到Actor：
 
-![image-20250507173530029](Pic/image-20250507173530029.png)
+![image-20250507173530029](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250507173530029.png)
 
 - 生命周期：
 
-![image-20250507173608498](Pic/image-20250507173608498.png)
+![image-20250507173608498](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250507173608498.png)
 
 #### UActorComponent的派生类
 
@@ -161,11 +161,11 @@
    - `APlayerController`：玩家控制
    - `AAIController`：AI控制
 
-![image-20250510154033663](Pic/image-20250510154033663.png)
+![image-20250510154033663](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250510154033663.png)
 
 2. 具有比 AActor 更强大的输入管理
 
-![image-20250510155149664](Pic/image-20250510155149664.png)
+![image-20250510155149664](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250510155149664.png)
 
 ### Pawn的派生类
 
@@ -280,7 +280,7 @@ Level在World内可分为2类：
 
 1. 核心Class登记：
 
-![image-20250618161709640](Pic/image-20250618161709640.png)
+![image-20250618161709640](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250618161709640.png)
 
 2. 游戏实体的Spawn：
    - 玩家的Pawn，PlayerController，AIController
@@ -310,15 +310,15 @@ AMyGameModeBase::AMyGameModeBase()
 }
 ```
 
-![image-20250618163340737](Pic/image-20250618163340737.png)
+![image-20250618163340737](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250618163340737.png)
 
 在实现自定义的GameMode后，可将其指定为 **默认的GameMode**。作用是 Level未指定GameMode下 默认使用此GameMode
 
-![image-20250618163614379](Pic/image-20250618163614379.png)
+![image-20250618163614379](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250618163614379.png)
 
 或将其指定为 **Level的 GameMode**。但注意 GameMode在World中仅存在唯一实例，在 Persistent Level+Streaming Levels 的情况下，仅会采用 Persistent Level 所指定的GameMode
 
-![image-20250618164352434](Pic/image-20250618164352434.png)
+![image-20250618164352434](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250618164352434.png)
 
 
 ### 参考文章
@@ -470,7 +470,7 @@ if (MyScoreSubsystem != nullptr)
 }
 ```
 
-![image-20250624153523499](Pic/image-20250624153523499.png)
+![image-20250624153523499](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250624153523499.png)
 
 其他几类Subsystem的访问例如下：
 
@@ -494,7 +494,7 @@ ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(PlayerController->Player)
 UMyLocalPlayerSubsystem * MySubsystem = LocalPlayer->GetSubsystem<UMyLocalPlayerSubsystem>();
 ```
 
-![image-20250624154215497](Pic/image-20250624154215497.png)
+![image-20250624154215497](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250624154215497.png)
 
 ### 参考文章
 
@@ -571,7 +571,7 @@ if (UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::CreateSa
 }
 ```
 
-![image-20250623170726088](Pic/image-20250623170726088.png)
+![image-20250623170726088](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250623170726088.png)
 
 ### 参考文章
 
@@ -584,9 +584,9 @@ if (UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::CreateSa
 
 # GamePlay框架的 Runtime启动流程
 
-![image-20250510155149664](Pic/UE-GamePlay框架的Runtime流程.png)
+![image-20250510155149664](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/UE-GamePlay框架的Runtime流程.png)
 
-![image-20250510155149664](Pic/UE-GamePlay框架的Runtime流程2.png)
+![image-20250510155149664](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/UE-GamePlay框架的Runtime流程2.png)
 
 ## 参考文章
 
@@ -659,7 +659,7 @@ UAbilitySystemComponent* AGASSampleCharacter::GetAbilitySystemComponent() const
 }
 ```
 
-![image-20250628172718541](Pic/image-20250628172718541.png)
+![image-20250628172718541](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250628172718541.png)
 
 ## Gameplay Tags
 
@@ -669,7 +669,7 @@ UAbilitySystemComponent* AGASSampleCharacter::GetAbilitySystemComponent() const
 
 GameplayTags的管理位于 项目设置->项目->GameplayTags 内，对应配置亦被保存在 DefaultGameplayTags.ini 文件内
 
-![image-20250629154748694](Pic/image-20250629154748694.png)
+![image-20250629154748694](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250629154748694.png)
 
 ### Tags的定义
 
@@ -685,11 +685,11 @@ Tags可以通过如下方式进行定义、修改：
 
 在 项目设置->项目->GameplayTags->Gameplay标签表列表（Gameplay Tag Table List）内 创建、指定数据表（行类型为 `GameplayTagTableRow`）
 
-![image-20250807144218835](Pic/image-20250807144218835.png)
+![image-20250807144218835](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250807144218835.png)
 
 后即可进行Tags配置，配置后生效的Tags就能在 Gameplay标签列表 内看到
 
-![image-20250807144326996](Pic/image-20250807144326996.png)
+![image-20250807144326996](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250807144326996.png)
 
 ### Tags的规划
 
@@ -755,7 +755,7 @@ Status（状态）
 
 GA可用于表示 攻击、被攻击、技能等，甚至于 角色跳跃、物品交互等
 
-![image-20250629164241509](Pic/image-20250629164241509.png)
+![image-20250629164241509](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250629164241509.png)
 
 ### 用法
 
@@ -763,7 +763,7 @@ GA可用于表示 攻击、被攻击、技能等，甚至于 角色跳跃、物�
 
 以从 `UGamePlayAbility` 派生GA蓝图为例，GA蓝图的基本结构如下：
 
-![image-20250629171246560](Pic/image-20250629171246560.png)
+![image-20250629171246560](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250629171246560.png)
 
 GA的职责：
 
@@ -825,7 +825,7 @@ void AGASSampleCharacter::BeginPlay()
 }
 ```
 
-![image-20250629172722366](Pic/image-20250629172722366.png)
+![image-20250629172722366](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250629172722366.png)
 
 #### 3.1 GA的激活
 
@@ -835,7 +835,7 @@ A. 主动调用ASC组件提供的 `TryActivateAbilityByClass`、`TryActivateAbil
 
 B. GA自身配置Trigger条件，当ASC收到Trigger后将触发激活 其拥有的、满足Trigger条件的 GA。常用方法是 `UAbilitySystemBlueprintLibrary::SendGameplayEventToActor`
 
-![image-20250629174728912](Pic/image-20250629174728912.png)
+![image-20250629174728912](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250629174728912.png)
 
 #### 3-2. GA的激活 - Input触发
 
@@ -847,7 +847,7 @@ GA的激活，还可以通过绑定Input输入进行触发，触发将直接进�
 
 1. 项目设置内添加操作映射
 
-![image-20250815221500561](Pic/image-20250815221500561.png)
+![image-20250815221500561](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250815221500561.png)
 
 2. 声明 Ability对应触发的InputID的 枚举列表（注意 枚举名和上面的操作映射名字 必须一致）
 
@@ -898,7 +898,7 @@ public:
 };
 ```
 
-![image-20250815222837342](Pic/image-20250815222837342.png)
+![image-20250815222837342](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250815222837342.png)
 
 
 3. 运行态时 对 ASC组件执行 绑定Input激活Ability方法：`UGDAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputComponent* InputComponent, FGameplayAbilityInputBinds BindInfo)`。这使得 `EGDAbilityInputID` 枚举内的InputID在触发时 可响应到ASC组件内
@@ -975,7 +975,7 @@ class GASDOCUMENTATION_API AGDCharacterBase : public ACharacter, public IAbility
 }
 ```
 
-![image-20250815230413771](Pic/image-20250815230413771.png)
+![image-20250815230413771](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250815230413771.png)
 
 3. 重写改造 ASC组件执行 绑定Input激活Ability方法：`UGDAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputComponent* InputComponent, FGameplayAbilityInputBinds BindInfo)` 。因为其内部绑定逻辑是针对 常规Input输入，即 `UInputComponent`，而我们则是需要对 `UEnhancedInputComponent` 进行绑定
 
@@ -1081,7 +1081,7 @@ void UAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputCompon
 
 GA上可配置系列 GameplayTags，使其进行 预设的逻辑处理
 
-![image-20250701160404864](Pic/image-20250701160404864.png)
+![image-20250701160404864](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250701160404864.png)
 
 |           名称            |                             描述                             |                        备注                        |
 | :-----------------------: | :----------------------------------------------------------: | :------------------------------------------------: |
@@ -1136,7 +1136,7 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
 3. 执行结果为 因TargetTags内配置的Tags，均不在 GA的TargetBlockedTags列表内，故 成功激活GA
 4. 若将 TargetTags从`Ability.Test.B`改配置为`Ability.Test.A`，则执行结果为 因TargetTags内配置的Tags，有存在于 GA的TargetBlockedTags列表内，故 将被阻止激活GA。其余同理
 
-![image-20250701225905311](Pic/image-20250701225905311.png)
+![image-20250701225905311](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250701225905311.png)
 
 总结：
 
@@ -1163,7 +1163,7 @@ Cooldown GE的配置要求：
 - Duration Policy = Has Duration类型，并对应配置有效时长
 - Granted Tags->Added 配置 Cooldown相关的Tag
 
-![image-20250706175722358](Pic/image-20250706175722358.png)
+![image-20250706175722358](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250706175722358.png)
 
 ### GA细节面板 - Costs
 
@@ -1174,7 +1174,7 @@ Costs GE的配置要求：
 - Duration Policy = Instant
 - 一个或多个Modifier
 
-![image-20250706180450910](Pic/image-20250706180450910.png)
+![image-20250706180450910](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250706180450910.png)
 
 ### GA - AbilityTask
 
@@ -1182,7 +1182,7 @@ Costs GE的配置要求：
 
 UE已内置诸多常用节点（节点功能可参考 [AbilityTask原生类盘点 - 知乎](https://zhuanlan.zhihu.com/p/431081292)），亦可自行从 `UAbilityTask` 派生实现（可参考 [UE5 GAS RPG创建自定义的Ability Task - CSDN](https://blog.csdn.net/qq_30100043/article/details/137859611)
 
-![image-20250702113549438](Pic/image-20250702113549438.png)
+![image-20250702113549438](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250702113549438.png)
 
 
 
@@ -1291,17 +1291,17 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 
 最后将创建的AS挂载到 ASC组件上：
 
-![image-20250703174938577](Pic/image-20250703174938577.png)
+![image-20250703174938577](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250703174938577.png)
 
 #### 2. AS的初始化
 
 方法1（不推荐）：为目标AS配置对应的 DataTable，挂载到ASC上的Default Starting Table项：
 
-![image-20250709195207309](Pic/image-20250709195207309.png)
+![image-20250709195207309](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250709195207309.png)
 
 方法2（官方推荐）：新建GE专用于初始化目标AS，运行态时自行Apply以进行初始化：
 
-![image-20250709195748391](Pic/image-20250709195748391.png)
+![image-20250709195748391](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250709195748391.png)
 
 参考文章：
 
@@ -1309,7 +1309,7 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 
 #### 3. AS的使用
 
-![image-20250703174705572](Pic/image-20250703174705572.png)
+![image-20250703174705572](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250703174705572.png)
 
 
 
@@ -1317,7 +1317,7 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 
 `UGameplayEffect` 即 GE，是**Ability对自己或他人产生影响的途径**。可理解为游戏内的 一段伤害、一个Buff等 **一项游戏效果**，其注重于 效果的结果表现，而不是 效果的实现流程（这是GA的职责），因此其 **不可添加逻辑、相当于一个配置各类效果的配置表**
 
-![image-20250704204529992](Pic/image-20250704204529992.png)
+![image-20250704204529992](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704204529992.png)
 
 ### GE的功能
 
@@ -1325,13 +1325,13 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 
 通过配置GE细节面板->GameplayEffect->Modifier，可修改Attribute：
 
-![image-20250704174546020](Pic/image-20250704174546020.png)
+![image-20250704174546020](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704174546020.png)
 
 #### 赋予GameplayTag
 
 当此GE Apply成功时，会赋予目标ASC 配置的GameplayTag：
 
-![image-20250704180912409](Pic/image-20250704180912409.png)
+![image-20250704180912409](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704180912409.png)
 
 #### 赋予GA
 
@@ -1345,39 +1345,39 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 
   - Do Nothing：GA不会被移除
 
-![image-20250704181210460](Pic/image-20250704181210460.png)
+![image-20250704181210460](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704181210460.png)
 
 #### 嵌套应用GE
 
 当此GE Apply成功时，Apply配置的GE：
 
-![image-20250704174447542](Pic/image-20250704174447542.png)
+![image-20250704174447542](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704174447542.png)
 
 当此GE 的Duration被打断或结束时，Apply配置的GE：
 
 （备注：适用情况为 DurationPolicy=HasDuration）
 
-![image-20250704180213438](Pic/image-20250704180213438.png)
+![image-20250704180213438](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704180213438.png)
 
 当此GE 的Stacking溢出时，Apply配置的GE：
 
 （备注：Stacking溢出仅适用于 DurationPolicy=Infinite/HasDuration）
 
-![image-20250704175840562](Pic/image-20250704175840562.png)
+![image-20250704175840562](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704175840562.png)
 
 #### 调用GC
 
 当此GE Apply成功时，触发配置的GC：
 
-![image-20250704181859613](Pic/image-20250704181859613.png)
+![image-20250704181859613](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704181859613.png)
 
 ### GE的使用
 
 从 `UGameplayEffect` 即可派生出GE蓝图，后就可 **从ASC 或 GA 内Apply指定类型的GE**：
 
-![ASC内应用GE](Pic/image-20250704204038864.png)
+![ASC内应用GE](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704204038864.png)
 
-![GA内应用GE](Pic/image-20250704204158308.png)
+![GA内应用GE](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704204158308.png)
 
 ## Gameplay Cue（GC）
 
@@ -1394,27 +1394,27 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 
 打开GameplayCue编辑器（UE5位于 工具栏内），为所需GC创建一个Tag，后点击 处理器->新增，就显示为此Tag创建GC的蓝图的界面：
 
-![image-20250705113603476](Pic/image-20250705113603476.png)
+![image-20250705113603476](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250705113603476.png)
 
 #### 2. GC蓝图设置
 
 若是 Static类型的GC，则需要在蓝图内 重载`OnExecute`方法，并对 类默认值->细节面板->Gameplay Cue进行相关设置：
 
-![image-20250705174816951](Pic/image-20250705174816951.png)
+![image-20250705174816951](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250705174816951.png)
 
 若是 Actor类型的GC，则需要在蓝图内 重载`OnActive`、`OnRemove`方法，并对 细节面板->Gameplay Cue、Clean Up 进行相关设置：
 
-![image-20250705171754483](Pic/image-20250705171754483.png)
+![image-20250705171754483](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250705171754483.png)
 
 #### 3. GC的使用
 
 可通过GE触发 目标Gameplay Cue Tags 的GC：
 
-![image-20250705172452344](Pic/image-20250705172452344.png)
+![image-20250705172452344](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250705172452344.png)
 
 也可在GA内调用触发GC：
 
-![image-20250705173205714](Pic/image-20250705173205714.png)
+![image-20250705173205714](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250705173205714.png)
 
 ## 参考文章
 
@@ -1434,13 +1434,13 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 
 根据 黑板（BlackBoard）存储、提供的必要数据，行为树蓝图内部 **[通过事件驱动](https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---overview?application_version=5.5#behaviortreesareevent-driven)** 进行系列 **流程决策、执行**
 
-![20250809_184606](Pic/20250809_184606.gif)
+![20250809_184606](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250809_184606.gif)
 
 ## 黑板（BlackBoard）
 
 **黑板** 是一项独立资源，用于存储记录 行为树所需的信息（名为 **黑板键**）
 
-![image-20250809183540927](Pic/image-20250809183540927.png)
+![image-20250809183540927](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250809183540927.png)
 
 ## 行为树
 
@@ -1448,13 +1448,13 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 
 执行逻辑时，行为树会使用 **黑板** 来存储它需要知道的信息（名为 **黑板键**），从而做出有根据的决策：
 
-![image-20250809183824642](Pic/image-20250809183824642.png)
+![image-20250809183824642](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250809183824642.png)
 
 ### 行为树 - 基本用法
 
 在创建完一个行为树后，可在 AIController内的 `OnPossess`事件中，选择执行目标行为树：
 
-![image-20250809184255645](Pic/image-20250809184255645.png)
+![image-20250809184255645](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250809184255645.png)
 
 ### 行为树节点
 
@@ -1499,7 +1499,7 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 
 装饰器节点含诸多 [预设类型](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-decorators?application_version=5.5)，也可以[自定义装饰器](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-decorators?application_version=5.5#customdecorators)：
 
-![image-20250809172418520](Pic/image-20250809172418520.png)
+![image-20250809172418520](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250809172418520.png)
 
 以 [黑板节点](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-decorators?application_version=5.5#blackboard) （检查给定的 **黑板键（Blackboard Key）** 上是否设置了值）为例：
 
@@ -1508,7 +1508,7 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
    - 通知观察者=结果改变时+观察者终止=Both，则表示 当黑板键 **HasLineOfSight** 布尔值相互变化时（即 条件判断结果变化），自身分支（**Chase Player**）及 同层右侧分支 都将停止。最终回到 **AI Root**根节点
 2. 例如 初始时 **HasLineOfSight**=false，不进入**Chase Player**分支，按顺序进入 **Patrol**分支。而当 **HasLineOfSight**->true 时，则中断**Chase Player**及右侧全部分支（正在执行**Patrol**分支的话 也将被中断）。最终回到 **AI Root**根节点，又顺序进入 **Chase Player**分支、又进行  **HasLineOfSight** 的条件判断为达成，成功进入 **Chase Player**分支
 
-![image-20250809172827877](Pic/image-20250809172827877.png)
+![image-20250809172827877](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250809172827877.png)
 
 #### 任务节点
 
@@ -1516,11 +1516,11 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 
 任务节点含诸多 [预设类型](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/unreal-engine-behavior-tree-node-reference-tasks?application_version=5.5)，也可以[自定义任务节点](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-tasks?application_version=5.5#customtasks)：
 
-![image-20250810203051750](Pic/image-20250810203051750.png)
+![image-20250810203051750](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250810203051750.png)
 
 以 [移动至（MoveTo）节点](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-tasks?application_version=5.5#moveto)为例：设定 黑板键 为 Actor类型的关键帧 `EnemyActor`，则执行MoveTo节点时，所属的 AI Pawn会移动到目标位置
 
-![image-20250810203905169](Pic/image-20250810203905169.png)
+![image-20250810203905169](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250810203905169.png)
 
 ##### 基本用法
 
@@ -1532,11 +1532,11 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 2. 后执行自定义逻辑处理（修改AIPawn的追逐速度）
 3. 最终 产生执行结果（`Finish Execute(bool isSuccess)`），即代表 此节点的执行结果
 
-![image-20250810221030083](Pic/image-20250810221030083.png)
+![image-20250810221030083](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250810221030083.png)
 
 C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode` ：
 
-![image-20250810223152216](Pic/image-20250810223152216.png)
+![image-20250810223152216](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250810223152216.png)
 
 #### 服务节点
 
@@ -1552,7 +1552,7 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 - 当 Patrol子树 成功运行，触发一次 `Event Receive Activation`，此服务节点 处于激活态。激活态期间 根据配置间隔和随机偏差 周期性触发 `Event Receive Tick`
 - 当 Patrol子树全部完成运行或被中断 且 服务节点处于激活态，触发一次 `Event Receive Deactivation`
 
-![image-20250810231821702](Pic/image-20250810231821702.png)
+![image-20250810231821702](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250810231821702.png)
 
 ##### 参考文章
 

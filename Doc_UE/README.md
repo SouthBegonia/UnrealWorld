@@ -2,7 +2,7 @@
 
 ## Unreal Engine的 启动流程
 
-![UnrealEngine的启动流程](Pic/UnrealEngine的启动流程.png)
+![UnrealEngine的启动流程](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/UnrealEngine的启动流程.png)
 
 ### 参考文章
 
@@ -95,7 +95,7 @@ private:
 	int32 ParamB = 20;
 ```
 
-![image-20250607151915717](Pic/image-20250607151915717.png)
+![image-20250607151915717](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250607151915717.png)
 
 ### UFUNCTION
 
@@ -162,15 +162,15 @@ Int32 BlueprintPureFalseFunction() const
 
 蓝图内的 对象引用（`TObjectPtr`）、类引用（`TSubClassOf`）= 硬引用，软对象引用（`TSoftObjectPtr`）、软类引用（`TSoftClassPtr`） = 软引用
 
-![image-20250813002554247](Pic/image-20250813002554247.png)
+![image-20250813002554247](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813002554247.png)
 
 我们可以通过 [引用查看器（Reference Viewer）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/reference-viewer-in-unreal-engine) 查看某个资产的引用情况，图里的 **白线条=硬引用**，**粉色线条=软引用**，还可以通过 [尺寸贴图（SizeMap）](https://dev.epicgames.com/community/learning/tutorials/r4y7/unreal-engine-size-map) 查看因硬引用而影响的 资产内存大小
 
 例如下图示例：含有一个 软对象引用的变量，且变量默认指向了目标资产，则通过引用查看器可看到其引用关系，且因其为软引用，故不占有资产内存
 
-![image-20250813004018477](Pic/image-20250813004018477.png)
+![image-20250813004018477](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813004018477.png)
 
-![image-20250813004750983](Pic/image-20250813004750983.png)
+![image-20250813004750983](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813004750983.png)
 
 #### 使用注意事项
 
@@ -180,19 +180,19 @@ Int32 BlueprintPureFalseFunction() const
 
 将软引用对象Load后，对返回的 类引用对象 进行Cast转换，则 Cast目标对象 将变为此资源的 硬引用
 
-![image-20250813010909838](Pic/image-20250813010909838.png)
+![image-20250813010909838](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813010909838.png)
 
 解决方法为：不用Cast，Load后已经有所需对象了，直接使用即可
 
-![image-20250813011506609](Pic/image-20250813011506609.png)
+![image-20250813011506609](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813011506609.png)
 
 又继续可能有问题：SpawnActor的返值为 `Actor`，但我想访问 其特定子类（`BP_Box01: Actor`）内的成员，就又不免不了Cast、就又会造成硬引用问题
 
-![image-20250813150330345](Pic/image-20250813150330345.png)
+![image-20250813150330345](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813150330345.png)
 
 解决方法为：目标子类（`BP_Box01`）实现一个蓝图接口，外部想访问的话走接口、蓝图接口又访问目标子类的内部成员。这样的话虽然会造成 对蓝图接口资源的硬引用，但其大小远远不及 目标子类硬引用所造成的资源占用，几乎可忽略
 
-![image-20250813150954197](Pic/image-20250813150954197.png)
+![image-20250813150954197](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813150954197.png)
 
 #### 参考文章
 
@@ -579,7 +579,7 @@ if (EnumPtr != nullptr)
 }
 ```
 
-![image-20250613141116553](Pic/image-20250613141116553.png)
+![image-20250613141116553](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250613141116553.png)
 
 ### 参考文章
 
@@ -614,7 +614,7 @@ FMyStruct MyStruct = FMyStruct();
 UE_LOG(LogTemp, Warning, TEXT("StructName = %s"), *MyStruct.GetStructName());
 ```
 
-![image-20250613161815851](Pic/image-20250613161815851.png)
+![image-20250613161815851](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250613161815851.png)
 
 ### 参考文章
 
@@ -655,11 +655,11 @@ struct FTableHeroStruct : public FTableRowBase
 
 声明完 `FTableHeroStruct : FTableRowBase` 结构体后，就可创建 **数据表格** 资产（本例的表格类型为 `FTableHeroStruct`）：
 
-![image-20250614164909162](Pic/image-20250614164909162.png)
+![image-20250614164909162](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250614164909162.png)
 
 打开 数据表格 资产后，即可进行表格项编辑：
 
-![image-20250614165621417](Pic/image-20250614165621417.png)
+![image-20250614165621417](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250614165621417.png)
 
 注意：
 
@@ -742,13 +742,13 @@ if (MyHeroTable != nullptr)
 
 目前支持 数据表 到 CSV、JSON 的相互转换。例如 将 表格数据 资产 转换为CSV：
 
-![image-20250614173053274](Pic/image-20250614173053274.png)
+![image-20250614173053274](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250614173053274.png)
 
 将 CSV 转换为 表格资产：
 
 （对于CSV、JSON内的 非匹配、缺失列字段，可设置表格资产内的 导入选项 的相关参数）
 
-![image-20250614172937923](Pic/image-20250614172937923.png)
+![image-20250614172937923](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250614172937923.png)
 
 ### 参考文章
 
@@ -823,7 +823,7 @@ DrawDebug 用于在 编辑器或开发环境下，于场景内绘制 图形或�
 
 相关绘制方法（C++或蓝图都有）均使用的 `UKismetSystemLibrary` 内的API：
 
-![image-20250615152652698](Pic/image-20250615152652698.png)
+![image-20250615152652698](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250615152652698.png)
 
 效果示例：
 
@@ -858,13 +858,13 @@ UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输�
 
 通过配置目标InputAction的触发器，可实现不同输入行为的 各类触发事件（见下图）。对于触发器的配置可参阅：[虚幻UE 增强输入-触发器 - CSDN](https://blog.csdn.net/weixin_45865901/article/details/135407105)
 
-![image-20250607175659814](Pic/image-20250607175659814.png)
+![image-20250607175659814](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250607175659814.png)
 
 #### 用法 - 输入优先级问题
 
 常规用法中，往EnhanceInputSubSystem添加某套InputMappingContext，其核心方法为`IEnhancedInputSubsystemInterface::AddMappingContext()`，可以看到 此套IMC储在类型为 `Map<MappingContext, Priority>` 的 `AppliedInputContexts` 变量内
 
-![image-20250813223630822](Pic/image-20250813223630822.png)
+![image-20250813223630822](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813223630822.png)
 
 这就是EnhancedInputSystem的功能之一：叠加挂载InputMappingContext + 优先级触发
 
@@ -876,7 +876,7 @@ UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输�
 
 总结也就是 **多IMC下，KeyAction键入而引发的IA 将根据各IMC的Priority 进行优先级触发**
 
-![image-20250813222633198](Pic/image-20250813222633198.png)
+![image-20250813222633198](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813222633198.png)
 
 ### 参考文章
 
@@ -911,9 +911,9 @@ UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输�
 
 示例3：[虚幻-UE5增强输入按键设置教程2.0 - BiliBili](https://www.bilibili.com/video/BV1aySiYpErL)。具有 独立完整示例工程。实现方案为 修改 `UInputMappingContext`资产的数据，对 新旧 `InputAction` 进行 `UInputMappingContext::UnmapKey()`/`UInputMappingContext::MapKey()`
 
-![image-20250727175824610](Pic/image-20250727175824610.png)
+![image-20250727175824610](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250727175824610.png)
 
-![image-20250727175951133](Pic/image-20250727175951133.png)
+![image-20250727175951133](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250727175951133.png)
 
 
 
@@ -925,7 +925,7 @@ UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输�
 
 摇杆的2D轴 = X、Y两个轴向上的 `FVector2D` 值
 
-![image-20250608144608000](Pic/image-20250608144608000.png)
+![image-20250608144608000](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250608144608000.png)
 
 
 
@@ -1076,7 +1076,7 @@ UE内常见的Sequencer资产有：
 
 ![](https://pic1.zhimg.com/v2-a0ce5c61aff418b2a737c8830da09d4a_1440w.jpg)
 
-![LevelSequence轨道](Pic/image-20250801211212359.png)
+![LevelSequence轨道](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250801211212359.png)
 
 ### Sequencer的基本用法
 
@@ -1084,15 +1084,15 @@ UE内常见的Sequencer资产有：
 
 在内容浏览器中点击右键空白区域，选择 **过场动画（Cinematics） > 关卡序列（Level Sequence）** 即可创建，双击后就可打开Sequencer编辑器进行编辑，注意：Play时建议把Sequencer编辑窗口关闭、避免运行时显示异常
 
-![image-20250801193535590](Pic/image-20250801193535590.png)
+![image-20250801193535590](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250801193535590.png)
 
 后就可以在逻辑层对这个Sequence进行Play播放了：核心API是 `ULevelSequencePlayer::CreateLevelSequencePlayer()`、`UMovieSceneSequencePlayer::Play()`，同时也可以 设置播放参数、监听播放事件等
 
-![image-20250801194038593](Pic/image-20250801194038593.png)
+![image-20250801194038593](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250801194038593.png)
 
-![image-20250801193952902](Pic/image-20250801193952902.png)
+![image-20250801193952902](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250801193952902.png)
 
-![20250801_163229](Pic/20250801_163229.gif)
+![20250801_163229](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250801_163229.gif)
 
 ### Sequencer的功能介绍
 
@@ -1108,9 +1108,9 @@ UE内常见的Sequencer资产有：
   - 适用范围：不会在Level内持久存在、仅需Sequencer临时Actor的过场动画
   - 辨别：Actor图标上带黄色闪电的
 
-![PossessableActor](Pic/image-20250803163452038.png)
+![PossessableActor](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250803163452038.png)
 
-![SpawnableActor](Pic/image-20250803163738104.png)
+![SpawnableActor](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250803163738104.png)
 
 #### 轨道内Actor对象的重绑定
 
@@ -1127,9 +1127,9 @@ Sequence内Actor重绑定的基本流程为：
 
 一个重绑定CharacterActor的示例如：Sequence内制作CharacterActor的序列帧动画，设置其为 **可持有对象**，且设置 其绑定端点为 PlayerPawn（[UE内设方法](https://dev.epicgames.com/documentation/en-us/unreal-engine/dynamic-binding-in-sequencer#quickbind)）。则当 运行游戏、播放Sequence时，根据方法获取到 PlayerPawn、进行重绑定节点、正式开播Sequence
 
-![image-20250803180941620](Pic/image-20250803180941620.png)
+![image-20250803180941620](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250803180941620.png)
 
-![20250803_185034](Pic/20250803_185034.gif)
+![20250803_185034](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250803_185034.gif)
 
 除此之外，针对普通的Actor，也可进行重绑定：[用Sequencer在蓝图中重新绑定Actor - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/change-cinematic-track-bindings-in-unreal-engine)（原理同上）
 
@@ -1141,27 +1141,27 @@ TODO：针对 可生成对象类型的Actor的重绑定？是否能绑定到指�
 
 首先需要创建 相机剪切轨道：可人为在Sequencer编辑窗口 添加->相机切换轨道，或是 首次新建相机或把现有相机拖入，会自动创建 相机切换轨道
 
-![image-20250801195523238](Pic/image-20250801195523238.png)
+![image-20250801195523238](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250801195523238.png)
 
 我们可以对目标相机Key动画等，但若是想要把此相机的画面呈现于 最终画面，则需要将其添加到 相机切换轨道内，那此段相机的镜头才能被呈现、剪辑、混合
 
-![image-20250801201459204](Pic/image-20250801201459204.png)
+![image-20250801201459204](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250801201459204.png)
 
-![20250801_202433](Pic/20250801_202433.gif)
+![20250801_202433](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250801_202433.gif)
 
 当然也可以把Character身上的相机加入轨道进行编辑：
 
 （同时建议设置此相机的 属性->完成时->保持状态，以便在Sequence播放完后 恢复此相机的原有状态）
 
-![20250801_205521](Pic/20250801_205521.gif)
+![20250801_205521](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250801_205521.gif)
 
-![image-20250801210200179](Pic/image-20250801210200179.png)
+![image-20250801210200179](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250801210200179.png)
 
 #### 轨道 - [镜头轨道](https://dev.epicgames.com/documentation/en-us/unreal-engine/sequences-shots-and-takes-in-unreal-engine?application_version=5.5#shots)
 
 主要功能为 承载多个Level Sequence片段，并可再次进行剪辑、混合
 
-![20250802_213531](Pic/20250802_213531.gif)
+![20250802_213531](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250802_213531.gif)
 
 #### 轨道 - [事件轨道](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/cinematic-event-track-in-unreal-engine)
 
@@ -1170,13 +1170,13 @@ TODO：针对 可生成对象类型的Actor的重绑定？是否能绑定到指�
 - [触发器 Trigger](https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematic-event-track-in-unreal-engine#triggerevents)：绑定事件后，在目标 **关键帧节点 单次触发事件**。轨道内各节点可绑定各自事件
 - [重复器 Repeater](https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematic-event-track-in-unreal-engine#repeaterevents)：绑定事件后，在目标 **轨道片段内 每帧触发事件**。轨道内各片段可绑定各自事件
 
-![触发器](Pic/image-20250803153723424.png)
+![触发器](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250803153723424.png)
 
-![重复器](Pic/image-20250803154843398.png)
+![重复器](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250803154843398.png)
 
 对于绑定的事件，有UE提供的 快速绑定事件，或自行在 Sequence的蓝图（即 [导演蓝图](https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematic-event-track-in-unreal-engine#directorblueprint)）内创建Event提供绑定
 
-![image-20250803155512545](Pic/image-20250803155512545.png)
+![image-20250803155512545](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250803155512545.png)
 
 
 
