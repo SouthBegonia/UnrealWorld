@@ -1319,7 +1319,9 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 
 ![image-20250704204529992](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704204529992.png)
 
-### GE的功能
+### GE的功能简介
+
+在 UE 5.3 版本后，GE稍有改动，改动内容可参阅 [UE5-GAS插件UE5.3改动 - 知乎](https://zhuanlan.zhihu.com/p/657035214)
 
 #### 修改Attribute
 
@@ -1370,6 +1372,88 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 当此GE Apply成功时，触发配置的GC：
 
 ![image-20250704181859613](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704181859613.png)
+
+### GE功能 - 修改Attribute
+
+作为GE的核心功能，修改Attribute的功能主要由 GE->GameplayEffect页签->Modifiers、Excutions 实现
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250817003752686.png)
+
+#### Modifiers
+
+一项 Modifiers 可修改一项 Attribute
+
+- Attribute：要修改的Attribute
+- Modifier Op：运算符。包含 加、乘、除、覆盖。配合 Magnitude值 对Attribute进行修改
+- Modifier Magnitude：运算值。也就是 将要和 Attribute进行 Modifier Op运算的值
+  - Scalable Float：直接使用 浮点数 作为Magnitude值
+  - Attribute Based：使用 从Source或Target上 快照捕获的某个Attribute 作为Magnitude值
+  - Custom Calculation Class：使用 自定义计算类的返值 作为Magnitude值。可自行实现复杂计算逻辑、捕获所需的Attribute
+  - Set By Caller：使用 蓝图Caller的传值 作为Magnitude值
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250816225154917.png)
+
+##### Custom Calculation Class
+
+核心是 从`UGameplayModMagnitudeCalculation` 派生子类、自行按需捕获Attribute、计算返回Magnitude值 以供 ModifierOp 进行最终运算
+
+例如：实现了 `UMMC_Test : UGameplayModMagnitudeCalculation`，GE的执行表现为 扣除Source身上当前HealthAttribute值的一半
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250817002729020.png)
+
+```c++
+// UMMC_Test.h
+UCLASS()
+class [PROJECTNAME]_API UMMC_Test : public UGameplayModMagnitudeCalculation
+{
+	GENERATED_BODY()
+
+public:
+	UMMC_Test();
+
+	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
+
+private:
+	// 声明捕获属性
+	FGameplayEffectAttributeCaptureDefinition CaptureHealthDef;
+};
+```
+
+```c++
+// UMMC_Test.cpp
+
+// 构造函数内 初始化捕获信息
+UMMC_Test::UMMC_Test()
+{
+	// 设置 需要捕获的Attribute 及捕获设置参数
+	CaptureHealthDef.AttributeToCapture = UGDAttributeSetBase::GetHealthAttribute();
+	CaptureHealthDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Source;
+	CaptureHealthDef.bSnapshot = false;
+
+	// 添加到捕获列表
+	RelevantAttributesToCapture.Add(CaptureHealthDef);
+}
+
+// Magnitude计算逻辑
+float UMMC_Test::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
+{
+	// 获取 捕获值
+	FAggregatorEvaluateParameters EvaluateParams;
+	float CaptureHealthValue = 0.0f;
+	GetCapturedAttributeMagnitude(CaptureHealthDef, Spec, EvaluateParams, CaptureHealthValue);
+
+    // 返回计算完成的 Magnitude值
+	return CaptureHealthValue / 2.0f;
+}
+```
+
+#### 参考文章
+
+- [GASDocumentation - Github](https://github.com/tranek/GASDocumentation)
+- [UE GAS框架中GameplayEffect/Attribute Based Modifier详解 - CSDN](https://blog.csdn.net/m0_45371381/article/details/146031577)
+- [虚幻四Gameplay Ability System入门(7)-Gameplay Effect详解(2)自定义Calculation Class - 知乎](https://zhuanlan.zhihu.com/p/368112930)
+- [UE5 GAS RPG使用MMC根据等级设置血量和蓝量（下） - CSDN](https://blog.csdn.net/qq_30100043/article/details/136884265)
+- [UE5 GAS RPG 使用Execution Calculations处理对目标造成的最终伤害 - CSDN](https://blog.csdn.net/qq_30100043/article/details/138673957)
 
 ### GE的使用
 
