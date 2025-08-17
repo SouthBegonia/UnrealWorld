@@ -1393,6 +1393,14 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250816225154917.png)
 
+##### Attribute Based
+
+核心是 从目标对象上获取Attribute 作为Magnitude值 以供 ModifierOp 进行最终运算
+
+例如：配置实现了 扣除目标身上的HealthAttribute值（值为 目标身上的 当前HealthAttribute值），GE执行表现为 目标Health扣光
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250817210511175.png)
+
 ##### Custom Calculation Class
 
 核心是 从`UGameplayModMagnitudeCalculation` 派生子类、自行按需捕获Attribute、计算返回Magnitude值 以供 ModifierOp 进行最终运算
@@ -1428,7 +1436,7 @@ UMMC_Test::UMMC_Test()
 	// 设置 需要捕获的Attribute 及捕获设置参数
 	CaptureHealthDef.AttributeToCapture = UGDAttributeSetBase::GetHealthAttribute();
 	CaptureHealthDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Source;
-	CaptureHealthDef.bSnapshot = false;
+	CaptureHealthDef.bSnapshot = false;		// true = 捕获ApplyGE时刻的值, false = 捕获每次计算时刻的值
 
 	// 添加到捕获列表
 	RelevantAttributesToCapture.Add(CaptureHealthDef);
@@ -1446,6 +1454,14 @@ float UMMC_Test::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec
 	return CaptureHealthValue / 2.0f;
 }
 ```
+
+##### Set By Caller
+
+核心为 蓝图函数（`AssignTagSetByCallerMagnitude`）传入自定义Magnitude值，并以 DataTag（GameplayTag）或DataName（FName） 为唯一标识，GE在Apply时刻 根据此唯一标识获取到 Magnitude值 以供 ModifierOp 进行最终运算
+
+例如：使用DataTag=Data.Damage、Magnitude=-50，GE的执行表现为 扣除目标身上当前HealthAttribute值 50
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250817212113127.png)
 
 #### 参考文章
 
