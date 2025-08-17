@@ -1375,7 +1375,7 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 
 ### GE功能 - 修改Attribute
 
-作为GE的核心功能，修改Attribute的功能主要由 GE->GameplayEffect页签->Modifiers、Excutions 实现
+作为GE的核心功能，修改Attribute的功能主要由 GE->GameplayEffect页签->Modifiers、Executions实现
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250817003752686.png)
 
@@ -1403,7 +1403,7 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 
 ##### Custom Calculation Class
 
-核心是 从`UGameplayModMagnitudeCalculation` 派生子类、自行按需捕获Attribute、计算返回Magnitude值 以供 ModifierOp 进行最终运算
+核心是 从[`UGameplayModMagnitudeCalculation`](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Plugins/GameplayAbilities/UGameplayModMagnitudeCalculation) 派生子类、自行按需捕获Attribute、计算返回Magnitude值 以供 ModifierOp 进行最终运算
 
 例如：实现了 `UMMC_Test : UGameplayModMagnitudeCalculation`，GE的执行表现为 扣除Source身上当前HealthAttribute值的一半
 
@@ -1459,9 +1459,115 @@ float UMMC_Test::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec
 
 核心为 蓝图函数（`AssignTagSetByCallerMagnitude`）传入自定义Magnitude值，并以 DataTag（GameplayTag）或DataName（FName） 为唯一标识，GE在Apply时刻 根据此唯一标识获取到 Magnitude值 以供 ModifierOp 进行最终运算
 
-例如：使用DataTag=Data.Damage、Magnitude=-50，GE的执行表现为 扣除目标身上当前HealthAttribute值 50
+例如：使用DataTag=Data.Damage、Magnitude=-50，GE的执行表现为 扣除目标身上当前HealthAttribute值（50）
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250817212113127.png)
+
+#### Executions
+
+相比于 Modifier，Executions则更为灵活：可自定义计算逻辑和Attribute修改
+
+##### Execution Calculation Class
+
+与 Custom Calculation Class方法类似，Execution Calculation Class也可以 捕获Attribute、自行计算Magnitude值。其从 [`UGameplayEffectExecutionCalculation`](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Plugins/GameplayAbilities/UGameplayEffectExecutionCalculat-) 派生计算类
+
+优点：
+
+- 多Attribute修改应用：Execution Calculation Class 可直接计算Magnitude值并应用修改到Attribute，而不再是 计算Magnitude值并返回 以供ModifierOp 进行最终运算
+- 可从传入参数（`ExecutionParams`）内获取到source、target双方诸多信息（ASC、Actor、Tags...）
+- 快照值预修改：可使用 CalculationModifiers 对快照Attribute值 预先进行ModifierOp修改、才传递给业务层
+
+缺点：
+
+- 不可预测性，仅能在C++层实现
+- 不支持 未设置Period的Infinite
+- 不会触发属性的 `PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)`，需要自行实现属性限制
+
+例如：实现了 `UTestExecutionCalculation : UGameplayEffectExecutionCalculation`，GE的执行表现为 扣除身上当前HealthAttribute值（MaxHealthAttribute/2）、并扣除了ManaAttribute值（10）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250817231043917.png)
+
+```c++
+// UTestExecutionCalculation.h
+UCLASS()
+class [PROJECTNAME]_API UTestExecutionCalculation : public UGameplayEffectExecutionCalculation
+{
+	GENERATED_BODY()
+
+public:
+	UTestExecutionCalculation();
+
+	virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
+};
+```
+
+```c++
+// UTestExecutionCalculation.cpp
+
+struct STestCaptureDefStatics
+{
+	DECLARE_ATTRIBUTE_CAPTUREDEF(Health)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(MaxHealth)
+
+	STestCaptureDefStatics()
+	{
+		// 设置 需要捕获的Attribute、捕获源、是否快照
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSetBase, Health, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSetBase, MaxHealth, Target, true);
+	}
+};
+
+static const STestCaptureDefStatics& TestCaptureDefStatics()
+{
+	static STestCaptureDefStatics DStatics;
+	return DStatics;
+}
+
+// 构造函数内 初始化捕获信息
+UTestExecutionCalculation::UTestExecutionCalculation()
+{
+	// 添加到捕获列表
+	RelevantAttributesToCapture.Add(TestCaptureDefStatics().HealthDef);
+	RelevantAttributesToCapture.Add(TestCaptureDefStatics().MaxHealthDef);
+}
+
+// 计算处理逻辑
+void UTestExecutionCalculation::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
+{
+	// 获取 source、target相关信息
+	UAbilitySystemComponent* TargetAbilitySystem = ExecutionParams.GetTargetAbilitySystemComponent();
+	UAbilitySystemComponent* SourceAbilitySystem = ExecutionParams.GetSourceAbilitySystemComponent();
+
+	AActor* TargetActor = TargetAbilitySystem ? TargetAbilitySystem->GetAvatarActor() : nullptr;
+	AActor* SourceActor = SourceAbilitySystem ? SourceAbilitySystem->GetAvatarActor() : nullptr;
+
+	const FGameplayEffectSpec& Spec = ExecutionParams.GetOwningSpec();
+
+	const FGameplayTagContainer* TargetTags = Spec.CapturedTargetTags.GetAggregatedTags();
+	const FGameplayTagContainer* SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
+
+	FAggregatorEvaluateParameters EvaluationParameters;
+	EvaluationParameters.SourceTags = SourceTags;
+	EvaluationParameters.TargetTags = TargetTags;
+
+
+	// 获取 捕获值
+	float HealthVal = 0.0f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(TestCaptureDefStatics().HealthDef, EvaluationParameters, HealthVal);
+	float MaxHealthVal = 0.0f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(TestCaptureDefStatics().MaxHealthDef, EvaluationParameters, MaxHealthVal);
+
+	// 传入计算后的Magnitude值，生成一个Modifier，以达到修改Attribute的效果
+	float MagnitudeVal_Health = -MaxHealthVal;
+	auto HealthMod = FGameplayModifierEvaluatedData(TestCaptureDefStatics().HealthProperty, EGameplayModOp::Additive, MagnitudeVal_Health);
+	OutExecutionOutput.AddOutputModifier(HealthMod);
+
+	// 同理，可修改其他Attribute
+	float MagnitudeVal_Mana = -10;
+	auto ManaMod = FGameplayModifierEvaluatedData(UGDAttributeSetBase::GetManaAttribute(), EGameplayModOp::Additive, MagnitudeVal_Mana);
+	OutExecutionOutput.AddOutputModifier(ManaMod);
+}
+```
 
 #### 参考文章
 
@@ -1470,6 +1576,8 @@ float UMMC_Test::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec
 - [虚幻四Gameplay Ability System入门(7)-Gameplay Effect详解(2)自定义Calculation Class - 知乎](https://zhuanlan.zhihu.com/p/368112930)
 - [UE5 GAS RPG使用MMC根据等级设置血量和蓝量（下） - CSDN](https://blog.csdn.net/qq_30100043/article/details/136884265)
 - [UE5 GAS RPG 使用Execution Calculations处理对目标造成的最终伤害 - CSDN](https://blog.csdn.net/qq_30100043/article/details/138673957)
+- [UE5 Gameplay Ability System(GAS) 简单记录 - cnblog](https://www.cnblogs.com/rkexy/p/17961311)
+- [GAS GE 自定义计算过程 - Zerol](https://kisspread.github.io/notes/GAS/6GE_Calculation.html)
 
 ### GE的使用
 
