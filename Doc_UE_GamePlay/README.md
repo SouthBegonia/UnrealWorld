@@ -1667,6 +1667,45 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 
 ![image-20250705173205714](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250705173205714.png)
 
+## GAS的调试方法
+
+### [showdebug abilitysystem](https://dev.epicgames.com/community/learning/tutorials/Y477/unreal-engine-gameplay-ability-system-debugging-tools#showdebugabilitysystem)
+
+运行中通过`~`键打开控制台，输入 `showdebug abilitysystem` 即可显示当前控制的Character的GAS相关数据（PageUp、PageDown切换查看对象）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250818202442845.png)
+
+### [AbilitySystem.DebugBasicHUD](https://dev.epicgames.com/community/learning/tutorials/Y477/unreal-engine-gameplay-ability-system-debugging-tools#abilitysystemdebugbasichud)
+
+运行中通过`~`键打开控制台，输入 `AbilitySystem.DebugBasicHUD` 即可显示，主要内容有：当前AttributeSet的信息、Attribute的监听对象、当前GE信息
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250818213114903.png)
+
+### [Debug Widgets](https://dev.epicgames.com/community/learning/tutorials/Y477/unreal-engine-gameplay-ability-system-debugging-tools#debugwidgets)
+
+运行中通过`~`键打开控制台，输入下列指令，即能可视化查看特定数据：
+
+|                         commands                         |                             描述                             |                           使用示例                           |
+| :------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| `AbilitySystem.DebugAttribute [Attribute1] [Attribute2]` | 在所有带有 目标Attribute的Actor上，绘制目标Attribute的数据信息 | `AbilitySystem.DebugAttribute Health MaxHealth WeaponDamage` |
+|      `AbilitySystem.DebugAbilityTags [Tag1] [Tag2]`      | 在所有带有 目标GamePlayTag的Actor，绘制带有Tag及层数信息（无Tag就不绘制） | 显示=`AbilitySystem.DebugAbilityTags Damage.Conditions.DamageImmune`；清除=`AbilitySystem.DebugAbilityTags` |
+|           `AbilitySystem.ClearDebugAttributes`           |       清除 `AbilitySystem.DebugAttribute` 所绘制的信息       |                                                              |
+
+![](https://dev.epicgames.com/community/api/learning/image/2e55c4f3-1cce-45cb-9e67-7fd8d6106c99?resizing_type=fit&width=2800&height=834)
+
+### [Gameplay Debugger](https://dev.epicgames.com/community/learning/tutorials/Y477/unreal-engine-gameplay-ability-system-debugging-tools#gasingameplaydebugger)
+
+UE内置的调试器，能在 运行态时 可视化查看 目标Actor上的 AI、BehaviorTree、Abilities、EQS、Perception相关的数据
+
+在Outliner大纲视图内，选中想要查看的Actor，回到Game中 点击键盘`'`键，即可显示窗口。通过快捷键（修改快捷键在 项目设置->引擎->Gameplay调试器）切换页签到 3.Abilities 后，即可查看GAS相关数据：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250818201841408.png)
+
+### [GAS in Visual Logger](https://dev.epicgames.com/community/learning/tutorials/Y477/unreal-engine-gameplay-ability-system-debugging-tools#gasinvisuallogger)
+
+可视化记录器（Visual Logger），位于 工具->调试->可视化记录器。可将AbilitySystem相关日志 以时间轴形式展现：
+![](https://dev.epicgames.com/community/api/learning/image/e86c9450-82b9-44eb-984b-8a37e2449ac7?resizing_type=fit&width=1400&height=1187)
+
 ## 参考文章
 
 - [Gameplay技能系统 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/gameplay-ability-system-for-unreal-engine?application_version=5.4)
@@ -1674,6 +1713,7 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 - [【Unreal】虚幻GAS系统快速入门 - 知乎](https://zhuanlan.zhihu.com/p/486808688)
 - [UE5 GAS Base - CSDN](https://blog.csdn.net/qq_52179126/article/details/131860252)
 - [UE4 GAS/ActionRPG学习导图——AttributeSet（Gameplay Ability System）- CSDN](https://blog.csdn.net/jk_chen_acmer/article/details/115309073)
+- [Gameplay Ability System - Debugging Tools - UnrealEngineDev](https://dev.epicgames.com/community/learning/tutorials/Y477/unreal-engine-gameplay-ability-system-debugging-tools)
 
 
 
