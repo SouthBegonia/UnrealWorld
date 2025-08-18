@@ -1289,9 +1289,52 @@ void AGASSampleCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 }
 ```
 
-最后将创建的AS挂载到 ASC组件上：
+后需要建立 AttributeSet 与 ASC的联系：即让**ASC注册持有AS**。方法为：在与ASC同一OwnerActor上的 构造方法中 就创建AttributeSet，则当 ASC执行 `UAbilitySystemComponent::InitializeComponent()` 时，就会自动对此AS并进行相关处理：
 
-![image-20250703174938577](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250703174938577.png)
+```c++
+// AGDPlayerState.cpp
+AGDPlayerState::AGDPlayerState()
+{
+	// 实例化ASC
+	AbilitySystemComponent = CreateDefaultSubobject<UGDAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+
+    // 在与ASC同OwnerActor的构造方法中创建AttributeSet，则将会在 UAbilitySystemComponent::InitializeComponent() 时被注册到ASC
+	AttributeSetBase = CreateDefaultSubobject<UGDAttributeSetBase>(TEXT("AttributeSetBase"));
+}
+
+// UAbilitySystemComponent_Abilities.cpp
+void UAbilitySystemComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+
+	// Look for DSO AttributeSets (note we are currently requiring all attribute sets to be subobjects of the same owner. This doesn't *have* to be the case forever.
+	AActor *Owner = GetOwner();
+	InitAbilityActorInfo(Owner, Owner);	// Default init to our outer owner
+
+	// cleanup any bad data that may have gotten into SpawnedAttributes
+	for (int32 Idx = SpawnedAttributes.Num()-1; Idx >= 0; --Idx)
+	{
+		if (SpawnedAttributes[Idx] == nullptr)
+		{
+			SpawnedAttributes.RemoveAt(Idx);
+		}
+	}
+
+	TArray<UObject*> ChildObjects;
+	GetObjectsWithOuter(Owner, ChildObjects, false, RF_NoFlags, EInternalObjectFlags::Garbage);
+
+	for (UObject* Obj : ChildObjects)
+	{
+		UAttributeSet* Set = Cast<UAttributeSet>(Obj);
+		if (Set)  
+		{
+			SpawnedAttributes.AddUnique(Set);
+		}
+	}
+
+	SetSpawnedAttributesListDirty();
+}
+```
 
 #### 2. AS的初始化
 
