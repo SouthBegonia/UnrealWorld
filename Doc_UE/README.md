@@ -892,7 +892,7 @@ UE中的输入可分为 UE5前的旧版输入、UE5后的EnhancedInput增强输�
 
 实现例如 **游戏运行中** 修改目标 **操作映射/轴映射/InputAction 的键**，并保留设置配置以供重启后使用
 
-![](https://dev.epicgames.com/community/api/learning/image/8eb6f845-509b-4820-8fc5-88cdedc8cb55?resizing_type=fit)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250819204107743.png)
 
 ### Enhanced Input的方案
 

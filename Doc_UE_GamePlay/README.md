@@ -1691,7 +1691,7 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 |      `AbilitySystem.DebugAbilityTags [Tag1] [Tag2]`      | 在所有带有 目标GamePlayTag的Actor，绘制带有Tag及层数信息（无Tag就不绘制） | 显示=`AbilitySystem.DebugAbilityTags Damage.Conditions.DamageImmune`；清除=`AbilitySystem.DebugAbilityTags` |
 |           `AbilitySystem.ClearDebugAttributes`           |       清除 `AbilitySystem.DebugAttribute` 所绘制的信息       |                                                              |
 
-![](https://dev.epicgames.com/community/api/learning/image/2e55c4f3-1cce-45cb-9e67-7fd8d6106c99?resizing_type=fit&width=2800&height=834)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250819203922424.png)
 
 ### [Gameplay Debugger](https://dev.epicgames.com/community/learning/tutorials/Y477/unreal-engine-gameplay-ability-system-debugging-tools#gasingameplaydebugger)
 
@@ -1704,7 +1704,7 @@ UE内置的调试器，能在 运行态时 可视化查看 目标Actor上的 AI�
 ### [GAS in Visual Logger](https://dev.epicgames.com/community/learning/tutorials/Y477/unreal-engine-gameplay-ability-system-debugging-tools#gasinvisuallogger)
 
 可视化记录器（Visual Logger），位于 工具->调试->可视化记录器。可将AbilitySystem相关日志 以时间轴形式展现：
-![](https://dev.epicgames.com/community/api/learning/image/e86c9450-82b9-44eb-984b-8a37e2449ac7?resizing_type=fit&width=1400&height=1187)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250819203951301.png)
 
 ## 参考文章
 
@@ -1719,7 +1719,7 @@ UE内置的调试器，能在 运行态时 可视化查看 目标Actor上的 AI�
 
 # Behavior Tree
 
-![](https://dev.epicgames.com/community/api/documentation/image/3971fbea-64ae-4764-a4c6-8704f7440584?resizing_type=fill&width=1920&height=335)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250819204016556.png)
 
 [行为树](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/behavior-trees-in-unreal-engine?application_version=5.5) 是UE内 **非玩家角色单位的 行为指导**
 
