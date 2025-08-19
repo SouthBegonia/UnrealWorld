@@ -1,6 +1,6 @@
 # Unreal Engine - GamePlay框架
 
-![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/e48f12be-54cd-419c-93b0-47715d80e51d/gameplay-schematic.png)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/UE_GamePlay.png)
 
 
 
@@ -87,7 +87,7 @@
 - Actor的生命周期已过
 - 应用程序关闭（全部Actor被销毁）
 
-![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/e63c12cc-0186-4e34-a7bc-5ca774b0bce6/actorlifecycle1.png)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/UE_GamePlay_ActorLifeCycle1.png)
 
 
 
@@ -1764,7 +1764,7 @@ UE内置的调试器，能在 运行态时 可视化查看 目标Actor上的 AI�
 
 即 **行为树的起始点**，特殊节点（不可挂载 装饰器或服务节点）。点选后可 查看、修改 此行为树使用的 黑板资源（Blackboard Asset）
 
-![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/673ec171-08fc-4af8-b66e-118b7a6aaa22/root-node-1.png)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250819202925567.png)
 
 #### 合成节点
 
@@ -1774,15 +1774,15 @@ UE内置的调试器，能在 运行态时 可视化查看 目标Actor上的 AI�
 
 1. [选择器（Selector）](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-composites?application_version=5.5#selector)：**子节点按 从左到右顺序执行**，当某个子节点执行成功 则选择器执行成功 且 停止执行，而当全部子节点执行失败，则选择器执行失败。即 **顺序执行，直到子节点成功 才停止**
 
-![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/ac747ade-ed8c-405a-a526-732b2c3827f7/selector-01.png)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250819202941209.png)
 
 2. [序列（Sequence）](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-composites?application_version=5.5#sequence)：**子节点按 从左到右顺序执行**，当全部子节点执行成功，则序列执行成功，而当某个子节点实行失败 则序列执行失败 且 停止执行。即 **顺序执行，有子节点失败 就停止**
 
-![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/20747362-bf02-42ae-ac01-16eab3624a1b/sequence-01.png)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250819203003628.png)
 
 3. [简单平行节点（SimpleParallel）](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-composites?application_version=5.5#simpleparallel)：左侧为 任务节点（称为 主任务），右侧为 后台树，**两边 并发执行**。当 主任务执行完成时，根据节点设置的结束模式（FinishMode）不同，后台树可能 被立即终止 或 等待执行完成
 
-![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/89bead9d-67de-4aa7-99e2-c59f7202bb1a/simple-parallel-01.png)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250819203023732.png)
 
 #### 装饰器节点
 

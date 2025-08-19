@@ -117,7 +117,7 @@ UFUNCTION(BlueprintPure=fasle)
 Int32 BlueprintPureFalseFunction() const
 ```
 
-![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/2a62ab45-1e02-457d-a578-a5610834bd6e/bpcallable.png)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250819203125764.png)
 
 ### 参考文章
 
@@ -1057,7 +1057,7 @@ void NativeConstruct()	//控件绑定、控件使用
 
 [Sequencer](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/how-to-make-movies-in-unreal-engine) 是虚幻引擎的过场动画编辑器，允许用户为动画角色、摄像机、各种属性以及其他Actor制作动画。它提供了一个非线性的编辑环境，允许你按时间轴创建、修改轨道和关键帧
 
-![](https://d1iv7db44yhgxn.cloudfront.net/documentation/images/97597671-45c7-4afe-9088-4ec48cb554c6/whatis.gif)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/UE_Sequencer.gif)
 
 ### Sequencer的功能
 
