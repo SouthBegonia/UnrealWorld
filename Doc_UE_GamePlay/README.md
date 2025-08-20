@@ -1622,6 +1622,39 @@ void UTestExecutionCalculation::Execute_Implementation(const FGameplayEffectCust
 - [UE5 Gameplay Ability System(GAS) 简单记录 - cnblog](https://www.cnblogs.com/rkexy/p/17961311)
 - [GAS GE 自定义计算过程 - Zerol](https://kisspread.github.io/notes/GAS/6GE_Calculation.html)
 
+### GE细节面板
+
+#### GE细节面板 - Duration
+
+**Duration Policy**：描述GE的 持续类型
+
+| Duration Policy  |                         描述                          |   修改对象   | Period | 应用示例 |
+| :--------------: | :---------------------------------------------------: | :----------: | :----: | :------: |
+|   **Instant**    |                立即触发、立即自动结束                 |  BaseValue   | 不可用 | 常规扣血 |
+|   **Infinite**   |                立即触发、人为手动结束                 | CurrentValue |  可用  | 长按奔跑 |
+| **Has Duration** | 立即触发、到期自动结束（持续时间=Duration Magnitude） | CurrentValue |  可用  | 临时Buff |
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250820160625227.png)
+
+#### GE细节面板 - Period
+
+**Period**：设置GE的触发周期（仅 Infinite、Has Duration 可用），时间单位为 秒
+
+**Execute Periodic Effect on Application**：GE首次触发、开始计时Time=0时 是否就触发一次
+
+**Periodic Inhibition Policy**：GE被阻断后的处理方式
+
+- Never Reset：从被打断时的位置 继续执行
+- Reset Period：从0开始计算周期
+- Execute and Reset Period：打断时立即执行一次，下次从0开始计算周期
+
+|      Period配置       |                   表现效果                    |                  备注                   |
+| :-------------------: | :-------------------------------------------: | :-------------------------------------: |
+|   Infinite + Period   |         GE以 每Period秒 永远触发下去          | 相当于 以每Period秒 执行一次Instant触发 |
+| Has Duration + Period | GE在 DurationMagnitude秒内 以 每Period秒 触发 |                                         |
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250820161047369.png)
+
 ### GE的使用
 
 从 `UGameplayEffect` 即可派生出GE蓝图，后就可 **从ASC 或 GA 内Apply指定类型的GE**：
