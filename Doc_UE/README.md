@@ -1187,6 +1187,17 @@ TODO：针对 可生成对象类型的Actor的重绑定？是否能绑定到指�
 
 
 
+# UE - Plugins
+
+### [GAS - Editor](https://github.com/polygonvariable/unreal-gas-editor)
+
+功能：可视化创建、管理 GAS中的 AttributeSet、Attribute
+
+适用版本：UE5
+![](https://github.com/polygonvariable/unreal-gas-editor/blob/main/Documentation/Image/gas_editor_new_attrs.png?raw=true)
+
+
+
 # 规范
 
 ## 资产规范
