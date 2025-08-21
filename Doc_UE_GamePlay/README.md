@@ -1628,11 +1628,11 @@ void UTestExecutionCalculation::Execute_Implementation(const FGameplayEffectCust
 
 **Duration Policy**：描述GE的 持续类型
 
-| Duration Policy  |                         描述                          |   修改对象   | Period | 应用示例 |
-| :--------------: | :---------------------------------------------------: | :----------: | :----: | :------: |
-|   **Instant**    |                立即触发、立即自动结束                 |  BaseValue   | 不可用 | 常规扣血 |
-|   **Infinite**   |                立即触发、人为手动结束                 | CurrentValue |  可用  | 长按奔跑 |
-| **Has Duration** | 立即触发、到期自动结束（持续时间=Duration Magnitude） | CurrentValue |  可用  | 临时Buff |
+| Duration Policy  |                         描述                          |                 修改对象                  | Period | 应用示例 |
+| :--------------: | :---------------------------------------------------: | :---------------------------------------: | :----: | :------: |
+|   **Instant**    |                立即触发、立即自动结束                 |                 BaseValue                 | 不可用 | 常规扣血 |
+|   **Infinite**   |                立即触发、人为手动结束                 | 无Period=CurrentValue；有Period=BaseValue |  可用  | 长按奔跑 |
+| **Has Duration** | 立即触发、到期自动结束（持续时间=Duration Magnitude） | 无Period=CurrentValue；有Period=BaseValue |  可用  | 临时Buff |
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250820160625227.png)
 
