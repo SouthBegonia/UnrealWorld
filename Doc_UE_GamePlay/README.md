@@ -582,6 +582,45 @@ if (UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::CreateSa
 
 
 
+## 常用工具、函数、库
+
+### [UGamePlayStatic](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Kismet/UGameplayStatics)
+
+适用于C++与蓝图的 静态类，含有诸多 **GamePlay实用方法**：
+
+- **全局相关**：
+  - `GetGameMode()`、`GetGameState()`、`GetGameInstance()`、`GetPlayerController()`、`GetPlayerPawn()`、`GetPlayerCharacter()`
+  - `SetGamePaused()`、`IsGamePaused()`
+
+- **关卡逻辑**：
+  - `OpenLevel()`、`OpenLevelBySoftObjectPtr()`
+  - `LoadStreamLevel()`、`UnloadSteamLevel()`、`GetStreamingLevel()`
+- **生成相关**：
+  - `SpawnObject()`
+- **Actor相关**：
+  - `GetActorOfClass()`
+  - `GetAllActorsOfClass()`、`GetAllActorsWithInterface()`、`GetAllActorsWithTag()`
+- **粒子相关**：
+  - `SpawnEmitterAtLocation()`、`SpawnEmitterAttached()`
+- **音效相关**：
+  - `PlaySoundAtLocation()`、`PlaySound2D()`
+- **射线检测相关**：
+  - `MakeHitResult()`、`BreakHitResult()`
+- **SaveGame相关**：
+  - `CreateSaveGameObject()`
+  - `SaveGameToMemory()`、`SaveGameToSlot()`、`DoesSaveGameExist()`
+  - `LoadGameFromMomory()`、`LoadGameFromSlot()`
+- **时间获取相关**：
+  - `GetWorldDeltaSeconds()`、`GetTimeSeconds()`、`GetRealTimeSeconds()`
+
+
+
+参考文章：
+
+- [UGameplayStatics类实用分析 - 知乎](https://zhuanlan.zhihu.com/p/71254108)
+
+
+
 # GamePlay框架的 Runtime启动流程
 
 ![image-20250510155149664](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/UE-GamePlay框架的Runtime流程.png)
