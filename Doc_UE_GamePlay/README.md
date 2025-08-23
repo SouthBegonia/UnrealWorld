@@ -1920,3 +1920,45 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 ##### 参考文章
 
 - [[UE4][C++][AI]自定义行为树节点——Service(服务节点) - 知乎](https://zhuanlan.zhihu.com/p/296462878)
+
+
+
+# 寻路系统
+
+UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/basic-navigation-in-unreal-engine)，主要用于 **为 AI Agent 提供寻路功能**
+
+基本使用流程为：
+
+1. 在场景生成 寻路网格体 
+2. （非必要）运行态时 寻路网格体的重构
+3. 寻路代理 使用 寻路网格体 进行寻路移动
+
+## 寻路网格体
+
+寻路网格体（Nav Mesh），是 **针对Level生成、并存储于Level的数据**，其在运行态时 随Level被加载、使用，亦可在运行态时 被重构
+
+### 寻路网格体 运行态时的生成规则
+
+寻路网格体虽然是在 编辑器态（离线下）生成、存储到Level的，但在运行态时，针对 **运行态下 是否可重构、修改寻路网格体** 问题，将寻路网格体的 **[运行态生成规则](https://dev.epicgames.com/documentation/en-us/unreal-engine/overview-of-how-to-modify-the-navigation-mesh-in-unreal-engine#4-generatingthenavigationmeshatruntime)** 分为了3类：
+
+（可在 *项目设置->引擎->导航网格体->运行时生成* 进行设置）
+
+|               生成规则               |                             描述                             | 备注 |
+| :----------------------------------: | :----------------------------------------------------------: | :--: |
+|            静态（Static）            |                    运行加载后，无法再更改                    |      |
+|           动态（Dynamic）            | 运行时将重新构建。期间 寻路网格使用的数据可被更新、网格体可重构、新生成 |      |
+| 限动态修饰（Dynamic Modifiers Only） | 运行加载后，期间仅有 寻路区域/寻路链接/动态对象 上的寻路修饰 可修改网格体数据（影响寻路结果），但不会新生成网格体 |      |
+
+### [寻路网格体的生成](https://dev.epicgames.com/documentation/en-us/unreal-engine/basic-navigation-in-unreal-engine#2-buildingthenavigationmesh)
+
+在目标Level下，放置 **寻路网格体边界体积（Navigation Mesh Bounds Volume）** 的Actor对象到场景内、调整其覆盖范围，即可生成寻路网格体。按下 `P` 键，能可视化看到网格体：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250823171144851.png)
+
+此外，还会附带生成一个 **RecastNavMesh-Default** 对象到场景，其功能有 **调整网格体生成选项、显示设置等**：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250823171824640.png)
+
+## 参考文章
+
+- [寻路系统 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/basic-navigation-in-unreal-engine)
