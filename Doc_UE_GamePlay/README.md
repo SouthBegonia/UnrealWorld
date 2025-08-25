@@ -1979,6 +1979,37 @@ UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/
 | NavArea_Obstacle  | 体积内的区域的寻路成本 较高。相当于 **除非代理找不到更低成本的路径，否则不会走该区域** |
 | NavArea_LowHeight |                在高度不足的地方使用，无法通过                |
 
+#### [寻路链接代理](https://dev.epicgames.com/documentation/en-us/unreal-engine/overview-of-how-to-modify-the-navigation-mesh-in-unreal-engine#3-usingnavigationlinkproxies)
+
+**寻路链接代理（Nav Link Proxy）** 由单组/多组 **左右成对的点链接构成**，点链接的左右两端之间 构成一段虚假的寻路网格体（可配置其AreaClass）、以 **构造 跨寻路网格体区域之间的 移动路线**
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250825193251967.png)
+
+寻路链接代理分为2类：
+
+- 简单链接（SimpleLink）：适用于 平地位移、从高台跳下。不可自定义移动逻辑
+- 智能链接（SmartLink）：适用于 跳跃到高台等。需自行实现左右端点间的移动逻辑
+
+##### 简单链接
+
+简单链接 即为寻路链接代理最简单直观的表现。放置 寻路链接代理（Nav Link Proxy）的Actor到场景下，调节**左右端点位置**（必须位于 已有的寻路网格体内），设置**可行方向**（单向或双向），设置其区域类（通常=NavArea_Default，表示可行）。当看到 左右端点箭头正常显示、方向符合，即表示此Nav Link Proxy搭放正确，运行后能作为合法路径加入到寻路移动中
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250825191929338.png)
+
+##### 智能链接
+
+相比于简单链接，智能链接的核心区别在于：**可自定义实现 抵达智能链接端点后的逻辑处理**。流程上就是：代理移动到智能链接的端点后、触发`Receive Smart Link Reache事件`、后续自行实现移动逻辑（通常为跳跃或瞬移）
+
+用法上，例如创建一个 `BP_NavProxyLink : NavLinkProxy` 蓝图，实现 `Receive Smart Link Reache事件`，编写代理的跳跃逻辑（跳跃到 智能链接端点的 末端/目标点）：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250825200033780.png)
+
+后将 `BP_NavProxyLink` 放置于场景，先按照简单链接的用法 配置左右端点的位置及可行方向，后 **修改区域类为 None**，点击 **将端点从简单链接复制到智能链接（Copy End Points from Simple Link to Smart Link）** 按钮，再勾选 **智能链接有意义（Smart Link Is Relevant）** 复选框
+
+运行后表现就是 代理移动到智能链接的端点、触发蓝图事件、执行跳跃逻辑到了目标端点位置，至此完成了寻路移动
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250825201021063.png)
+
 
 
 ## 参考文章
