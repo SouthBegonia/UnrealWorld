@@ -1959,6 +1959,28 @@ UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250823171824640.png)
 
+### [寻路网格体的修改](https://dev.epicgames.com/documentation/en-us/unreal-engine/modifying-the-navigation-mesh-in-unreal-engine?application_version=4.27)
+
+在基于 寻路网格体边界体积（Navigation Mesh Bounds Volume）生成了寻路网格体后，亦可再 **对寻路网格体进行修改（网格是否生成、路径成本、可行性）**
+
+#### [寻路修饰体积](https://dev.epicgames.com/documentation/en-us/unreal-engine/modifying-the-navigation-mesh-in-unreal-engine?application_version=4.27#2-usingnavigationmodifiervolumes)
+
+**寻路修饰体积（Nav Modifier Volumes）** 用于 **修改寻路网格体**
+放置 Nav Modifier Volumes的Actor对象到场景内、调整其覆盖范围，即可 **修改所处范围的寻路网格体**：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250825160902305.png)
+
+设置 Nav Modifier Volumes 上的 **区域类（Area Class）**即代表不同的修改效果：
+
+|    Area Class     |                             说明                             |
+| :---------------: | :----------------------------------------------------------: |
+|  NavArea_Default  | 将相同的寻路成本指定给体积内的区域和寻路网格体。相当于 **不做修改** |
+|   NavArea_Null    | 体积内的区域的寻路成本 无限，相当于 **移除寻路网格体、无法通过** |
+| NavArea_Obstacle  | 体积内的区域的寻路成本 较高。相当于 **除非代理找不到更低成本的路径，否则不会走该区域** |
+| NavArea_LowHeight |                在高度不足的地方使用，无法通过                |
+
+
+
 ## 参考文章
 
 - [寻路系统 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/basic-navigation-in-unreal-engine)
