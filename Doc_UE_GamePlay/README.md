@@ -1864,6 +1864,8 @@ UE内置的调试器，能在 运行态时 可视化查看 目标Actor上的 AI�
 
 ![image-20250809172418520](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250809172418520.png)
 
+##### 基本用法
+
 以 [黑板节点](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-behavior-tree-node-reference-decorators?application_version=5.5#blackboard) （检查给定的 **黑板键（Blackboard Key）** 上是否设置了值）为例：
 
 1. 有 **"Hash Line of Sight？"**装饰器节点：
@@ -1872,6 +1874,27 @@ UE内置的调试器，能在 运行态时 可视化查看 目标Actor上的 AI�
 2. 例如 初始时 **HasLineOfSight**=false，不进入**Chase Player**分支，按顺序进入 **Patrol**分支。而当 **HasLineOfSight**->true 时，则中断**Chase Player**及右侧全部分支（正在执行**Patrol**分支的话 也将被中断）。最终回到 **AI Root**根节点，又顺序进入 **Chase Player**分支、又进行  **HasLineOfSight** 的条件判断为达成，成功进入 **Chase Player**分支
 
 ![image-20250809172827877](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250809172827877.png)
+
+##### 面板说明
+
+**黑板键（Blackboard Key）** ：
+
+- 通知观察者（Notify Observer）：
+  - 值改变时 = **黑板键的 键值变化（Value1 <=> Value2）** 时触发通知观察者。适用于 值类型的黑板键
+  - 结果改变时 = **黑板键的 结果发生变化（Null <=> Actor1/Actor2/...）**时触发通知观察者。适用于 引用类型的黑板键
+- 观察者终止（Observer Aborts）：观察器 收到触发通知时的 中断行为
+  - None = 不中断
+  - Self = 中断其所在子树，并返回失败
+  - Low Priority = 中断所有 低优先级的节点、子树（直观上就是 其右侧全部子树）
+  - Both = Self + Low Priority
+
+##### 参考文章
+
+- [Notify Observer difference? - UnrealEngineDev](https://forums.unrealengine.com/t/notify-observer-difference/411460)
+- [WTF Is? AI: Blackboard Decorator Node in Unreal Engine 4 ( UE4 ) - Youtube](https://www.youtube.com/watch?v=PcBV-X5R9dE&t=366s&ab_channel=MathewWadsteinTutorials)
+- [UE5 行为树（1）：运行逻辑 - 知乎](https://zhuanlan.zhihu.com/p/667581758)
+
+
 
 #### 任务节点
 
