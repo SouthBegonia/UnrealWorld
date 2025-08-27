@@ -2031,6 +2031,8 @@ UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/
 
 ## 寻路代理
 
+寻路代理，通常指代 AI Agent，即 AIController所控制的Character
+
 ### 寻路查询筛选器
 
 基于上文我们知道 创建完寻路网格体后，可以通过 Nav Modifier Volumes 修改网格体的可行性或移动成本，这样做的话相当于 **所有寻路代理 将共用同套寻路网格体 进行寻路、无法特殊处理单个代理**，因此就有了 **寻路查询筛选器（Navigation Query Filter）** ：解决 **单个寻路代理 在网格体上 各区域的移动成本重载**。
@@ -2049,6 +2051,24 @@ UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/
 例如 有3块默认成本一致的区域（蓝、粉、红）。新建一个 寻路查询筛选器后，设置筛选器 重载粉色、红色区域的成本较高、蓝色区域不变（不添加也行）、配置筛选器到Character上的 **筛选器类（Filter Class）** 栏。则 当代理开始寻路时，将会走蓝色区域 而不是成本被筛选器重载后成本较高的红、粉色区域：
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827154905457.png)
 
+
+
+## 寻路行为
+
+基于上文创建完成了 场景的寻路网格（核心是 Navigation Mesh Bounds Volume），现在我们就能 在移动代理（AI Agent）上调用**寻路相关方法**
+
+### AIMoveTo
+
+蓝图常用的AIMoveTo节点，对应C++位于 `UAIBlueprintHelperLibrary::CreateMoveToProxyObject(UObject* WorldContextObject, APawn* Pawn, FVector Destination, AActor* TargetActor = NULL, float AcceptanceRadius = 5.f, bool bStopOnOverlap = false) `
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827165945169.png)
+
+### UBTTask_MoveTo
+
+行为树的 MoveTo 任务节点，对应C++位于 `UBTTask_MoveTo `
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827172627951.png)
+
 ## 参考文章
 
 - [寻路系统 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/basic-navigation-in-unreal-engine)
+- [虚幻引擎 NavMesh 导航寻路系统原理机制源码剖析 - 知乎](https://zhuanlan.zhihu.com/p/691181077)
