@@ -2043,7 +2043,7 @@ UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827152959880.png)
 
 例如 有3块默认成本一致的区域（蓝、粉、红）。新建一个 寻路查询筛选器后，设置筛选器 重载粉色、红色区域的成本较高、蓝色区域不变（不添加也行）、配置筛选器到Character上的 **筛选器类（Filter Class）** 栏。则 当代理开始寻路时，将会走蓝色区域 而不是成本被筛选器重载后成本较高的红、粉色区域：
-![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827152132847.png)
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827154905457.png)
 
 ## 参考文章
 
