@@ -2023,6 +2023,10 @@ UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827144553845.png)
 
+### 寻路网格体的优化
+
+[优化寻路网格体的生成速度 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/optimizing-navigation-mesh-generation-speed?application_version=4.27)
+
 
 
 ## 寻路代理
