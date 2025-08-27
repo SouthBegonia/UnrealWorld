@@ -2010,7 +2010,40 @@ UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250825201021063.png)
 
+#### 寻路区域/区域类
 
+基于上文我们知道 Nav Modifier Volumes 中可以设置其 **区域类（Area Class）** ，以达到修改寻路网格体区域的可行性或移动成本，其核心就是 Area Class内的 **默认成本（Default Cost）**
+从 `NavArea` 派生一个子类后，即可看到其设置参数：
+
+- **默认成本（Default Cost）**：描述所其区域的成本，数值越大表示成本越高。默认=1=无额外成本（相当于 NavArea_Default）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827145238720.png)
+
+例如 创建了3个`NavArea` 的子类，设定到不同Nav Modifier Volumes上。其中蓝色、红色区域的成本为1，而粉色区域的成本为4，则寻路代理在移动时，将会避开粉色区域、选择走蓝色或红色区域：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827144553845.png)
+
+
+
+## 寻路代理
+
+### 寻路查询筛选器
+
+基于上文我们知道 创建完寻路网格体后，可以通过 Nav Modifier Volumes 修改网格体的可行性或移动成本，这样做的话相当于 **所有寻路代理 将共用同套寻路网格体 进行寻路、无法特殊处理单个代理**，因此就有了 **寻路查询筛选器（Navigation Query Filter）** ：解决 **单个寻路代理 在网格体上 各区域的移动成本重载**。
+
+就例如：一个由陆地+河流构成的区域，单位可正常寻路移动、穿越河流，但火系单位 不可移动跨越河流，即 对于火系单位来说 河流区域的移动成本无限大
+
+从 `Navigation Query Filter` 派生一个子类后，即可看到寻路查询筛选器的设置参数：
+
+- 区域：
+  - 区域类：需要自定义重载的 Area Class
+  - 漫游开销重载：即重载 默认成本（Default Cost）
+  - 进入开销重载：即重载 固定区域进入开销
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827152959880.png)
+
+例如 有3块默认成本一致的区域（蓝、粉、红）。新建一个 寻路查询筛选器后，设置筛选器 重载粉色、红色区域的成本较高、蓝色区域不变（不添加也行）、配置筛选器到Character上的 **筛选器类（Filter Class）** 栏。则 当代理开始寻路时，将会走蓝色区域 而不是成本被筛选器重载后成本较高的红、粉色区域：
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827152132847.png)
 
 ## 参考文章
 
