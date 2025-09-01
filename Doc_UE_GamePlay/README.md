@@ -1789,7 +1789,7 @@ UE内置的调试器，能在 运行态时 可视化查看 目标Actor上的 AI�
 
 
 
-# Behavior Tree
+# AI - Behavior Tree
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250819204016556.png)
 
@@ -1946,7 +1946,7 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 
 
-# 寻路系统
+# AI - 寻路系统
 
 UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/basic-navigation-in-unreal-engine)，主要用于 **为 AI Agent 提供寻路功能**
 
@@ -2095,3 +2095,33 @@ UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/
 
 - [寻路系统 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/basic-navigation-in-unreal-engine)
 - [虚幻引擎 NavMesh 导航寻路系统原理机制源码剖析 - 知乎](https://zhuanlan.zhihu.com/p/691181077)
+
+
+
+# AI - 感知系统
+
+**[AI感知系统（AI Perception System）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/ai-perception-in-unreal-engine?application_version=5.5)** 为Pawn提供了一种 **从环境中接收数据的方式**，例如 噪音的来源、AI是否遭到破坏、或AI是否看到了什么
+
+实现上是通过 **AI感知组件（AI Perception Component）** 来完成，其相当于 刺激的监听器，收到刺激（视觉/听觉/伤害等）后触发响应事件
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250901164440545.gif)
+
+## [感知组件（AI Perception Component）](https://dev.epicgames.com/documentation/en-us/unreal-engine/ai-perception-in-unreal-engine?application_version=5.5#ai-perception-component)
+
+在一个Pawn单位上添加 `UAIPerceptionComponent : UActorComponent` 组件，其核心参数有：
+
+- 感官配置：配置所需的 **感知属性**，例如 伤害/视觉/听觉等
+- 事件：感知变化时 分发的各类事件
+  - 目标感知更新时 `OnTargetPerceptionUpdated`
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250901154945220.png)
+
+### [感知属性（AI Perception Properties）](https://dev.epicgames.com/documentation/en-us/unreal-engine/ai-perception-in-unreal-engine?application_version=5.5#ai-perception-properties)
+
+可以添加 **感官配置**（`UAISenseConfig`）并 配置所需的 **感知类型**（`UAISense`），以实现不同的 感知逻辑
+
+#### 感知类型（AI Sense）
+
+感知类型 即为**感知逻辑的实现**，对应为 `AISense : UObject `
+
+UE已有的类型有 视觉（`UAISense_Sight : AISense `）、听觉（`UAISense_Hearing : AISense `）、伤害（`UAISense_Damage : AISense `）等，对应用法可参阅 [AI Perception Properties - UnrealEngine](https://dev.epicgames.com/documentation/en-us/unreal-engine/ai-perception-in-unreal-engine?application_version=5.5#ai-perception-properties)
