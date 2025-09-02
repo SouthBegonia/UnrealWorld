@@ -1388,6 +1388,7 @@ void UAbilitySystemComponent::InitializeComponent()
 参考文章：
 
 - [【UE】记录GAS中AttributeSet初始化流程 - 知乎](https://zhuanlan.zhihu.com/p/687390022)
+- [How should I put attribute sets on an actor? - UnrealEngineDev](https://dev.epicgames.com/community/learning/tutorials/DPpd/unreal-engine-gameplay-ability-system-best-practices-for-setup#howshouldiputattributesetsonanactor?)
 
 #### 3. AS的使用
 
@@ -1781,6 +1782,7 @@ UE内置的调试器，能在 运行态时 可视化查看 目标Actor上的 AI�
 ## 参考文章
 
 - [Gameplay技能系统 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/gameplay-ability-system-for-unreal-engine?application_version=5.4)
+- [Your First 60 Minutes with Gameplay Ability System - UnrealEngineDev](https://dev.epicgames.com/community/learning/tutorials/8Xn9/unreal-engine-epic-for-indies-your-first-60-minutes-with-gameplay-ability-system#enablingthegameplayabilitiesplugin)
 - [虚幻引擎游戏技能系统文档 - CSDN](https://blog.csdn.net/pirate310/article/details/106311256)
 - [【Unreal】虚幻GAS系统快速入门 - 知乎](https://zhuanlan.zhihu.com/p/486808688)
 - [UE5 GAS Base - CSDN](https://blog.csdn.net/qq_52179126/article/details/131860252)
