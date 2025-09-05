@@ -1,5 +1,3 @@
-UE内的AI，可概述为 AI单位的**智能行为** + 行为的**环境准备**，旨在于 **实现非玩家单位（AI单位）的智能交互行为**
-
 
 - [Behavior Tree](#behavior-tree)
   - [黑板（BlackBoard）](#黑板blackboard)
@@ -43,6 +41,16 @@ UE内的AI，可概述为 AI单位的**智能行为** + 行为的**环境准备*
 
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
+
+# 总览
+
+UE内的AI，可概述为 AI单位的**智能行为** + 行为的**环境准备**，旨在于 **实现非玩家单位（AI单位）的智能交互行为**
+
+
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
+
+
 
 # Behavior Tree
 
@@ -198,6 +206,101 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 ##### 参考文章
 
 - [[UE4][C++][AI]自定义行为树节点——Service(服务节点) - 知乎](https://zhuanlan.zhihu.com/p/296462878)
+
+
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
+
+
+
+# StateTree
+
+[StateTree](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/state-tree-in-unreal-engine)是UE内的 **通用分层状态机**，组合了行为树中的 选择器（Selectors） 与状态机中的 状态（States） 和 过渡（Transitions）
+
+有别于 BehaviorTree可实现的 **高智能、频繁感知、EQS的AI**，StateTree主要作用是实现 **数量庞大、低智能、AI**
+
+## 状态树（StateTree）
+
+### 配置与使用
+
+在 Plugins内添加 **GameplayStateTree** 和 **StateTree** 插件后，即可新建 ST资产：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905193850568.png)
+
+后为单位添加 `UStateTreeComponent` 或 `UStateTreeAIComponent`，并设置 StateTree资产、在StateTree内设置对应单位的上下文类。运行后将 自动执行进入StateTree
+
+- `UStateTreeComponent`：上下文只关联 Actor类。适用于 不含AIController的单位
+- `UStateTreeAIComponent`：上下文关联 Actor+Controller。适用于 带AIController的单位
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905195935677.png)
+
+**StateTree基本运行规则**为：
+
+1. 自顶向下 逐层检查State 是否可进入
+2. 进入State后依次执行 此State的任务队列
+3. 依照 此State的过渡规则 可在各类情况下（State完成/成功/失败、事件通知等）过渡到其他State
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905194803273.png)
+
+### 状态树模块
+
+#### 输入条件
+
+输入条件用于 **判断是否能进入此State**。包含 参数比较、Tags持有判断
+
+但注意 判断对比的参数源 只有上下文Actor的成员参数及 StateTree左侧面板的参数（这块参数全StateTree可读不可写，外部也不可读取/修改，相当于常量）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905201137265.png)
+
+#### 任务
+
+任务是 **某个State期间的一段功能逻辑函数，任务的完成性 决定了 此State的完成性**
+
+例如 有一个 `Patrol And Move` 的State，为其创建、添加一个任务 `STT_MoveToLoaction : UStateTreeTaskBlueprintBase` 功能为移动自身到目标位置，其周期函数有：
+
+- `Event EnterState`：进入此State 开始执行此任务时触发
+- `Event ExitState`：此State在 任务EnterState后 退出其状态时触发
+- `Event StateCompleted`：此State完成时触发
+- `Event Tick`：任务激活期间（EnterState 到 ExitState）的Tick
+
+当我们执行完成移动逻辑后，相当于 `Patrol And Move` **当前State就算完成了，一定要 主动调用 `Finish Task`**，则State才会走 过渡判断（图例是顺序过渡到Wait），否则将一直处于 `Patrol And Move`状态。而 `STT_MoveToLoaction ` 之前还有的 `STT_FindRandomPatrol`、`STT_SetMoveSpeed` 任务内 就可以不调用`Finish Task`
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905202053007.png)
+
+此外我们可以设置 **任务函数的传入、传出参数**。例如有一个 `STT_FindRandomPatrol : UStateTreeTaskBlueprintBase` 功能为 提供一个范围内的随机可达坐标。则我们可以：
+
+- 传入 上下文参数 `Actor`（添加变量后、输入设置其Categoty=Context。StateTree内会自动绑定参数源为 上下文Actor）
+- 传入 限制范围参数 `PatrolRadius: float`（添加变量后、输入设置其Categoty=Input。StateTree内设置参数源为 全局参数 `PatrolRadius=1000`）
+- 计算后设置传出参数 `PatrolLocation : Vector`（添加变量后、输入设置其Categoty=Output。StateTree内后续任务就可获取此值作为参数源，例如后面 `STT_MoveToLoaction `任务的`TargetLocation`）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905205310275.png)
+
+#### 全局任务
+
+区别于上文的任务是 挂在于某个State下的，**全局任务则位于 StateTree资产详情面板内**，其挂载的也是 `UStateTreeTaskBlueprintBase`类型的任务，区别有：
+
+- 全局任务 在StateTree执行时 同步执行（可触发 `Event EnterState`、`Event Tick`）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905204016814.png)
+
+## 用法示例
+
+例如 用StateTree实现 [UE官方BehaviorTree示例](https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---quick-start-guide?application_version=5.5#endresult)，二者基本结构例如：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905192536172.png)
+
+区别于 BehaviorTree实现（在AIController中 AIPerception感知时 更新黑板键 HasLineOfSight），StateTree则调整为 在AIController中 AIPerception感知时 SendEvent到StateTree、以驱动StateTree切换State：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905195358232.png)
+
+
+
+## 参考文章
+
+- [《游戏AI系统其三：状态树StateTree》 - 知乎](https://zhuanlan.zhihu.com/p/27481809513)
+- [Learn All You Need to Know About State Trees In Unreal Engine FOR FREE - Youtube](https://www.youtube.com/watch?v=BAYZgAzs7RM&ab_channel=TheGameDevCave)
+- [虚幻的行为树 Behavior Tree (BT)与状态树 State Tree (ST)对比分析 - 知乎](https://zhuanlan.zhihu.com/p/1918237969791288178)
+
 
 
 
@@ -395,3 +498,7 @@ UE已有的类型有 视觉（`UAISense_Sight : AISense `）、听觉（`UAISens
 
 
 
+# 参考文章
+
+- [Artificial Intelligence - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/artificial-intelligence-in-unreal-engine?application_version=5.5)
+- [游戏开发中的AI技术Overview - 知乎](https://zhuanlan.zhihu.com/p/15800876841)
