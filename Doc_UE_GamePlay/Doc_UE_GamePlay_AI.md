@@ -244,7 +244,7 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 ### 状态树模块
 
-#### 输入条件
+#### 输入条件（Enter Conditions）
 
 输入条件用于 **判断是否能进入此State**。包含 参数比较、Tags持有判断
 
@@ -252,7 +252,7 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905201137265.png)
 
-#### 任务
+#### 任务（Tasks）
 
 任务是 **某个State期间的一段功能逻辑函数，任务的完成性 决定了 此State的完成性**
 
@@ -275,13 +275,38 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905205310275.png)
 
-#### 全局任务
+#### 全局任务（Global Tasks）
 
 区别于上文的任务是 挂在于某个State下的，**全局任务则位于 StateTree资产详情面板内**，其挂载的也是 `UStateTreeTaskBlueprintBase`类型的任务，区别有：
 
 - 全局任务 在StateTree执行时 同步执行（可触发 `Event EnterState`、`Event Tick`）
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905204016814.png)
+
+#### 过渡（Transitions）
+
+过渡是指 **State之间的切换规则**，基本流程为：通过契机触发过渡判断时、判断过渡条件是否通过、通过则从此State切换到目标State
+
+（下图1）在State细节面板上，添加一条过渡，其参数有：
+
+- **触发（Trigger）**：即 触发过渡判断的契机
+  - 状态完成时（On State Conpleted）
+  - 状态成功时（On State Succeeded）
+  - 状态失败时（On State Failed）
+  - 状态Tick期间（On Tick）
+  - 状态期收到事件（On Event）
+- **过渡到（Transition To）**：
+  - 下个状态：即 面板上此State的 **相邻下一条State**。但是 **倘若下条State不满足它的 输入条件，则过渡失败**、仍将处于此State
+  - 下个可选状态：即 顺序检查面板上 **此State的后续State**，**倘若 后续某条State满足它的 输入条件，则过渡成功**，否则过渡失败。例如 下图2中，ST_2输入条件恒不满足，ST_1的过渡需配置为 下个可选状态才可顺延过渡到ST_3，倘若配置为 下个状态 则过渡到ST_2失败、仍将处于ST_1
+  - 树成功、树失败：标记当前StateTree的完成状态，也将 **终止执行此StateTree**
+  - 指定State：同理也将检查目标State的  输入条件
+- **条件（Conditions）**：即 过渡条件，满足全部条件后 才允许此过渡
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250906152813229.png)
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250906154304940.png)
+
+
 
 ## 用法示例
 
