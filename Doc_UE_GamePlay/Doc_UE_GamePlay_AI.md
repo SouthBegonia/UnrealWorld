@@ -275,14 +275,6 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905205310275.png)
 
-#### 全局任务（Global Tasks）
-
-区别于上文的任务是 挂在于某个State下的，**全局任务则位于 StateTree资产详情面板内**，其挂载的也是 `UStateTreeTaskBlueprintBase`类型的任务，区别有：
-
-- 全局任务 在StateTree执行时 同步执行（可触发 `Event EnterState`、`Event Tick`）
-
-![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905204016814.png)
-
 #### 过渡（Transitions）
 
 过渡是指 **State之间的切换规则**，基本流程为：通过契机触发过渡判断时、判断过渡条件是否通过、通过则从此State切换到目标State
@@ -305,6 +297,28 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250906152813229.png)
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250906154304940.png)
+
+#### 求值器（Evaluators）
+
+求值器（`StateTreeEvaluatorBlueprintBase`）是StateTree资产详情面板的成员，其主要功能是 **在StateTree起始/结束/Tick 时，计算、提供参数给到 树内各State使用**，其在StateTree开始时 就一并执行
+
+例如下图，新建一个 求值器`STE_Test_Global : StateTreeEvaluatorBlueprintBase`，其核心事件有：
+
+- `Event TreeStart`
+- `Event TreeStop`
+- `Event Tick`
+
+我们可以通过此求值器，在 `Event TreeStart` 时 计算、缓存所需业务参数（`ActorMoveComp`），后续的State就可以直接 获取、使用此参数（而不是 State自身又通过Task 实现求值器一样的计算逻辑），且 **求值器可被此StateTree内 全部State访问使用**
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250906161259988.png)
+
+#### 全局任务（Global Tasks）
+
+区别于上文的任务是 挂在于某个State下的，**全局任务则位于 StateTree资产详情面板内**，其挂载的也是 `UStateTreeTaskBlueprintBase`类型的任务、含有相同的事件（ `Event EnterState`、`Event Tick`等）
+
+其和求值器一样，在StateTree开始时 就一并执行。但和求值器功能有重贴，目前版本（UE5.5-）用法推荐是 求值器+State任务
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905204016814.png)
 
 
 
