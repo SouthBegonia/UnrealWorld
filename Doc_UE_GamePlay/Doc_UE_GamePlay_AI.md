@@ -246,11 +246,25 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 #### 输入条件（Enter Conditions）
 
-输入条件用于 **判断是否能进入此State**。包含 参数比较、Tags持有判断
+输入条件用于 **判断是否能进入此State**。内置包含 参数比较、Tags持有判断等，亦可 自行继承实现自定义条件判断
 
 但注意 判断对比的参数源 只有上下文Actor的成员参数及 StateTree左侧面板的参数（这块参数全StateTree可读不可写，外部也不可读取/修改，相当于常量）
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905201137265.png)
+
+##### 自定义实现 输入条件
+
+例如下图 新建一个**蓝图形式的输入条件** `STD_TestCondition : UStateTreeConditionBlueprintBase`，重写`Receive Test Condition`，其返回值即为Condition：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250908142822624.png)
+
+若是 **C++形式的输入条件**，以 UE5.6中的[Variant_Combat示例](https://github.com/EpicGames/UnrealEngine/blob/release/Templates/TP_ThirdPerson/Source/TP_ThirdPerson/Variant_Combat/AI/CombatStateTreeUtility.h) 中为例，其创建了一个 判断自身Character是否落地的输入条件 `FStateTreeCharacterGroundedCondition : FStateTreeConditionCommonBase`：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250908144013760.png)
+
+后在 `TestCondition(FStateTreeExecutionContext& Context)`内实现判断逻辑、返回Condition值，并使用 Categoty=Condition的成员参数`bMustBeOnAir : bool` 以设置Condition的双向判断：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250908144600435.png)
 
 #### 任务（Tasks）
 
