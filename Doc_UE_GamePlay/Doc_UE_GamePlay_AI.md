@@ -219,6 +219,8 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 有别于 BehaviorTree可实现的 **高智能、频繁感知、EQS的AI**，StateTree主要作用是实现 **数量庞大、低智能、AI**
 
+> 备注：截至目前 UE5.6，官方还在对StateTree模块进行扩充、修改，因此建议 ST功能预览则用最新UE版本，业务实现则按需选择
+
 ## 状态树（StateTree）
 
 ### 配置与使用
@@ -246,7 +248,7 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 #### 输入条件（Enter Conditions）
 
-输入条件用于 **判断是否能进入此State**。内置包含 参数比较、Tags持有判断等，亦可 自行继承实现自定义条件判断
+输入条件用于 **判断是否能进入此State**。内置包含 参数比较、Tags持有判断等，亦可 自行继承实现自定义条件判断。对应C++层的 `FStateTreeConditionBase : FStateTreeNodeBase`
 
 但注意 判断对比的参数源 只有上下文Actor的成员参数及 StateTree左侧面板的参数（这块参数全StateTree可读不可写，外部也不可读取/修改，相当于常量）
 
@@ -268,9 +270,9 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 #### 任务（Tasks）
 
-任务是 **某个State期间的一段功能逻辑函数，任务的完成性 决定了 此State的完成性**
+任务是 **某个State期间的一段功能逻辑函数，任务的完成性 决定了 此State的完成性**。对应C++层的 `FStateTreeTaskBase : FStateTreeNodeBase`
 
-例如 有一个 `Patrol And Move` 的State，为其创建、添加一个任务 `STT_MoveToLoaction : UStateTreeTaskBlueprintBase` 功能为移动自身到目标位置，其周期函数有：
+例如 有一个 `Patrol And Move` 的State，为其创建、添加一个蓝图形式的任务 `STT_MoveToLoaction : UStateTreeTaskBlueprintBase` 功能为移动自身到目标位置，其周期函数有：
 
 - `Event EnterState`：进入此State 开始执行此任务时触发
 - `Event ExitState`：此State在 任务EnterState后 退出其状态时触发
@@ -289,9 +291,21 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905205310275.png)
 
+##### 自定义实现 任务
+
+**蓝图形式的任务**，从 `UStateTreeTaskBlueprintBase` 派生后重写 `Event EnterState`、`Event ExitState`、`Event StateCompleted`、`Event Tick`几个事件即可，可参照上文实现
+
+**C++形式的任务**，则从 `FStateTreeTaskCommonBase`派生后重写，以 UE5.6中的[Variant_Combat示例](https://github.com/EpicGames/UnrealEngine/blob/release/Templates/TP_ThirdPerson/Source/TP_ThirdPerson/Variant_Combat/AI/CombatStateTreeUtility.h)，其创建了一个 自身Character发动攻击的任务 `FStateTreeComboAttackTask : FStateTreeTaskCommonBase`：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250908153524102.png)
+
+随后也是同样的重写相关方法：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250908154158808.png)
+
 #### 过渡（Transitions）
 
-过渡是指 **State之间的切换规则**，基本流程为：通过契机触发过渡判断时、判断过渡条件是否通过、通过则从此State切换到目标State
+过渡是指 **State之间的切换规则**，基本流程为：通过契机**触发过渡判断**时、**判断过渡条件**是否通过、通过则从此State切换到目标State
 
 （下图1）在State细节面板上，添加一条过渡，其参数有：
 
@@ -306,7 +320,7 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
   - 下个可选状态：即 顺序检查面板上 **此State的后续State**，**倘若 后续某条State满足它的 输入条件，则过渡成功**，否则过渡失败。例如 下图2中，ST_2输入条件恒不满足，ST_1的过渡需配置为 下个可选状态才可顺延过渡到ST_3，倘若配置为 下个状态 则过渡到ST_2失败、仍将处于ST_1
   - 树成功、树失败：标记当前StateTree的完成状态，也将 **终止执行此StateTree**
   - 指定State：同理也将检查目标State的  输入条件
-- **条件（Conditions）**：即 过渡条件，满足全部条件后 才允许此过渡
+- **条件（Conditions）**：即 过渡条件，满足全部条件后 才允许此过渡。与输入条件一样 可采用 `FStateTreeConditionBase `，其自定义实现方案也相同
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250906152813229.png)
 
@@ -314,7 +328,7 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 #### 求值器（Evaluators）
 
-求值器（`StateTreeEvaluatorBlueprintBase`）是StateTree资产详情面板的成员，其主要功能是 **在StateTree起始/结束/Tick 时，计算、提供参数给到 树内各State使用**，其在StateTree开始时 就一并执行
+求值器 是StateTree资产详情面板的成员，其主要功能是 **在StateTree起始/结束/Tick 时，计算、提供参数给到 树内各State使用**，其在StateTree开始时 就一并执行
 
 例如下图，新建一个 求值器`STE_Test_Global : StateTreeEvaluatorBlueprintBase`，其核心事件有：
 
@@ -326,15 +340,19 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250906161259988.png)
 
+##### 自定义实现 求值器
+
+**蓝图形式的求值器**，从 `StateTreeEvaluatorBlueprintBase`派生后重写 `Event TreeStart`、`Event TreeStop`、`Event Tick`事件即可，可参照上文实现
+
+**C++形式的求值器**，则从 `FStateTreeEvaluatorBase :FStateTreeNodeBase`派生，也是同样的重写`TreeStart`、`TreeStop`、`Tick`方法
+
 #### 全局任务（Global Tasks）
 
-区别于上文的任务是 挂在于某个State下的，**全局任务则位于 StateTree资产详情面板内**，其挂载的也是 `UStateTreeTaskBlueprintBase`类型的任务、含有相同的事件（ `Event EnterState`、`Event Tick`等）
+区别于上文的任务是 挂在于某个State下的，**全局任务则位于 StateTree资产详情面板内**，其挂载的也 同类型的`FStateTreeNodeBase`（`UStateTreeTaskBlueprintBase`、`FStateTreeTaskCommonBase` 的父类）类型的任务，也就包含有相同的事件（`Event EnterState`、`Event Tick`等）
 
-其和求值器一样，在StateTree开始时 就一并执行。但和求值器功能有重贴，目前版本（UE5.5-）用法推荐是 求值器+State任务
+类似于 求值器，其也是在StateTree开始时 就一并执行，二者功能上有重叠性（Tick、能计算提供参数给到StateTree节点）
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905204016814.png)
-
-
 
 ## 用法示例
 
