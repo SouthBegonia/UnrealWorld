@@ -356,6 +356,8 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 ## 用法示例
 
+### 示例1
+
 例如 用StateTree实现 [UE官方BehaviorTree示例](https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---quick-start-guide?application_version=5.5#endresult)，二者基本结构例如：
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905192536172.png)
@@ -364,7 +366,24 @@ C++层的实现也类似，例如 官方任务节点 `UBTTask_Wait : UBTTaskNode
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250905195358232.png)
 
+### 示例2
 
+例如 官方在UE5.6下ThirdPerson模板项目内的[Variant_Combat](https://github.com/EpicGames/UnrealEngine/tree/release/Templates/TP_ThirdPerson/Source/TP_ThirdPerson/Variant_Combat) 为例，其用StateTree实现了AI敌人的行为（待机、侧移对峙、攻击）及特殊状态处理（落地、死亡）：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250908194019948.gif)
+
+其StateTree结构如下图，流程简述就是：非死亡期间，进行 索敌攻击、待机、侧移对峙 3选1随机执行；外加Tick期间判断死亡、落地的状态过渡
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250908194646472.png)
+
+数据源问题：
+
+- 全局任务`FStateTreeGetPlayerInfoTask`在Tick期间持续获取更新`TargrtPlayerCharacter`等数据（也就是被AI单位视为敌人的 玩家的Character），为各类Condition判断或Task提供了核心参数
+- 状态树模式为 `UStateTreeAIComponent`，则可持有 上下文Actor和上下文AIController的指针，也就能 获取二者的成员参数以供StateTree各部分使用
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250908193211546.png)
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250908193121013.png)
 
 ## 参考文章
 
