@@ -984,19 +984,16 @@ void NativeDestruct()
 
 基于上述区别，在控件初始化、绑定时，需要区分处理：
 
-```c++
-// 若是在 编辑器 下就绑定、预览控件的：
-bool Initialize()	//控件绑定
-void NativePreConstruct()   //控件使用（设置文字颜色、按钮事件绑定...）
-
-// 若是在 Game 下才绑定、预览控件的：
-void NativeConstruct()	//控件绑定、控件使用
-// 也可以 void NativeOnInitialized() 进行控件绑定，void NativeConstruct() 使用控件
-```
+|                                                         |               编辑器               |                  Game / PIE                  |
+| :-----------------------------------------------------: | :--------------------------------: | :------------------------------------------: |
+|    C++：`Initialize()` / BP：`Event On Initialized`     |              控件绑定              |                   控件绑定                   |
+|    C++：`NativeConstruct()` / BP：`Event Construct`     |                 x                  | 控件绑定、控件使用（运行态才可预览修改效果） |
+| C++：`NativePreConstruct()` / BP：`Event Pre Construct` | 控件使用（编辑器就可预览修改效果） |                  不推荐使用                  |
 
 ### 参考文章
 
 - [UMG生命周期 - 博客园](https://www.cnblogs.com/sin998/p/15490311.html)
+- [[UE5]UMGにおける初期化処理について](https://historia.co.jp/archives/39279/)
 - [[UEC++]UMG的构建函数 - CSDN](https://blog.csdn.net/q757745037/article/details/143270863)
 - [UE4 UMG中C++成员变量绑定蓝图Widget - 知乎](https://zhuanlan.zhihu.com/p/337908390)
 
