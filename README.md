@@ -2,7 +2,19 @@
 
 记录 **[Unreal Engine](https://www.unrealengine.com/zh-CN)** 相关内容
 
+- [UnrealWorld](#unrealworld)
+  - [项目](#项目)
+    - [Demo\_UE\_BP\_NetEase](#demo_ue_bp_netease)
+  - [文档](#文档)
+  - [IDE](#ide)
+    - [Visual Studio](#visual-studio)
+    - [Rider](#rider)
+    - [IDE相关](#ide相关)
+  - [其他](#其他)
 
+
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
 
 ## 项目
 
@@ -12,6 +24,8 @@
 
 
 
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
+
 ## 文档
 
 Unreal Engine 综合类文档：[Doc_UE](https://github.com/SouthBegonia/UnrealWorld/tree/main/Doc_UE)
@@ -19,6 +33,8 @@ Unreal Engine 综合类文档：[Doc_UE](https://github.com/SouthBegonia/UnrealW
 Unreal Engine GamePlay相关文档：[Doc_UE_GamePlay](https://github.com/SouthBegonia/UnrealWorld/tree/main/Doc_UE_GamePlay)
 
 
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
 
 ## IDE
 
@@ -42,8 +58,8 @@ Unreal Engine GamePlay相关文档：[Doc_UE_GamePlay](https://github.com/SouthB
 
 - 安装方法：
   - [UE5 + Rider 配置调试，修改代码操作 - 知乎](https://zhuanlan.zhihu.com/p/8648285372)
-    - 备注1：UE编辑器偏好设置->码编辑器设置 选Rider Uproject，而不是Rider
-    - 备注2：UE5+Rider打开解决方案时，选择 在游戏中安装 RiderLink插件，而不是 在引擎中安装。若控制台最终提示RiderLink插件安装失败，可能为Rider的问题，可尝试升级Rider版本或重装Rider
+    - 备注1：UE编辑器偏好设置->码编辑器设置 **选Rider Uproject**，而不是Rider
+    - 备注2：UE5+Rider首次打开解决方案时，将会 **自动提示需要安装 RiderLink插件**，**优先选择 在引擎中安装**，失败的话其次再选 在游戏中安装。若控制台最终提示RiderLink插件安装失败，可能为Rider的问题，可尝试升级Rider版本或重装Rider
   - [rider-for-unreal - Jetbrains](https://www.jetbrains.com/guide/gamedev/tutorials/rider-for-unreal/)
 
 - 其他：
@@ -66,6 +82,8 @@ Unreal Engine GamePlay相关文档：[Doc_UE_GamePlay](https://github.com/SouthB
    根本原因是 不同UE版本所必需的MSVC版本不同（UE版本越高，MSVC通常也对应更高）。因此针对多UE版本的开发环境，需要用VS Installer安装多个版本的MSVC组件，参考：[UE5 5.1.1创建C++项目，显示error C4668和error C4067的解决方法 - CSDN](https://blog.csdn.net/cat_want_fly/article/details/143869347)
 
 
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
 
 ## 其他
 
