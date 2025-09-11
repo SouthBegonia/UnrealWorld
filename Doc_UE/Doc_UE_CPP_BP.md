@@ -16,27 +16,33 @@
   - [`TSubClassOf<T>`](#tsubclassoft)
   - [`TSoftObjectPtr<T>`](#tsoftobjectptrt)
   - [参考文章](#参考文章-3)
-- [容器](#容器)
+- [接口](#接口)
+  - [蓝图接口](#蓝图接口)
+    - [基本用法](#基本用法)
+  - [C++接口](#c接口)
+    - [基本用法](#基本用法-1)
   - [参考文章](#参考文章-4)
-- [字符串](#字符串)
+- [容器](#容器)
   - [参考文章](#参考文章-5)
-- [枚举](#枚举)
+- [字符串](#字符串)
   - [参考文章](#参考文章-6)
-- [结构体](#结构体)
+- [枚举](#枚举)
   - [参考文章](#参考文章-7)
+- [结构体](#结构体)
+  - [参考文章](#参考文章-8)
 - [数据表 DataTables](#数据表-datatables)
   - [创建数据表](#创建数据表)
   - [数据表操作](#数据表操作)
   - [数据表导入导出](#数据表导入导出)
-  - [参考文章](#参考文章-8)
-- [委托](#委托)
   - [参考文章](#参考文章-9)
-- [断言](#断言)
+- [委托](#委托)
   - [参考文章](#参考文章-10)
-- [事件、函数、宏](#事件函数宏)
+- [断言](#断言)
   - [参考文章](#参考文章-11)
-- [DrawDebug](#drawdebug)
+- [事件、函数、宏](#事件函数宏)
   - [参考文章](#参考文章-12)
+- [DrawDebug](#drawdebug)
+  - [参考文章](#参考文章-13)
 
 
 
@@ -348,6 +354,158 @@ else
 - [UE5中TSoftObjectPtr的使用详解 - CSDN](https://blog.csdn.net/m0_45371381/article/details/147018736)
 - [UE5里的TObjectPtr TSharedPtr TWeakPtr TSoftObjectPtr 有什么区别 - CSDN](https://blog.csdn.net/qq_30100043/article/details/143108384)
 - [UE4/5 中的TSoftObjectPtr＜＞、TSoftClassPtr＜＞和TSubclassOf＜＞ - CSDN](https://blog.csdn.net/weixin_41130251/article/details/131602636)
+
+
+
+# 接口
+
+> **接口**（Interface）是一种定义一组方法或功能的约定或协议，它规定了 类或对象应该提供哪些功能和如何提供这些功能，但不涉及具体的实现细节，使得 不同的类或对象 能够通过相同的方式进行交互
+
+UE可从 C++层、蓝图层 创建接口，接口的引入旨在于推荐使用 **面向接口编程**：
+
+- 解耦合：通过接口 而非具体的类成员方法，使不同对象间的耦合度降低（避免无效强引用）
+- 增强可替换性
+- 实现多态性
+- 提高可维护性
+
+## 蓝图接口
+
+[**蓝图接口（Blueprint Interface）**](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/blueprint-interface-in-unreal-engine) 是一个或多个函数的集合，且 **函数只有声明、不可实现**，由其他蓝图对象进行 接口的继承实现
+
+### 基本用法
+
+通过 内容浏览器内的 蓝图->蓝图接口，即可创建蓝图接口，后其他蓝图对象即可 实现该接口。详细过程可参阅：[【教程】UE4中接口的使用--蓝图篇（一） - 知乎](https://zhuanlan.zhihu.com/p/36734872)
+
+需要注意的是，当外部尝试调用一个接口方法时，[接口方法的 函数类型](https://dev.epicgames.com/documentation/en-us/unreal-engine/implementing-blueprint-interfaces-in-unreal-engine?application_version=5.5#callinterfacefunctions)有3种：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250911193638279.png)
+
+|     函数类型      |                             描述                             |           适用情况           |
+| :---------------: | :----------------------------------------------------------: | :--------------------------: |
+|  对象（Object）   |            安全调用 实现了接口的对象上的 接口方法            | 不推荐，违背面向接口编程原则 |
+| 接口（Interface） |            安全调用 实现了接口的对象上的 接口方法            |     已知 对象实现了接口      |
+|      Message      | 尝试调用 对象上的 接口方法，若对象未实现接口则 调用失败。相比于其他2个 有性能消耗 |  推荐。未知 对象实现了接口   |
+
+## C++接口
+
+在C++层实现的接口，则更为灵活：接口方法可以 蓝图可见/不可见
+
+### 基本用法
+
+在C++层声明一个接口，主要有2块构成：派生自`UInterface`的空白类 + 实际接口类
+
+```c++
+// ReactToTriggerInterface.h
+#pragma once
+
+#include "ReactToTriggerInterface.generated.h"
+
+//声明 接口的空白类：只是为了向虚幻引擎反射系统确保可见性。通常无需修改
+UINTERFACE(MinimalAPI, Blueprintable)
+class UReactToTriggerInterface : public UInterface
+{
+    GENERATED_BODY()
+};
+
+//声明 接口的实际类：真正能被实现的接口类
+class IReactToTriggerInterface
+{
+    GENERATED_BODY()
+
+public:
+    /** 在此处添加接口函数声明 */
+};
+```
+
+后即可 被其他类实现此接口：
+
+```c++
+// ATrap.h
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "Trap.generated.h"
+
+#include "ReactToTriggerInterface.h"
+
+UCLASS(Blueprintable)
+class ATrap : public AActor, public IReactToTriggerInterface
+{
+	GENERATED_BODY()
+
+public:
+	/** Add interface function overrides here. */
+}
+```
+
+对于添加 **蓝图不可见 的接口方法**，声明为 不带有`UFUNCTION`宏的 虚函数 即可：
+
+```c++
+// ReactToTrigger.h
+public:	
+	virtual bool ReactToTrigger();
+
+// ReactToTrigger.cpp
+bool IReactToTriggerInterface::ReactToTrigger()
+{		
+	return false;
+}
+
+
+// Trap.h
+public:
+	virtual bool ReactToTrigger() override;
+
+// Trap.cpp
+bool ATrap::ReactToTrigger()
+{
+	return true;
+}
+```
+
+对于添加 **蓝图可见  的接口方法**，声明为 `UFUNCTION`宏 + `BlueprintCallable` + `BlueprintNativeEvent/BlueprintImplementableEvent `的 非虚函数 即可：
+
+```c++
+// ReactToTrigger.h
+public:	
+	/* 可以 在C++或蓝图 中实现 */
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	bool ReactToTrigger();
+	
+	/* 只能在 蓝图 中实现 */
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	bool ReactToTriggerOnlyBP();
+
+
+// Trap.h
+public:
+	bool ReactToTrigger_Implementation() override;
+
+// Trap.cpp
+bool ATrap::ReactToTrigger_Implementation() const
+{
+	return false;
+}
+```
+
+对于 **判断对象是否实现了接口**：
+
+```c++
+// 判断 OriginalObject 是否实现了 UReactToTriggerInterface
+bool bIsImplemented = OriginalObject->GetClass()->ImplementsInterface(UReactToTriggerInterface::StaticClass());
+//（与上等效）
+bIsImplemented = OriginalObject->Implements<UReactToTriggerInterface>();
+
+// 判断 OriginalObject 是否实现了 UReactToTriggerInterface，实现则 ReactingObject非空
+IReactToTriggerInterface* ReactingObject = Cast<IReactToTriggerInterface>(OriginalObject);
+```
+
+## 参考文章
+
+- [蓝图接口 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/blueprint-interface-in-unreal-engine?application_version=5.5)
+
+- [【UE4 C++ 基础知识】<9> Interface 接口 - cnblogs](https://www.cnblogs.com/shiroe/p/14691197.html)
+
+- [【UE】在C++中定义和使用接口 - 知乎](https://zhuanlan.zhihu.com/p/556880518)
 
 
 
