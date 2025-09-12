@@ -210,7 +210,7 @@ Int32 BlueprintPureFalseFunction() const
 
 ![image-20250813004750983](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813004750983.png)
 
-## 使用注意事项
+### 使用注意事项
 
 即便我们将变量声明为 软引用，但对其不当操作的话，可能会导致其变为 硬引用 或 被计入资产内存，诊断方法还是 引用查看器+SizeMap。以下罗列可能遇到的情况：
 
@@ -232,7 +232,7 @@ Int32 BlueprintPureFalseFunction() const
 
 ![image-20250813150954197](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813150954197.png)
 
-## 参考文章
+### 参考文章
 
 - [UE5 Understanding hard and soft references - LeafBrainGames - Youtube](https://www.youtube.com/watch?v=aUG54KCP89M&ab_channel=LeafBranchGames)
 - [SOFT Object References in Unreal Engine EXPLAINED - The Game Dev Cave - Youtube](https://www.youtube.com/watch?v=BazkY5aqoig&ab_channel=TheGameDevCave)
@@ -267,7 +267,7 @@ UPROPERTY()
 TArray<TObjectPtr<AActor>> MyActorArr;
 ```
 
-此外，`TObjectPtr<T>` + `UPROPERTY()` 的用法，使变量会被UE识别为 **强引用**
+此外，`TObjectPtr<T>` + `UPROPERTY()` 的用法，使变量会被UE识别为 **硬引用**
 
 ## `TWeakObjectPtr<T>`
 
