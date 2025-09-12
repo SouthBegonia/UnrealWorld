@@ -1030,3 +1030,156 @@ DrawDebug 用于在 编辑器或开发环境下，于场景内绘制 图形或�
 
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
+
+
+
+# 资源加载
+
+## 软引用资源
+
+### FSoftObjectPath、FSoftClassPath
+
+`FSoftObjectPath`可以软引用 任何资源和UClass
+
+`FSoftClassPath`只能软引用 Class、DynamicClass、BlueprintGeneratedClass、WidgetBlueprintGeneratedClass、AnimBluprintGeneratedClass和LinkerPlaceholderClass
+
+```c++
+// .h
+FSoftObjectPath SoftObjectPath;
+TSharedPtr<FStreamableHandle> AsyncLoadAssetTestHandle;
+
+// .cpp
+FStreamableDelegate AsyncLoadAssetTestDelegate;
+
+if (SoftObjectPath.IsValid())
+{
+	// 资源合法有效
+
+	if (SoftObjectPath.ResolveObject() == nullptr)
+	{
+		// 资源尚未加载
+
+		// 同步加载 1：
+		UObject* ObjectPtr = SoftObjectPath.TryLoad();
+
+		// 同步加载 2：
+		FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+		UObject* ObjectPtr = StreamableManager.LoadSynchronous(SoftObjectPath);
+
+		// 异步加载：
+		AsyncLoadAssetTestDelegate = FStreamableDelegate::CreateLambda([this]()
+		{
+			UObject* LoadObject = AsyncLoadAssetTestHandle->GetLoadedAsset();
+		});
+		FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+		AsyncLoadAssetTestHandle = StreamableManager.RequestAsyncLoad(SoftObjectPath, AsyncLoadAssetTestDelegate);
+	}else
+	{
+		// 资源已加载
+		UObject* ObjectPtr = SoftObjectPath.ResolveObject();
+	}
+}else
+{
+	// 资源无效
+}
+```
+
+```c++
+// .h
+FSoftClassPath SoftClassPath;
+TSharedPtr<FStreamableHandle> AsyncLoadAssetTestHandle;
+
+// .cpp
+FStreamableDelegate AsyncLoadAssetTestDelegate;
+
+if (SoftClassPath.IsValid())
+{
+	// 资源合法有效
+
+	if (SoftClassPath.ResolveClass() == nullptr)
+	{
+		// 资源尚未加载
+
+		// 同步加载 1：
+		UClass* ClassPtr = SoftClassPath.TryLoadClass<AActor>();
+
+		// 同步加载 2：
+		FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+		UClass* ClassPtr = Cast<UClass>(StreamableManager.LoadSynchronous(SoftClassPath));
+
+		// 异步加载：
+		AsyncLoadAssetTestDelegate = FStreamableDelegate::CreateLambda([this]()
+		{
+			UObject* LoadObject = AsyncLoadAssetTestHandle->GetLoadedAsset();
+			UClass* LoadClass = Cast<UClass>(LoadObject);
+		});
+		FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+		AsyncLoadAssetTestHandle = StreamableManager.RequestAsyncLoad(SoftClassPath, AsyncLoadAssetTestDelegate);
+	}else
+	{
+		// 资源已加载
+        UClass* ClassPtr = SoftClassPath.ResolveClass();
+	}
+}
+else
+{
+	// 资源无效
+}
+```
+
+### TSoftObjectPtr、TSoftClassPtr
+
+```c++
+// .h
+TSoftClassPtr<AActor> SoftClassPtr;
+TSoftObjectPtr<UAnimMontage> SoftObjectPtr;	// TSoftClassPtr内部也是走的TSoftObjectPtr，故二者用法类似
+void LoadSourceCallback();
+
+// .cpp
+if (SoftClassPtr.IsNull() == false)
+{
+	// 资源合法有效
+
+	if (SoftClassPtr.IsPending())	// 内部展开为：Get() == nullptr && !IsNull()
+	{
+		// 资源尚未加载
+
+		// 同步加载 1：
+		UClass* ClassPtr = SoftClassPtr.LoadSynchronous();
+
+		// 同步加载 2：
+		FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+		TSubclassOf<AActor> ClassPtr = StreamableManager.LoadSynchronous(SoftClassPtr);
+
+        // 异步加载
+        FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+        StreamableManager.RequestAsyncLoad(
+            SoftClassPtr.ToSoftObjectPath(),
+            FStreamableDelegate::CreateUObject(this, &[TESTCLASS]::LoadSourceCallback)
+        );
+	}else
+	{
+		// 资源已加载
+		UClass* ClassPtr = SoftClassPtr.Get();
+	}
+}
+else
+{
+	// 资源无效
+}
+
+void [TESTCLASS]::LoadSourceCallback()
+{
+	UClass* ClassPtr = SoftClassPtr.Get();
+}
+
+```
+
+## 参考文章
+
+- [【UE5 资源管理】LoadAsset加载资源 - 知乎](https://zhuanlan.zhihu.com/p/691079389)
+- [UE4中资源的引用 - cnblogs](https://www.cnblogs.com/kekec/p/13357937.html)
+
+
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
