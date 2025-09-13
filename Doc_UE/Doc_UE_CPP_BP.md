@@ -1033,11 +1033,51 @@ DrawDebug 用于在 编辑器或开发环境下，于场景内绘制 图形或�
 
 
 
-# 资源加载
+# 资源
 
-## 软引用资源
+## 资源加载
 
-### FSoftObjectPath、FSoftClassPath
+### 硬引用资源
+
+#### 编辑器直接加载
+
+当变量被标记为 `UPROPERTY()` + 裸指针/TObjectPtr/TSubClassOf，且 暴露给蓝图+挂载资产，则 此资产资源将随Owner加载时被一并加载，也将计入 Owner内存占用的一部分
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250913145809206.png)
+
+#### 构造函数加载
+
+在构造函数内使用 `FClassFinder`、`FObjectFinder` 以在编辑器态、运行态时进行资源加载：
+
+备注：此情况虽已形成硬引用关系，但 引用查看器、SizeMap 均无法捕获，不便于后期排查
+
+```c++
+// .h
+TSubclassOf<AActor> HardClass;
+
+// .cpp
+[TESTCLASS]::TESTCLASS()
+{
+	HardClass = ConstructorHelpers::FClassFinder<AActor>(TEXT("/Script/Engine.Blueprint'/Game/BP_BoxActor01.BP_BoxActor01_C'")).Class;
+}
+```
+
+备注：资源为 蓝图对象时，末尾添加 `_C`，原因可参阅：[UE蓝图资源路径中“_C“的含义 - CSDN](https://blog.csdn.net/Mnsentinor/article/details/143088840)
+
+#### 主动调用LoadClass、LoadObject
+
+在运行态时，主动调用 `LoadClass`、`LoadObject` 以同步加载资源：
+
+```c++
+// .h
+TSubclassOf<AActor> HardClass;
+
+HardClass = LoadClass<AActor>(nullptr, TEXT("/Script/Engine.Blueprint'/Game/BP_BoxActor01.BP_BoxActor01_C'"));
+```
+
+### 软引用资源
+
+#### FSoftObjectPath、FSoftClassPath
 
 `FSoftObjectPath`可以软引用 任何资源和UClass
 
@@ -1127,7 +1167,7 @@ else
 }
 ```
 
-### TSoftObjectPtr、TSoftClassPtr
+#### TSoftObjectPtr、TSoftClassPtr
 
 ```c++
 // .h
@@ -1179,6 +1219,8 @@ void [TESTCLASS]::LoadSourceCallback()
 
 - [【UE5 资源管理】LoadAsset加载资源 - 知乎](https://zhuanlan.zhihu.com/p/691079389)
 - [UE4中资源的引用 - cnblogs](https://www.cnblogs.com/kekec/p/13357937.html)
+- [[UE C++] 资源加载(二) 查找资源——FindObject - CSDN](https://blog.csdn.net/qq_52179126/article/details/130114399)
+- [UE蓝图资源路径中“_C“的含义 - CSDN](https://blog.csdn.net/Mnsentinor/article/details/143088840)
 
 
 
