@@ -9,12 +9,15 @@
 - [Marcro 宏](#marcro-宏)
 - [指针与引用](#指针与引用)
   - [硬引用与软引用](#硬引用与软引用)
-  - [使用注意事项](#使用注意事项)
-  - [参考文章](#参考文章-2)
-  - [`TObjectPtr<T>`](#tobjectptrt)
-  - [`TWeakObjectPtr<T>`](#tweakobjectptrt)
-  - [`TSubClassOf<T>`](#tsubclassoft)
-  - [`TSoftObjectPtr<T>`](#tsoftobjectptrt)
+      - [使用注意事项](#使用注意事项)
+    - [参考文章](#参考文章-2)
+  - [TObjectPtr](#tobjectptr)
+  - [TWeakObjectPtr](#tweakobjectptr)
+  - [TSubClassOf](#tsubclassof)
+  - [TSoftObjectPtr](#tsoftobjectptr)
+  - [TSharedPtr](#tsharedptr)
+  - [TSharedRef](#tsharedref)
+  - [TWeakPtr](#tweakptr)
   - [参考文章](#参考文章-3)
 - [接口](#接口)
   - [蓝图接口](#蓝图接口)
@@ -43,6 +46,16 @@
   - [参考文章](#参考文章-12)
 - [DrawDebug](#drawdebug)
   - [参考文章](#参考文章-13)
+- [资源](#资源)
+  - [资源加载](#资源加载)
+    - [硬引用资源](#硬引用资源)
+      - [编辑器直接加载](#编辑器直接加载)
+      - [构造函数加载](#构造函数加载)
+      - [主动调用LoadClass、LoadObject](#主动调用loadclassloadobject)
+    - [软引用资源](#软引用资源)
+      - [FSoftObjectPath、FSoftClassPath](#fsoftobjectpathfsoftclasspath)
+      - [TSoftObjectPtr、TSoftClassPtr](#tsoftobjectptrtsoftclassptr)
+  - [参考文章](#参考文章-14)
 
 
 
@@ -210,7 +223,7 @@ Int32 BlueprintPureFalseFunction() const
 
 ![image-20250813004750983](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250813004750983.png)
 
-### 使用注意事项
+#### 使用注意事项
 
 即便我们将变量声明为 软引用，但对其不当操作的话，可能会导致其变为 硬引用 或 被计入资产内存，诊断方法还是 引用查看器+SizeMap。以下罗列可能遇到的情况：
 
@@ -237,7 +250,7 @@ Int32 BlueprintPureFalseFunction() const
 - [UE5 Understanding hard and soft references - LeafBrainGames - Youtube](https://www.youtube.com/watch?v=aUG54KCP89M&ab_channel=LeafBranchGames)
 - [SOFT Object References in Unreal Engine EXPLAINED - The Game Dev Cave - Youtube](https://www.youtube.com/watch?v=BazkY5aqoig&ab_channel=TheGameDevCave)
 
-## `TObjectPtr<T>`
+## TObjectPtr
 
 `TObjectPtr<T>` 是UE5引入的 替代原始指针`T*` 的 `UObject`指针类型，目的在于：
 
@@ -269,7 +282,7 @@ TArray<TObjectPtr<AActor>> MyActorArr;
 
 此外，`TObjectPtr<T>` + `UPROPERTY()` 的用法，使变量会被UE识别为 **硬引用**
 
-## `TWeakObjectPtr<T>`
+## TWeakObjectPtr
 
 `TWeakObjectPtr<T>` 是 `UObject`对象的 弱引用指针，其不对`UObject`对象产生引用计数、不阻止其进入GC流程被销毁，常用在：
 
@@ -295,7 +308,7 @@ else
 }
 ```
 
-## `TSubClassOf<T>`
+## TSubClassOf
 
 `TSubclassOf<T>` 是某个特定 类对象（`UClass`） 的硬引用，用途有：
 
@@ -312,7 +325,7 @@ UPROPERTY(EditAnywhere, Category = "MyCategory")
 TSubclassOf<AWeapon> WeaponClass;
 ```
 
-## `TSoftObjectPtr<T>`
+## TSoftObjectPtr
 
 `TSoftObjectPtr<T>` 是 `UObject`对象的 软引用指针。其本质上只是存储的 对象的`FSoftObjectPath`资产路径。常用于 加载纹理模型等
 
@@ -339,6 +352,139 @@ else
     // 异步加载纹理
     //FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
     //Streamable.RequestAsyncLoad(MyTexture.ToSoftObjectPath(),FStreamableDelegate::CreateUObject(this, &XXXXXXExample::OnTextureLoaded));
+}
+```
+
+## TSharedPtr
+
+TSharedPtr 是 非`UObject`对象的 共享智能指针，使用 **引用计数 来控制对象生命周期**（最后一个持有的TSharedPtr被销毁时，对象才会释放）
+
+```c++
+USTRUCT(BlueprintType)
+struct FMyStruct
+{
+	GENERATED_USTRUCT_BODY()
+public:
+	void TestFunc() {}
+};
+
+//创建 共享指针
+TSharedPtr<FMyStruct> MySharedPtr = nullptr;
+//MySharedPtr = MakeShareable(new FMyStruct);
+MySharedPtr = MakeShared<FMyStruct>();
+
+if (MySharedPtr.IsValid())	// 判断有效性
+{
+    //成员访问
+    MySharedPtr->TestFunc();
+
+    //获取 普通指针
+    FMyStruct* MyStructPtr = MySharedPtr.Get();
+    MyStructPtr->TestFunc();
+
+    //获取 引用计数
+    int32 MyStructPtrRefCount = MySharedPtr.GetSharedReferenceCount();
+    //引用计数：MySharedPtr[1]
+
+    //复制 共享指针
+    TSharedPtr<FMyStruct> MySharedPtr2 = MySharedPtr;
+    //引用计数：MySharedPtr[2]，MySharedPtr2[2]
+
+    //转移 共享指针
+    TSharedPtr<FMyStruct> MySharedPtr3 = MoveTemp(MySharedPtr);
+    //引用计数：MySharedPtr[0]，MySharedPtr2[2]，MySharedPtr3[2]
+
+    //清空 共享指针
+    MySharedPtr2.Reset();
+    //引用计数：MySharedPtr[0]，MySharedPtr2[0]，MySharedPtr3[1]
+    MySharedPtr3.Reset();
+    //引用计数：MySharedPtr[0]，MySharedPtr2[0]，MySharedPtr3[0]
+}
+```
+
+## TSharedRef
+
+TSharedRef是 非`UObject`对象的 共享智能指针，与 TSharedPtr 类似也是引用计数，但其 **固定引用 非空对象，且不可置为nullptr**
+
+```c++
+USTRUCT(BlueprintType)
+struct FMyStruct
+{
+	GENERATED_USTRUCT_BODY()
+public:
+	void TestFunc() {}
+};
+
+//创建 共享引用
+//TSharedRef<FMyStruct> MySharedRef(new FMyStruct);
+//TSharedRef<FMyStruct> MySharedRef = MakeShareable(new FMyStruct);
+TSharedRef<FMyStruct> MySharedRef = MakeShared<FMyStruct>();
+
+//成员访问
+MySharedRef->TestFunc();
+
+//获取 普通引用
+FMyStruct& MyStructRefTemp = MySharedRef.Get();
+MyStructRefTemp.TestFunc();
+
+//获取 引用计数
+int32 MyStructRefCount = MySharedRef.GetSharedReferenceCount();
+//引用计数：MySharedRef[1]
+
+//复制 共享引用
+TSharedRef<FMyStruct> MySharedRef2 = MySharedRef;
+//引用计数：MySharedRef[2]，MySharedRe2[2]
+MyStructRefCount = MySharedRef.GetSharedReferenceCount();
+MyStructRefCount = MySharedRef2.GetSharedReferenceCount();
+
+//转换为 TSharedPtr、TWeakPtr
+TSharedPtr<FMyStruct> MySharedPtr = MySharedRef.ToSharedPtr();
+TWeakPtr<FMyStruct> MyWeakPtr = MySharedRef.ToWeakPtr();
+```
+
+## TWeakPtr
+
+TWeakPtr是 非`UObject`对象的 弱指针，其引入旨在于 **解决TSharedPtr可能带来的循环引用问题**
+
+与 TSharedPtr 相比，其不参与引用计数、不会阻止对象的销毁
+
+```c++
+USTRUCT(BlueprintType)
+struct FMyStruct
+{
+	GENERATED_USTRUCT_BODY()
+public:
+	void TestFunc() {}
+};
+
+TSharedPtr<FMyStruct> MySharedPtr = nullptr;
+//TSharedRef<FMyStruct> MySharedRef = MakeShared<FMyStruct>();
+
+//创建 弱指针
+TWeakPtr<FMyStruct> MyWeakPtr(MySharedPtr);
+//TWeakPtr<FMyStruct> MyWeakPtr(MySharedRef);
+
+if (MyWeakPtr.IsValid())	// 判断有效性
+{
+    //成员访问：需转换为TSharedPtr，以进行指针对象访问
+    TSharedPtr<FMyStruct> MySharedPtrByPin = MyWeakPtr.Pin();
+    if (MySharedPtrByPin.IsValid())
+    {
+        MySharedPtrByPin->TestFunc();
+    }
+
+    //复制 弱指针
+    TWeakPtr<FMyStruct> MyWeakPtr2 = MyWeakPtr;
+
+    //清空 弱指针
+    MyWeakPtr2.Reset();
+
+	//清空共享指针后，弱指针变空
+    MySharedPtr.Reset();
+    if (!MyWeakPtr.Pin())
+    {
+        //弱指针已空
+    }
 }
 ```
 
@@ -1047,7 +1193,7 @@ DrawDebug 用于在 编辑器或开发环境下，于场景内绘制 图形或�
 
 #### 构造函数加载
 
-在构造函数内使用 `FClassFinder`、`FObjectFinder` 以在编辑器态、运行态时进行资源加载：
+在`UObject`类型的 构造函数内 使用 `ConstructorHelpers::FClassFinder`、`ConstructorHelpers::FObjectFinder` 以在编辑器态、运行态时进行资源加载：
 
 备注：此情况虽已形成硬引用关系，但 引用查看器、SizeMap 均无法捕获，不便于后期排查
 
