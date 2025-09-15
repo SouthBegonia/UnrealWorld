@@ -51,6 +51,23 @@
 适用版本：UE5
 ![](https://github.com/polygonvariable/unreal-gas-editor/blob/main/Documentation/Image/gas_editor_new_attrs.png?raw=true)
 
+### [AsyncLoadingScreen](https://github.com/truong-bui/AsyncLoadingScreen)
+
+简介：采用 MoviePlayer+Slate 实现的 Level切换Loading显示
+
+功能：
+
+- 首次启用游戏、切换Level 时的Loading显示
+- Loading支持 视频 及 基于模板的自定义图片/图片序列
+
+备注：
+
+- 尚不支持主动拉起/关闭Loading、而是绑定自动跟随Open Level流程（因为插件实现的核心是 MoviePlayer注册PreLoadMap、PostLoadMapWithWorld委托、内部执行的业务流程）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250915181019670.png)
+
+
+
 # 规范
 
 ## 资产规范
