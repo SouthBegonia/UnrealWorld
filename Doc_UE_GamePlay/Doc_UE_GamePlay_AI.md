@@ -606,6 +606,92 @@ UE已有的类型有 视觉（`UAISense_Sight : AISense `）、听觉（`UAISens
 
 
 
+# EQS
+
+[EQS（Environmental Query System）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/environment-query-system-in-unreal-engine) 让AI单位能够 **根据查询类型 收集特定环境数据**，以供其做出决策
+
+常用于 行为树、状态树，供 AI单位寻找最近敌人、最佳躲藏位置等
+
+
+
+EQS的基本流程可概述为：基于实际场景 通过 [生成器](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/eqs-node-reference-generators-in-unreal-engine) **生成查询单位**，进行系列 [测试](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/eqs-node-reference-tests-in-unreal-engine) 以**计算 各查询单位的 权重结果**，最终提供 **外部使用此查询结果**。此外 生成查询单位或计算权重时 还可指定 [情景](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/eqs-node-reference-contexts-in-unreal-engine) 以限定 逻辑操作对象
+
+## 生成器（Generators）
+
+生成器 用于 **生成 将要测试和加权的 Item（位置或Actor）**，节点代码 `UEnvQueryGenerator : public UEnvQueryNode`
+
+### 基本用法
+
+首先启用 **场景查询编辑器（Environment Query Editor）**插件，后即可通过 内容浏览器->人工智能->场景查询 **创建EQS资产**
+
+创建完成EQS资产后，从Root节点即可拉出 生成器节点。UE已有部分 [预设的生成器节点](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/eqs-node-reference-generators-in-unreal-engine)
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916205142382.png)
+
+### 生成器节点
+
+#### Actors of Class
+
+在 搜索中心 周围特定的 搜索半径 内查找 给定类的所有Actor，返回的Actor可以用作测试中的Item
+
+例如下图：搜索 查询者自身 300范围内的 类型为`BP_EQS_Box`的Actor 作为Item
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916203732027.png)
+
+#### Composite
+
+也就是 多个生成器节点 共同生成Item以供测试
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916213731855.png)
+
+#### Current Location
+
+情景 的 位置坐标 作为Item
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916214054458.png)
+
+#### Points: XXXX
+
+**Points:Circle**：在 情景周围 生成环状网格 作为Item
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916215436789.png)
+
+**Points:Cone**：以 Actor情景为中心 放射出锥体网格 作为Item
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916215657846.png)
+
+**Points:Donut**：以 情景为中心 生成反射状网格 作为Item
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916220041880.png)
+
+**Points:Grid**：在 情景周围 生成方形网格 作为Item
+
+备注：通过设置 检测模式 以限定网格是否需符合寻路可达
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916220355199.png)
+
+**Points: Pathing Grid**：在 情景周围 基于寻路网格体范围 生成方形网格 作为Item：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916214938017.png)
+
+## 情景（Contexts）
+
+## 测试（Test）
+
+## 调试
+
+UE提供了 `AEQSTestingPawn : ACharacter` 以便于我们 **在编辑器下 直接查看目标EQS效果**
+
+例如下图 创建一个蓝图对象 `EQS_TestPawn :AEQSTestingPawn`，放置到场景内、挂载 查询模板参数（`QueryTemplate`），即可查看效果：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916210333442.png)
+
+
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
+
+
+
 # 参考文章
 
 - [Artificial Intelligence - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/artificial-intelligence-in-unreal-engine?application_version=5.5)
