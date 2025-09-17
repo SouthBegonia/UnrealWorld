@@ -53,6 +53,28 @@
   - [感知组件（AI Perception Component）](#感知组件ai-perception-component)
     - [感知属性（AI Perception Properties）](#感知属性ai-perception-properties)
       - [感知类型（AI Sense）](#感知类型ai-sense)
+- [EQS](#eqs)
+  - [生成器（Generators）](#生成器generators)
+    - [基本用法](#基本用法-3)
+    - [生成器节点](#生成器节点)
+      - [Actors of Class](#actors-of-class)
+      - [Composite](#composite)
+      - [Current Location](#current-location)
+      - [Points: XXXX](#points-xxxx)
+  - [情景（Contexts）](#情景contexts)
+    - [基本用法](#基本用法-4)
+    - [自定义情景](#自定义情景)
+      - [蓝图实现](#蓝图实现)
+      - [C++实现](#c实现)
+  - [测试（Test）](#测试test)
+    - [基本用法](#基本用法-5)
+      - [细节面板 - 测试](#细节面板---测试)
+    - [测试节点](#测试节点)
+      - [Distance](#distance)
+      - [Dot](#dot)
+      - [Trace](#trace)
+      - [Overlap](#overlap)
+  - [调试](#调试)
 - [参考文章](#参考文章-4)
 
 
@@ -660,7 +682,7 @@ EQS的基本流程可概述为：基于实际场景 通过 [生成器](https://d
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916215657846.png)
 
-**Points:Donut**：以 情景为中心 生成反射状网格 作为Item
+**Points:Donut**：以 情景为中心 生成放射状网格 作为Item
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916220041880.png)
 
@@ -737,6 +759,56 @@ void UEnvQueryContext_Test::ProvideContext(FEnvQueryInstance& QueryInstance, FEn
 ```
 
 ## 测试（Test）
+
+测试 用于 **对生成器提供的Item 过滤、打分**，生成器 可包含多个测试，测试顺序可调
+
+注意 流程上是 **先过滤 后打分**，以避免对无效的Item再打分计算
+
+### 基本用法
+
+创建完生成器后，即可以为其添加 单/多个测试，UE以包含诸多 [预设测试](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/eqs-node-reference-tests-in-unreal-engine)。当生成器生成Item后 将执行测试以进行过滤、打分
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250917171704767.png)
+
+例如下图示例：生成放射状Item后，执行 距离测试（过滤保留距离200~400的Item，剩余Item 根据与查询者的距离 进行线性插值打分、距离越远分越高）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250917174909571.png)
+
+#### 细节面板 - 测试
+
+- 测试目的（Test Purpose）：
+  - 仅过滤（Filter Only）：排除 未通过测试的Item
+  - 仅计分（Score Only）：对 Item进行评分（也可以说 赋予Item加权数值）
+  - 过滤并计分（Filter and Score）
+- 测试注释（Test Comment）
+
+### 测试节点
+
+#### Distance
+
+对 Item 到 目标情景 的距离 进行测试
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250917174909571.png)
+
+#### Dot
+
+对 2向量 的点积 进行测试
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250917182321566.png)
+
+#### Trace
+
+对 Item 到 目标情景 进行追踪测试。相当于二者进行射线检测
+
+通过设置 布尔匹配（Bool Match）=False，以实现典型的用例：Item位置 可以看到目标玩家，EQS最终提供此Item
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250917183405582.png)
+
+#### Overlap
+
+对 Item位置 进行 目标通道的 重叠测试
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250917184743575.png)
 
 ## 调试
 
