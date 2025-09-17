@@ -676,6 +676,66 @@ EQS的基本流程可概述为：基于实际场景 通过 [生成器](https://d
 
 ## 情景（Contexts）
 
+情景 可以作为 生成器或测试 逻辑处理中的 **参考值**，此值可为 Actor/Actor集合/坐标/坐标集合
+
+### 基本用法
+
+以下图为例，在 EQS_Test内，使用了 Points:Grid生成器节点，其细节面板内的 周围生成（Generate Around）即为 情景，当前选择的是 `EnvQueryContext_Querier`情景表示 查询者自身，表现上就是 基于查询者自身 生成Item网格
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250917152034487.png)
+
+UE提供 [预设情景节点](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/eqs-node-reference-contexts-in-unreal-engine) 有：
+
+- `UEnvQueryContext_Item: UEnvQueryContext`：无实质作用，仅单纯继承了 `UEnvQueryContext`
+- `UEnvQueryContext_Querier : UEnvQueryContext`：查询的OwnerActor作为参考值
+- `UEnvQueryContext_BlueprintBase : UEnvQueryContext`：供蓝图派生实现
+
+### 自定义情景
+
+#### 蓝图实现
+
+从 `UEnvQueryContext_BlueprintBase` 即可派生自定义情景，重写 **4个方法中的任意个即可**（可参阅源码，4方法的调用优先级逐级上升）
+
+- ProvideSingleActor：提供 单一Actor 作为参考值
+- ProvideSingleLocation：提供 单一FVector 作为参考值
+- ProvideActorsSet：提供 Actor集合 作为参考值
+- ProvideLocationsSet：提供 FVector集合 作为参考值
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250917155145786.png)
+
+以下图为例：`EQC_PlayerContext` 情景需要提供 本地玩家的Actor 作为参考值，则 重写`ProvideSingleActor`、返回玩家Actor即可；但此方法在编辑态下无效，则 为了方便测试`AEQSTestingPawn`，我们可以重写`ProvideActorsSet` 返回编辑器关卡内的玩家类 即可在编辑器态下查看效果（但注意：运行态下 将会走 `ProvideActorsSet` 而不是 `ProvideSingleActor`，因此建议测完后删除）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250917160245727.png)
+
+#### C++实现
+
+C++层实现则为 从`UEnvQueryContext` 派生自定义情景类、重写`ProvideContext`方法、设置参考值
+
+例如下列代码 `UEnvQueryContext_Test`情景 即为 提供玩家Actor 作为参考值
+
+```c++
+// UEnvQueryContext_Test.h
+class [PROJECT_NAME] UEnvQueryContext_Test : public UEnvQueryContext
+{
+	GENERATED_BODY()
+
+	virtual void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;
+};
+
+// UEnvQueryContext_Test.cpp
+void UEnvQueryContext_Test::ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const
+{
+	AActor* QueryOwner = Cast<AActor>(QueryInstance.Owner.Get());
+
+	APawn* Player = UGameplayStatics::GetPlayerPawn(QueryOwner->GetWorld(), 0);
+	
+    // 提供Actor作为参考值
+	UEnvQueryItemType_Actor::SetContextHelper(ContextData, Cast<AActor>(Player));
+    // 提供FVector作为参考值
+    //UEnvQueryItemType_Point::SetContextHelper(ContextData, FVector(0, 0, 0));
+}
+```
+
 ## 测试（Test）
 
 ## 调试
