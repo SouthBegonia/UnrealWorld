@@ -55,6 +55,7 @@
       - [感知类型（AI Sense）](#感知类型ai-sense)
 - [EQS](#eqs)
   - [生成器（Generators）](#生成器generators)
+    - [Item的类型](#item的类型)
     - [基本用法](#基本用法-3)
     - [生成器节点](#生成器节点)
       - [Actors of Class](#actors-of-class)
@@ -74,6 +75,9 @@
       - [Dot](#dot)
       - [Trace](#trace)
       - [Overlap](#overlap)
+  - [EQS用法示例](#eqs用法示例)
+    - [BehaviorTree 使用EQS](#behaviortree-使用eqs)
+    - [StateTree 使用EQS](#statetree-使用eqs)
   - [调试](#调试)
 - [参考文章](#参考文章-4)
 
@@ -823,6 +827,32 @@ void UEnvQueryContext_Test::ProvideContext(FEnvQueryInstance& QueryInstance, FEn
 对 Item位置 进行 目标通道的 重叠测试
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250917184743575.png)
+
+## EQS用法示例
+
+### BehaviorTree 使用EQS
+
+在行为树内 调用预设的 `UBTTask_RunEQSQuery`任务节点，即可执行配置的EQS（还可配置 EQS查询参数、结果选择、更新黑板键）
+
+例如下图示例：
+
+1. 在`RunEQSQuery`任务节点内 实行了 `EQS_Test`查询（以玩家为中心生成的辐射状网格，寻路移动到查询者 路径越短的Item分越高）
+2. 查询完毕后，若查询成功 则选择单一最佳项目（即分数最高的Item）更新其数据（此处为FVector）到 MoveToLocation黑板键；若 查询失败，则重置MoveToLocation黑板键数据
+3. 后行为树继续执行：执行MoveTo任务（移动到MoveToLocation黑板键的坐标）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250918165753317.png)
+
+### StateTree 使用EQS
+
+状态树内 提供了 `FStateTreeRunEnvQueryTask`运行EQS查询任务，即可执行配置的EQS（还可配置 EQS查询参数、结果选择、结果输出）
+
+例如下图示例：
+
+1. TestEQS状态内 为其添加 运行EQS查询任务，指定EQS为`EQS_Test`（查询逻辑同上文行为树内的EQS）
+2. 设置EQS的 结果输出到 状态的本地参数MoveToLocation上（查询成功 才更新数据到MoveToLocation）
+3. 查询完成后，状态树将继续执行后续任务：STT_MoveToLocation（自身移动到 MoveToLocation坐标）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250918170943587.png)
 
 ## 调试
 
