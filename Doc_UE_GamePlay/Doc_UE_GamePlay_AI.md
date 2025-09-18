@@ -642,6 +642,20 @@ EQS的基本流程可概述为：基于实际场景 通过 [生成器](https://d
 
 生成器 用于 **生成 将要测试和加权的 Item（位置或Actor）**，节点代码 `UEnvQueryGenerator : public UEnvQueryNode`
 
+### Item的类型
+
+关于 **Item的类型**（也相当于 **EQS的查询结果数据类型**）可根据 `UEnvQueryGenerator::ItemType` 辨别（派生的生成器节点，在其 构造函数内 会设置ItemType），ItemType可分为以下几类：
+
+- `UEnvQueryItemType_ActorBase : UEnvQueryItemType_VectorBase`：在BT内 Item可对应提供 Actor或FVector类型的 黑板键（代码位于 `UEnvQueryItemType_ActorBase::StoreInBlackboard()`
+- `UEnvQueryItemType_Direction : UEnvQueryItemType_VectorBase`：Item可对应 FVector类型的数据
+- `UEnvQueryItemType_Point : UEnvQueryItemType_VectorBase`：Item可对应 FVector类型的数据
+
+总结就是 **使用EQS时 需要根据所需结果类型（Actor/FVector）选择匹配的 生成器**
+
+下图即为 UE预设的生成器的 Item类型：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250918160502216.png)
+
 ### 基本用法
 
 首先启用 **场景查询编辑器（Environment Query Editor）**插件，后即可通过 内容浏览器->人工智能->场景查询 **创建EQS资产**
