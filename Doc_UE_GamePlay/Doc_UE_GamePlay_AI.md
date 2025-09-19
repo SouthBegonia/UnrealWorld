@@ -726,7 +726,7 @@ EQS的基本流程可概述为：基于实际场景 通过 [生成器](https://d
 
 UE提供 [预设情景节点](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/eqs-node-reference-contexts-in-unreal-engine) 有：
 
-- `UEnvQueryContext_Item: UEnvQueryContext`：无实质作用，仅单纯继承了 `UEnvQueryContext`
+- `UEnvQueryContext_Item: UEnvQueryContext`
 - `UEnvQueryContext_Querier : UEnvQueryContext`：查询的OwnerActor作为参考值
 - `UEnvQueryContext_BlueprintBase : UEnvQueryContext`：供蓝图派生实现
 
@@ -861,6 +861,11 @@ UE提供了 `AEQSTestingPawn : ACharacter` 以便于我们 **在编辑器下 直
 例如下图 创建一个蓝图对象 `EQS_TestPawn :AEQSTestingPawn`，放置到场景内、挂载 查询模板参数（`QueryTemplate`），即可查看效果：
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916210333442.png)
+
+## 参考文章
+
+- [EQS - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/environment-query-system-in-unreal-engine)
+- [UE5 EQS执行流程 源码解析 - 知乎](https://zhuanlan.zhihu.com/p/26110293004)
 
 
 
