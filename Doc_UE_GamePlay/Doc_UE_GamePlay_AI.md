@@ -90,6 +90,13 @@
 
 UE内的AI，可概述为 AI单位的**智能行为** + 行为的**环境准备**，旨在于 **实现非玩家单位（AI单位）的智能交互行为**
 
+- 智能行为：
+  - 环境感知
+  - 决策/方案
+  - 行为/能力
+- 环境准备：
+  - 导航系统
+  - 能力组件
 
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
@@ -877,3 +884,4 @@ UE提供了 `AEQSTestingPawn : ACharacter` 以便于我们 **在编辑器下 直
 
 - [Artificial Intelligence - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/artificial-intelligence-in-unreal-engine?application_version=5.5)
 - [游戏开发中的AI技术Overview - 知乎](https://zhuanlan.zhihu.com/p/15800876841)
+- [游戏开发中的各种 AI 决策技术 - 知乎](https://zhuanlan.zhihu.com/p/730977400)
