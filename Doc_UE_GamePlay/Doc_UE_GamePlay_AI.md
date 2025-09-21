@@ -79,7 +79,18 @@
     - [BehaviorTree 使用EQS](#behaviortree-使用eqs)
     - [StateTree 使用EQS](#statetree-使用eqs)
   - [调试](#调试)
-- [参考文章](#参考文章-4)
+  - [参考文章](#参考文章-4)
+- [Smart Objects](#smart-objects)
+  - [模块介绍](#模块介绍)
+    - [智能对象子系统（Smart Object Subsystem）](#智能对象子系统smart-object-subsystem)
+    - [游戏行为配置（Gameplay Behavior Config）](#游戏行为配置gameplay-behavior-config)
+    - [游戏行为（Gameplay Behavior）](#游戏行为gameplay-behavior)
+    - [智能对象定义（Smart Object Definition）](#智能对象定义smart-object-definition)
+    - [智能对象组件（Smart Object Component）](#智能对象组件smart-object-component)
+  - [流程介绍](#流程介绍)
+  - [基本用法](#基本用法-6)
+  - [参考文章](#参考文章-5)
+- [参考文章](#参考文章-6)
 
 
 
@@ -873,6 +884,101 @@ UE提供了 `AEQSTestingPawn : ACharacter` 以便于我们 **在编辑器下 直
 
 - [EQS - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/environment-query-system-in-unreal-engine)
 - [UE5 EQS执行流程 源码解析 - 知乎](https://zhuanlan.zhihu.com/p/26110293004)
+
+
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
+
+
+
+
+
+# Smart Objects
+
+[智能对象（Smart Objects）](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/smart-objects-in-unreal-engine) 是 **关卡内 可与AI单位或Player交互的 对象**
+
+智能对象 不包含执行逻辑，而是 提供交互信息到 交互对象上、交互对象再自行实现交互逻辑，旨在于 **将场景交互行为 与 AI单位的行为 解耦**。举例就像：一把椅子是智能对象（只能人形单位使用，使用方法是坐下动画），人形单位想要与椅子交互，就得移动到椅子位置、被动触发播放 坐下动画 即可
+
+## 模块介绍
+
+### 智能对象子系统（Smart Object Subsystem）
+
+智能对象子系统 `USmartObjectSubsystem : public UWorldSubsystem`，负责 **追踪关卡内所有 智能对象**，也提供了大部分业务方法
+
+例如下图 `BTT_FindSmartObject`行为树任务中，使用智能对象子系统 查询了附近可交互的智能对象：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921165407479.png)
+
+### 游戏行为配置（Gameplay Behavior Config）
+
+游戏行为配置 `UGameplayBehaviorConfig : public UObject`，负责 **指定游戏行为类**，且其可接收自定义参数以待后续呈递到 游戏行为中
+
+例如下图 `BP_SO_BehaviorConfig`游戏行为配置，指定了游戏行为类、且声明了`TargetMontage : UAnimMontage`参数：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921174541462.png)
+
+### 游戏行为（Gameplay Behavior）
+
+游戏行为 `UGameplayBehavior : public UObject`，负责 **让交互对象 实现具体的交互行为**（类似行为树的Task，触发->执行逻辑->结束任务）
+
+例如下图 `BP_SO_Behavior_PlayMontage`游戏行为，在 `OnTriggeredCharacter`事件内 让交互对象播放了蒙太奇动画（动画对象引用来自于 游戏行为配置）：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921180136692.png)
+
+### 智能对象定义（Smart Object Definition）
+
+智能对象定义 `USmartObjectDefinition : public UDataAsset` 是一种**数据资产**，负责 **承载交互行为配置**（游戏行为配置、游戏行为）
+
+**交互行为配置的载体为 Slot插槽**，可以在一个智能对象定义内 创建多个Slot、各Slot可以指定交互行为定义（游戏行为配置、游戏行为）、各Slot可通过标签以限制交互条件等。**对象交互 就是占用某个Slot、读取其行为配置、执行其游戏行为**
+
+例如下图 `SO_Definition_PlayMontage`智能对象定义，其创建了2个Slot：
+
+- `Slot_AM_Jump`：（默认行为）基于`BP_SO_BehaviorConfig`行为配置（传入`TargetMontage`=`AM_Jump`）、指定`BP_SO_Behavior_PlayMontage`游戏行为
+- `Slot_AM_Gesture`：自行指定了此Slot的 行为配置、游戏行为（传入`TargetMontage`=`AM_Gesture`）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921181114374.png)
+
+### 智能对象组件（Smart Object Component）
+
+智能对象组件 `USmartObjectComponent : public USceneComponent`，挂载于Actor上以 **标识其为 智能对象** 方可 **被智能对象子系统 追踪、使用**
+
+例如下图 `BP_SO_RunBT`蓝图对象内，手动添加了 SmartObjectComponent、并设置了 智能对象定位为 `SO_Definition_PlayMontage`：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921182505577.png)
+
+## 流程介绍
+
+1. 运行前准备：
+   - 制作 游戏行为配置、游戏行为
+   - 制作 智能对象定义：创建Slot、设置Slot的行为定义、限制条件等
+   - 制作 智能对象：带有智能对象组件、指定将使用的智能对象定义
+2. 运行中流程：
+   1. 游戏开始时，智能对象子系统 自动初始化
+   2. AI单位 通过智能对象子系统 查阅到附近有 智能对象
+   3. 当 此智能对象有 空闲Slot，则宣称占用此Slot，后即可与此Slot进行交互，交互完成后才会释放Slot
+
+## 基本用法
+
+基于 [官方示例](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/smart-objects-in-unreal-engine---quick-start) 后，有以下调整：
+
+- AI行为树 查找智能对象任务`BTT_FindSmartObject`中，宣称占用Slot新版本方法为 `USmartObjectBlueprintFunctionLibrary::MarkSmartObjectSlotAsClaimed`
+- AI行为树 执行智能对象交互任务`BTT_UseSmartObject`中，智能对象交互方法 改用 `MoveToAndUseSmartObjectWithGameplayBehavior`，以避免其再自行调用AIMoveTo到Slot位置
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921185448466.png)
+
+并 在`BP_SO_BehaviorConfig`游戏行为配置内 新加了 `TargetMontage : AnimMontage`参数，就能在`SO_Definition_PlayMontage`智能对象定义内 指定Slot播放哪个蒙太奇动画，实现了 不同Slot播不同蒙太奇动画（官方案例把蒙太奇动画写死到了 `BP_SO_Behavior_PlayMontage`游戏行为内）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921190222328.png)
+
+最终呈现效果：AI单位 与 圆柱型的智能对象进行交互（随机选择智能对象，随机选择红黄色Slot，Slot行为=在AI单位上播放 不同的蒙太奇动画）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921191242808.gif)
+
+## 参考文章
+
+- [虚幻引擎 | UE5 Smart Object（智能对象）插件理解与应用 - 知乎](https://zhuanlan.zhihu.com/p/1891993349180880509)
+- [UE5 SmartObjects（智能对象）插件 - 知乎](https://zhuanlan.zhihu.com/p/458142070)
+- [《游戏AI系统其二：SmartObject》 - 知乎](https://zhuanlan.zhihu.com/p/16492407509)
 
 
 
