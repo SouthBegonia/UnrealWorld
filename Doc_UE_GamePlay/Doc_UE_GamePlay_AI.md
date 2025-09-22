@@ -62,11 +62,14 @@
       - [Composite](#composite)
       - [Current Location](#current-location)
       - [Points: XXXX](#points-xxxx)
+      - [自定义生成器](#自定义生成器)
+        - [蓝图实现](#蓝图实现)
+        - [C++实现](#c实现)
   - [情景（Contexts）](#情景contexts)
     - [基本用法](#基本用法-4)
     - [自定义情景](#自定义情景)
-      - [蓝图实现](#蓝图实现)
-      - [C++实现](#c实现)
+      - [蓝图实现](#蓝图实现-1)
+      - [C++实现](#c实现-1)
   - [测试（Test）](#测试test)
     - [基本用法](#基本用法-5)
       - [细节面板 - 测试](#细节面板---测试)
@@ -731,6 +734,51 @@ EQS的基本流程可概述为：基于实际场景 通过 [生成器](https://d
 **Points: Pathing Grid**：在 情景周围 基于寻路网格体范围 生成方形网格 作为Item：
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250916214938017.png)
+
+#### 自定义生成器
+
+如以上UE预设的生成器 均无法满足我们需求（例如 使用Actors of Class生成，但又需要对Item进行筛选，一种做法是 Actors of Class+自定义测试，另种做法就是 自定义生成器）
+
+##### 蓝图实现
+
+从 `UEnvQueryGenerator_BlueprintBase`派生出 **自定义生成器蓝图**，后 **根据你的情景（Contexts）的类型** 重写 `DoItemGeneration` 或 `DoItemGenerationFromActors`、在函数体内 **添加生成Item**（主动调用`AddGeneratedVector`或`AddGeneratedActor`方法）
+
+例如下图 创建了`EQS_AllWall`自定义生成器蓝图，其将查找关卡内全部`BP_EQS_Wall`的Actor、但只把`BP_EQS_Wall`对象成员中`IsTall`符合的 添加到Item生成（生成的Item为Actor类型），最终在`EQS_Test`内调用此 `EQS_AllWall`生成器、将会按需生成Item：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250922171607608.png)
+
+##### C++实现
+
+从 `UEnvQueryGenerator`即可派生 **自定义生成器**，重写`UEnvQueryGenerator::GenerateItems()`方法、并在函数体内 **添加生成Item**（调用 `FEnvQueryInstance::AddItemData(TArray<TypeValue>& ItemCollection)`方法）
+
+以官方生成器节点Actors of Class 为例，其核心代码为：
+
+```c++
+// UEnvQueryGenerator_ActorsOfClass.h
+class UEnvQueryGenerator_ActorsOfClass : public UEnvQueryGenerator
+{
+	GENERATED_UCLASS_BODY()
+
+	UPROPERTY(EditDefaultsOnly, Category=Generator, meta=(AllowAbstract))
+	TSubclassOf<AActor> SearchedActorClass;
+
+	AIMODULE_API virtual void GenerateItems(FEnvQueryInstance& QueryInstance) const override;
+    
+    // OtherCode
+};
+
+// UEnvQueryGenerator_ActorsOfClass.cpp
+void UEnvQueryGenerator_ActorsOfClass::GenerateItems(FEnvQueryInstance& QueryInstance) const
+{
+	// OtherCode
+
+	TArray<AActor*> MatchingActors;
+
+    // OtherCode：从World检索合法的Actor
+
+	QueryInstance.AddItemData<UEnvQueryItemType_Actor>(MatchingActors);
+}
+```
 
 ## 情景（Contexts）
 
