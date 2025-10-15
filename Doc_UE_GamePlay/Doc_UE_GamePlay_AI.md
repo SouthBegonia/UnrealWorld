@@ -1032,6 +1032,57 @@ UE提供了 `AEQSTestingPawn : ACharacter` 以便于我们 **在编辑器下 直
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
 
+# MASS
+
+## MassEntity
+
+MassEntity是Mass框架的基础，其实现框架为 ECS
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251015173137277.png)
+
+### 基本框架
+
+ECS框架基本组成有：
+
+- **Entity（实体）**：带标识ID的容器。可以挂载若干Component
+- **Component（组件）**：纯数据、不包含逻辑。挂载在Entity上
+- **System（系统）**：纯函数、不包含数据。负责逻辑处理 某些特定Component
+
+#### Entity
+
+ECS中的 **Entity** 可对应 `FMassEntityHandle`，其涉及的关键数据有：
+
+- Entity的 **处理句柄**（`FMassEntityHandle`）：
+  - 包含 `Index : int32` 成员以 索引其 数据容器
+  - 包含 `SerialNumber: int32` 成员以 做数据校验
+
+- Entity的 **数据容器**（`FEntityData`）：
+  - 包含 `CurrentArchetype : TSharedPtr<FMassArchetypeData>` 成员以 指向原型数据
+
+- Entity的 **原型数据**（`FMassArchetypeData`）：
+  - 持有各类Fragment数据
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251015171312379.png)
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251015170646812.png)
+
+#### Component
+
+ECS中的 **Component** 对应了 `FMassFragment`：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251015200059782.png)
+
+#### System
+
+## 参考文章
+
+- [UE5的ECS：MASS框架(三) - 知乎](https://zhuanlan.zhihu.com/p/477803528)
+- [Unity ECS架构深度解析：从传统OOP到数据驱动的范式革命 - 知乎](https://blog.csdn.net/oWanMeiShiKong/article/details/146615175)
+
+
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
+
 
 
 # 参考文章
