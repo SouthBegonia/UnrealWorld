@@ -1074,6 +1074,13 @@ ECS中的 **Component** 对应了 `FMassFragment`：
 
 #### System
 
+ECS中的 **System** 对应了 `UMassProcessor`，其核心步骤为：
+
+1. 为此Processor配置 自定义Queries（所需目标Fragment、Tag）
+2. 基于Query结果 对目标Entity数据做逻辑处理
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251016154345551.png)
+
 ## 参考文章
 
 - [UE5的ECS：MASS框架(三) - 知乎](https://zhuanlan.zhihu.com/p/477803528)
