@@ -1081,6 +1081,42 @@ ECS中的 **System** 对应了 `UMassProcessor`，其核心步骤为：
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251016154345551.png)
 
+
+
+## MassGamePlay
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251016155812788.png)
+
+### 模块介绍
+
+#### Trait 特性
+
+**特性**（`UMassEntityTraitBase`）由多个Fragment/Tag组合而成，用于 **表征Entity的某项功能属性**，**持有该特征的Entity 也就持有了Fragment/Tag**
+
+例如下图示例：Entity添加了移动特征（`UMassMovementTrait`），也就带有了`FMassVelocityFragment`等Fragment，当执行 位移执行器（`UMassApplyMovementProcessor`）时 取得了此Entity上的相关Fragment、进行逻辑处理
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251016164534295.png)
+
+##### 基本用法
+
+Entity的特性的配置对应到 `FMassEntityConfig` 中的 `TArray<TObjectPtr<UMassEntityTraitBase>> Traits`
+
+我们可以通过在内容浏览器内 创建`UMassEntityConfigAsset : UDataAsset` 类型的数据资产，以配置所需特性
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251016165905231.png)
+
+##### Trait - UMassAssortedFragmentsTrait
+
+组合片段特性（`UMassAssortedFragmentsTrait`）用于 添加自定义Fragment和Tag
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251016170614619.png)
+
+##### Trait - UMassCrowdVisualizationTrait
+
+人群可视化特性（`UMassCrowdVisualizationTrait`）用于 表征集群的视觉显示
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251016170940861.png)
+
 ## 参考文章
 
 - [UE5的ECS：MASS框架(三) - 知乎](https://zhuanlan.zhihu.com/p/477803528)
