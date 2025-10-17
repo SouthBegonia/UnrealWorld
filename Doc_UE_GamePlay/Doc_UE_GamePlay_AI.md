@@ -93,7 +93,23 @@
   - [流程介绍](#流程介绍)
   - [基本用法](#基本用法-6)
   - [参考文章](#参考文章-5)
-- [参考文章](#参考文章-6)
+- [MASS](#mass)
+  - [MassEntity](#massentity)
+    - [基本框架](#基本框架)
+      - [Entity](#entity)
+      - [Component](#component)
+      - [System](#system)
+  - [MassGamePlay](#massgameplay)
+    - [模块介绍](#模块介绍-1)
+      - [Trait](#trait)
+        - [基本用法](#基本用法-7)
+        - [Trait - UMassAssortedFragmentsTrait](#trait---umassassortedfragmentstrait)
+        - [Trait - UMassCrowdVisualizationTrait](#trait---umasscrowdvisualizationtrait)
+      - [Spawner](#spawner)
+        - [基本用法](#基本用法-8)
+    - [工作流](#工作流)
+  - [参考文章](#参考文章-6)
+- [参考文章](#参考文章-7)
 
 
 
@@ -1089,7 +1105,7 @@ ECS中的 **System** 对应了 `UMassProcessor`，其核心步骤为：
 
 ### 模块介绍
 
-#### Trait 特性
+#### Trait
 
 **特性**（`UMassEntityTraitBase`）由多个Fragment/Tag组合而成，用于 **表征Entity的某项功能属性**，**持有该特征的Entity 也就持有了Fragment/Tag**
 
@@ -1117,8 +1133,45 @@ Entity的特性的配置对应到 `FMassEntityConfig` 中的 `TArray<TObjectPtr<
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251016170940861.png)
 
+#### Spawner
+
+**集群放置器**（`AMassSpawner : public AActor`）用于 批量创建、放置Entity
+
+##### 基本用法
+
+放置一个AMassSpawner到Level下，可查看其细节面板，核心参数有：
+
+- 数量（`Count`）/正在生成计数范围（`SpawningCountScale`）：最终放置Entity数量= Count * SpawningCountScale
+- 实体类型（`EntityTypes`）：定义 可能放置 **Entity的种类**（最终对应 UMassEntityConfigAsset资产）
+- 生成数据生成器（`SpawnDataGenerators`）：定义 可能放置 **Entity的地点**
+  - EQS生成点生成器（`UMassEntityEQSSpawnPointsGenerator`）：引擎自带类型，以EQS结果为放置点
+  - 区域图生成点生成器（`UMassEntityZoneGraphSpawnPointsGenerator`）：引擎自带类型，以符合条件的ZoneGraph区域内的点作为放置点
+
+例如下图示例：在AMassSpawner::BeginPlay时 放置20个 Entity（类型为DA_MassAIConfig）到 ZonGraph区域（任意带有标签为Pedestrian的区域，放置点相连间距范围[100,300]）内
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251017140425986.png)
+
+### 工作流
+
+基于上文我们知道了ECS在MassGamePlay内的对应模块：
+
+- Entity = MassEntity
+- Component = Fragment、Tag
+- System = Processor
+
+MassGamePlay下 各Processor的执行（执行哪个、何时执行、执行顺序），则在 ProjectSetting->Engine->Mass->ModuleSettings 内配置（UE 5.2+），其执行阶段根据 Processing Phase Config执行，各阶段内又囊括Processor：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251017162049942.png)
+
+在从`UMassProcessor`派生出自定义的Processor后，其将被识别、添加到 `FMassProcessingPhaseConfig::ProcessorCDOs` 内（代码位于 `UMassEntitySettings::BuildProcessorList()`），即可再设置其执行顺序等内容
+
+以下图 [UE - City Sample](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/city-sample-project-unreal-engine-demonstration) 为例，其创建了 `UCitySampleDebugVisProcessor : UMassProcessor`，设置其自动注册（全局下每个Tick都将执行Execute），设置其 执行阶段为PrePhysics，其执行顺序排在UpdateWorldFromMass执行组系列Processor后：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251017155945068.png)
+
 ## 参考文章
 
+- [City Sample - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/city-sample-project-unreal-engine-demonstration) 
 - [UE5的ECS：MASS框架(三) - 知乎](https://zhuanlan.zhihu.com/p/477803528)
 - [Unity ECS架构深度解析：从传统OOP到数据驱动的范式革命 - 知乎](https://blog.csdn.net/oWanMeiShiKong/article/details/146615175)
 
