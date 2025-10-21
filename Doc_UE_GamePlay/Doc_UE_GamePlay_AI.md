@@ -99,6 +99,8 @@
       - [Entity](#entity)
       - [Component](#component)
       - [System](#system)
+    - [调试](#调试-1)
+      - [Mass Debugger](#mass-debugger)
   - [MassGamePlay](#massgameplay)
     - [模块介绍](#模块介绍-1)
       - [Trait](#trait)
@@ -1097,7 +1099,27 @@ ECS中的 **System** 对应了 `UMassProcessor`，其核心步骤为：
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251016154345551.png)
 
+### 调试
 
+#### Mass Debugger
+
+UE 5.5+提供了 [Mass Debugger](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/mass-debugger-overview) 以便于直观查验环境内 MassEntity各模块的信息（5.6+又有新改动），功能包括：
+
+- 预览活动环境内的 Processor：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251021201749328.png)
+
+- 预览活动环境内的 Processing Graphs：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251021201944550.png)
+
+- 预览活动环境内的 基于EntityConfig实例化到环境内的Archetype汇总信息：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251021202053962.png)
+
+- （5.6+）预览活动环境内的 某个Entity信息、Entity的Fragment信息、Fragment断点调试：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251021202634717.png)
 
 ## MassGamePlay
 
