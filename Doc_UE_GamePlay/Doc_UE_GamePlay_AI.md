@@ -1194,8 +1194,10 @@ MassGamePlay下 各Processor的执行（执行哪个、何时执行、执行顺�
 ## 参考文章
 
 - [City Sample - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/city-sample-project-unreal-engine-demonstration) 
+- [UE5 Mass初体验 - 知乎](https://zhuanlan.zhihu.com/p/656677641)
 - [UE5的ECS：MASS框架(三) - 知乎](https://zhuanlan.zhihu.com/p/477803528)
 - [Unity ECS架构深度解析：从传统OOP到数据驱动的范式革命 - 知乎](https://blog.csdn.net/oWanMeiShiKong/article/details/146615175)
+- [UE5 Mass LOD - 知乎](https://zhuanlan.zhihu.com/p/677229249)
 
 
 
