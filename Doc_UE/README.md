@@ -40,6 +40,12 @@
 
 - 过场动画（Sequencer）：基本用法、轨道介绍
 
+# [Debug](https://github.com/SouthBegonia/UnrealWorld/tree/main/Doc_UE/Doc_UE_Debug.md)
+
+- Crush定位及分析
+
+
+
 # UE - Plugins
 
 收集实用的 第三方UE插件
