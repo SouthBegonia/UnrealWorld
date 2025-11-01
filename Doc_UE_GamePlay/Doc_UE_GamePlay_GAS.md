@@ -51,6 +51,7 @@
 	- [GE细节面板](#ge细节面板)
 		- [GE细节面板 - Duration](#ge细节面板---duration)
 		- [GE细节面板 - Period](#ge细节面板---period)
+		- [GE细节面板 - Stacking](#ge细节面板---stacking)
 	- [GE的使用](#ge的使用)
 - [Gameplay Cue（GC）](#gameplay-cuegc)
 	- [用法](#用法-1)
@@ -1128,6 +1129,41 @@ void UTestExecutionCalculation::Execute_Implementation(const FGameplayEffectCust
 | Has Duration + Period | GE在 DurationMagnitude秒内 以 每Period秒 触发 |                                         |
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250820161047369.png)
+
+### GE细节面板 - Stacking
+
+对于有持续性的GE（Duration=Infinite、Has Duration），其可对GE进行堆叠
+
+**Stack Limit Count**：最大堆叠层数
+
+**Stacking Type**：堆叠类型
+
+|    Stacking Type    |                    功能                    |  备注  |
+| :-----------------: | :----------------------------------------: | :----: |
+| Aggregate by Source | 层数在 Souce方（GE触发方） 堆叠以进行限制  | 施法者 |
+| Aggregate by Target | 层数在 Target方（GE应用方） 堆叠以进行限制 | 受击者 |
+
+**Stack Duration Refresh Policy**：新应用GE时 是否刷新 持续时间
+
+|   Stack Duration Refresh Policy   |  功能  | 备注 |
+| :-------------------------------: | :----: | :--: |
+| Refresh on Successful Application |  刷新  |      |
+|           Never Refresh           | 不刷新 |      |
+
+**Stack Period Reset Policy**：新应用GE时 是否刷新 周期
+
+|    Stack Period Reset Policy    |  功能  | 备注 |
+| :-----------------------------: | :----: | :--: |
+| Reset on Successful Application |  刷新  |      |
+|           Never Reset           | 不刷新 |      |
+
+**Stack Expiration Policy**：GE到期后 的处理方法
+
+|         Stack Expiration Policy          |            功能            | 备注 |
+| :--------------------------------------: | :------------------------: | :--: |
+|            Clear Entire Stack            |         清空全层GE         |      |
+| Remove Single Stack and Refresh Duration | 清空一层GE，并刷新持续时间 |      |
+|             Refresh Duration             |   不清空，并刷新持续时间   |      |
 
 ## GE的使用
 
