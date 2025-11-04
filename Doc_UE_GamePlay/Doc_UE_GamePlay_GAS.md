@@ -917,6 +917,8 @@ void UAbilitySystemComponent::InitializeComponent()
 
 例如：配置实现了 扣除目标身上的HealthAttribute值（值为 目标身上的 当前HealthAttribute值），GE执行表现为 目标Health扣光
 
+`最终运算值（供ModifierOp） = ((获取的AttributeValue + Pre Multiply Additive Value) * Coefficient) + Post Multiply Additive Value `
+
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250817210511175.png)
 
 #### Custom Calculation Class
