@@ -22,11 +22,15 @@
 			- [常规Input输入以激活GA](#常规input输入以激活ga)
 			- [EnhancedInput增强输入以激活GA](#enhancedinput增强输入以激活ga)
 			- [参考文章](#参考文章-1)
-	- [GA细节面板 - Tags标签](#ga细节面板---tags标签)
-		- [关于 Source XXX Tags、Target XXX Tags](#关于-source-xxx-tagstarget-xxx-tags)
-	- [GA细节面板 - Triggers触发器](#ga细节面板---triggers触发器)
-	- [GA细节面板 - Cooldowns](#ga细节面板---cooldowns)
-	- [GA细节面板 - Costs](#ga细节面板---costs)
+	- [GA细节面板](#ga细节面板)
+		- [Tags](#tags)
+			- [关于 Source XXX Tags、Target XXX Tags](#关于-source-xxx-tagstarget-xxx-tags)
+		- [Triggers](#triggers)
+		- [Cooldowns](#cooldowns)
+		- [Costs](#costs)
+		- [Advanced](#advanced)
+			- [Instancing Policy](#instancing-policy)
+			- [参考文章](#参考文章-2)
 	- [GA - AbilityTask](#ga---abilitytask)
 - [Gameplay Attributes](#gameplay-attributes)
 	- [AS用法](#as用法)
@@ -47,7 +51,7 @@
 			- [Set By Caller](#set-by-caller)
 		- [Executions](#executions)
 			- [Execution Calculation Class](#execution-calculation-class)
-		- [参考文章](#参考文章-2)
+		- [参考文章](#参考文章-3)
 	- [GE细节面板](#ge细节面板)
 		- [GE细节面板 - Duration](#ge细节面板---duration)
 		- [GE细节面板 - Period](#ge细节面板---period)
@@ -64,7 +68,7 @@
 	- [Debug Widgets](#debug-widgets)
 	- [Gameplay Debugger](#gameplay-debugger)
 	- [GAS in Visual Logger](#gas-in-visual-logger)
-- [参考文章](#参考文章-3)
+- [参考文章](#参考文章-4)
 
 
 
@@ -543,7 +547,9 @@ void UAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputCompon
 
 
 
-## GA细节面板 - Tags标签
+## GA细节面板
+
+### Tags
 
 GA上可配置系列 GameplayTags，使其进行 预设的逻辑处理
 
@@ -562,7 +568,7 @@ GA上可配置系列 GameplayTags，使其进行 预设的逻辑处理
 |   Target Required Tags    | 当`FGameplayEventData.TargetTags` 内 包含全部 配置的Tags，则此GA才允许被激活 |                                                    |
 |    Target Blocked Tags    | 当`FGameplayEventData.TargetTags` 内 拥有任意个 配置的Tags，则此GA禁止激活 |                                                    |
 
-### 关于 Source XXX Tags、Target XXX Tags
+#### 关于 Source XXX Tags、Target XXX Tags
 
 当我们采用 **[GameplayEvent的形式激活GA](https://dev.epicgames.com/documentation/en-us/unreal-engine/using-gameplay-abilities-in-unreal-engine?application_version=5.4#triggeringwithgameplayevents)**（例如调用方法 `UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(AActor* Actor, FGameplayTag EventTag, FGameplayEventData Payload)`，其中的形参 `FGameplayEventData Payload` 其内的下列2成员参数，即对应 Source XXX Tags、Target XXX Tags
 
@@ -608,7 +614,7 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
 
 - Source XXX Tags、Target XXX Tags 仅在 通过GameplayEvent激活GA 且有对应非空`Payload`配置下 才可能生效，否则GA的配置无需关心这2项目的内容
 
-## GA细节面板 - Triggers触发器
+### Triggers
 
 触发器用于 配置系列触发条件、当达成触发条件后 就激活此GA
 
@@ -620,7 +626,7 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
 - Owned Tag Added：当`OwnerActor`获得 配置TriggerTag的时候 激活一次此GA，当`OwnerActor`失去此Tag时 不会移除此GA，需要自行移除
 - Owned Tag Present：当`OwnerActor`获得 配置TriggerTag的时候 激活一次此GA，当`OwnerActor`失去此Tag时 会自动移除此GA（GA若执行未完成会被Cancel）
 
-## GA细节面板 - Cooldowns
+### Cooldowns
 
 Cooldown 用于 限制GA的触发间隔，配置项为 GE。其本质为 Cooldown的GE激活期间 添加Tag到ASC，通过此Tag进行限制、实现冷却
 
@@ -631,7 +637,7 @@ Cooldown GE的配置要求：
 
 ![image-20250706175722358](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250706175722358.png)
 
-## GA细节面板 - Costs
+### Costs
 
 Costs 用于 消耗目标Attribute以激活GA，配置项为 GE
 
@@ -641,6 +647,26 @@ Costs GE的配置要求：
 - 一个或多个Modifier
 
 ![image-20250706180450910](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250706180450910.png)
+
+### Advanced
+
+#### Instancing Policy
+
+实例化策略（Instancing Policy） 决定了 **GA的实例化方式**
+
+|    Instancing Policy    |               描述               | 性能开销 |    适用场景    |
+| :---------------------: | :------------------------------: | :------: | :------------: |
+|      NonInstanced       |   GA不会被实例化，GA操作其CDO    |    低    | 跳跃、基础移动 |
+|   Instanced Per Actor   |  每个ASC只能实例化一个GA并复用   |    中    | 射击、技能系统 |
+| Instanced Per Execution | 每次激活GA都会创建一个新的GA实例 |    高    |   一次性效果   |
+
+#### 参考文章
+
+- [GASDocumentation_Chinese - Github](https://github.com/BillEliot/GASDocumentation_Chinese?tab=readme-ov-file#467-%E5%AE%9E%E4%BE%8B%E5%8C%96%E7%AD%96%E7%95%A5)
+
+- [GASDocumentation能力实例：InstancingPolicy深度解析 - CSDN](https://blog.csdn.net/gitblog_00575/article/details/151093687)
+
+
 
 ## GA - AbilityTask
 
