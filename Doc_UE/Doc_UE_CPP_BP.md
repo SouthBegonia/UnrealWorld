@@ -7,6 +7,8 @@
   - [UFUNCTION](#ufunction)
   - [参考文章](#参考文章-1)
 - [Marcro 宏](#marcro-宏)
+  - [UPARAM](#uparam)
+    - [ref](#ref)
 - [指针与引用](#指针与引用)
   - [硬引用与软引用](#硬引用与软引用)
       - [使用注意事项](#使用注意事项)
@@ -189,7 +191,15 @@ Int32 BlueprintPureFalseFunction() const
 |   UPROPERTY    |    标记属性     |  被UE反射识别，进而反映到 编辑器、蓝图  |
 |   UFUNCTION    |    标记函数     |  被UE反射识别，进而反映到 编辑器、蓝图  |
 
+## UPARAM
 
+`UPARAM`宏用于 定义函数参数的额外元数据，最终 控制其在蓝图的显示、交互方式
+
+### ref
+
+配合函数的 引用类型的输入参数，使该参数在蓝图为输入参数（不加该宏则会被UE解析为输出参数）
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251124153950432.png)
 
 # 指针与引用
 
