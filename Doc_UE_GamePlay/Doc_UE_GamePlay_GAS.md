@@ -12,7 +12,7 @@
 		- [从DataTable导入Tags](#从datatable导入tags)
 	- [Tags的规划](#tags的规划)
 		- [ARPG类的Tags规划](#arpg类的tags规划)
-		- [参考文章](#参考文章)
+	- [参考文章](#参考文章)
 - [Gameplay Ability（GA）](#gameplay-abilityga)
 	- [用法](#用法)
 		- [1. 创建GA](#1-创建ga)
@@ -212,8 +212,10 @@ Status（状态）
         └──Stun
 ```
 
-### 参考文章
+## 参考文章
 
+- [GAS 1. GameplayTag用法与源码浅析 - 知乎](https://zhuanlan.zhihu.com/p/12124335222)
+- [UE C++ GAS GameplayTag的注册 - 知乎](https://zhuanlan.zhihu.com/p/1969084836514866258)
 - [UE4 Gameplay Tags怎么划分合理？ - 知乎](https://www.zhihu.com/question/377026014/answer/1068575405)
 - [GASDocumentation - Github](https://github.com/tranek/GASDocumentation)
 
