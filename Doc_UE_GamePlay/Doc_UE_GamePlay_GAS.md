@@ -57,6 +57,10 @@
 		- [GE细节面板 - Period](#ge细节面板---period)
 		- [GE细节面板 - Stacking](#ge细节面板---stacking)
 	- [GE的使用](#ge的使用)
+	- [GE模块](#ge模块)
+		- [FGameplayEffectContext](#fgameplayeffectcontext)
+			- [自定义 GameplayEffectContext](#自定义-gameplayeffectcontext)
+		- [参考文章](#参考文章-4)
 - [Gameplay Cue（GC）](#gameplay-cuegc)
 	- [用法](#用法-1)
 		- [1. 创建GC](#1-创建gc)
@@ -68,7 +72,7 @@
 	- [Debug Widgets](#debug-widgets)
 	- [Gameplay Debugger](#gameplay-debugger)
 	- [GAS in Visual Logger](#gas-in-visual-logger)
-- [参考文章](#参考文章-4)
+- [参考文章](#参考文章-5)
 
 
 
@@ -1200,6 +1204,53 @@ void UTestExecutionCalculation::Execute_Implementation(const FGameplayEffectCust
 ![ASC内应用GE](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704204038864.png)
 
 ![GA内应用GE](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250704204158308.png)
+
+
+
+## GE模块
+
+### FGameplayEffectContext
+
+`FGameplayEffectContext` 是GAS内 **承载GE相关 上下文信息的 结构体**，也可以说 **记录GE的来源信息**，例如其内的：
+
+- `EffectCauser : TWeakObjectPtr<AActor>` 记录 发起GE的Actor
+- `SourceObject : TWeakObjectPtr<UObject>` 记录 GE的创建源
+- `AbilityCDO : TWeakObjectPtr<UGameplayAbility>` 记录 此GE是被哪个GA所创建的
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251201133044164.png)
+
+`FGameplayEffectContext`将被包装为`FGameplayEffectContextHandle`、最终存储于`FGameplayEffectSpec::EffectContext`：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251201134656577.png)
+
+则在整个GE流程内，就可通过EffectContext访问所需的信息，例如 对Source上的Attribute信息进行快照 `FGameplayEffectSpec::CaptureDataFromSource()`：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251201135207865.png)
+
+#### 自定义 GameplayEffectContext
+
+基于上文可知，EffectContext可存储上下文相关的信息（其包含Souce方信息），但 **未预留额为的自定义数据载体**，因此对于 **需要额外的自定义数据以随EffectContext传递**，则需要 自定义派生源EffectContext
+
+方法1：
+
+- 实现思路：正常派生实现自定义EffectContext后，再派生实现、指定`UAbilitySystemGlobals`类、重写`UAbilitySystemGlobals::AllocGameplayEffectContext()`方法以达到全局替换生成自定义的EffectContext
+
+- 实现方法：[通过自定义GameplayEffectContext传递变量 - 知乎](https://zhuanlan.zhihu.com/p/522818757) 或 [Lyra](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/abilities-in-lyra-in-unreal-engine?application_version=5.6#flyragameplayeffectcontext)
+- 优缺点：
+  - 优点：默认生成的EffectContext将变为新自定义的类，业务层无需修改任何原有方法
+  - 缺点：不好做差异化
+
+方法2：
+
+- 实现思路：正常派生实现自定义EffectContext后，手动构造`FGameplayEffectSpec`、并改用项目自行实现的接口进行ApplyGameplayEffect
+- 实现方法：[自定义GameplayEffectContext(C++&蓝图) - 知乎](https://zhuanlan.zhihu.com/p/1966184666278113326)
+- 优缺点：
+  - 优点：可做差异化，不依赖特定ASC
+  - 缺点：注意区分使用新旧接口
+
+### 参考文章
+
+- [Creating your own Gameplay Effect Context. – The Games Dev](https://www.thegames.dev/?p=62)
 
 
 
