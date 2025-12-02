@@ -2,6 +2,7 @@
 - [总览](#总览)
 - [Behavior Tree](#behavior-tree)
   - [黑板（BlackBoard）](#黑板blackboard)
+    - [黑板键的使用](#黑板键的使用)
   - [行为树](#行为树)
     - [行为树 - 基本用法](#行为树---基本用法)
     - [行为树节点](#行为树节点)
@@ -147,9 +148,35 @@ UE内的AI，可概述为 AI单位的**智能行为** + 行为的**环境准备*
 
 ## 黑板（BlackBoard）
 
-**黑板** 是一项独立资源，用于存储记录 行为树所需的信息（名为 **黑板键**）
+**黑板** 是一项独立资源（`UBlackboardData : public UDataAsset`），用于存储记录 行为树所需的信息（名为 **黑板键**（`FBlackboardKeySelector`））
 
 ![image-20250809183540927](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250809183540927.png)
+
+### 黑板键的使用
+
+黑板键的数据（`BlackboardAsset : TObjectPtr<UBlackboardData>`）是隶属于黑板组件（`UBlackboardComponent : public UActorComponent`）的成员。因此对于 **获取/设置黑板键**，也就相当于对 `UBlackboardComponent `执行操作：
+
+```c++
+// 黑板键获取/设置常用函数库(C++、蓝图均可用) : UBTFunctionLibrary
+
+// UBTFunctionLibrary.cpp
+float UBTFunctionLibrary::GetBlackboardValueAsFloat(UBTNode* NodeOwner, const FBlackboardKeySelector& Key)
+{
+	UBlackboardComponent* BlackboardComp = GetOwnersBlackboard(NodeOwner);
+	return BlackboardComp ? BlackboardComp->GetValueAsFloat(Key.SelectedKeyName) : 0.0f;
+}
+
+void UBTFunctionLibrary::SetBlackboardValueAsFloat(UBTNode* NodeOwner, const FBlackboardKeySelector& Key, float Value)
+{
+	if (UBlackboardComponent* BlackboardComp = GetOwnersBlackboard(NodeOwner))
+	{
+		BlackboardComp->SetValue<UBlackboardKeyType_Float>(Key.SelectedKeyName, Value);
+	}
+}
+// ...
+```
+
+
 
 ## 行为树
 
