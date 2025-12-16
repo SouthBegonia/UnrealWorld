@@ -27,3 +27,37 @@ UE 会在游戏**崩溃闪退时** 收集本次运行的日志文件、生成**�
 
 - [Unreal 的 MiniDump 机制调研 - 知乎](https://zhuanlan.zhihu.com/p/649610542)
 - [UE 崩溃调试指南和技巧 - 知乎](https://zhuanlan.zhihu.com/p/655457589)
+
+
+
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
+
+
+
+
+## 内存泄漏
+
+### 排查方法
+
+#### Memreport
+
+控制台输入指令 以对内存进行快照、生成日志文件。多次手动快照、对比日志文件以排查问题
+
+日志文件位置：*Game/Saved/Profiling/MemReports*
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251216152356639.png)
+
+常用指令有：
+
+```
+# 生成简要内存分析
+MemReport
+
+# 生成信息内存分析
+MemReport -full
+```
+
+### 参考文章
+
+- [UE4/5内存追踪方法 - 知乎](https://zhuanlan.zhihu.com/p/646523625)
