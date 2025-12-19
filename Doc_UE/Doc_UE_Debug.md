@@ -2,6 +2,30 @@
 
 
 
+## 相关调试
+
+### 代码调试
+
+#### 断点时判断Server或Client
+
+添加如下参数到监视，即可在断点时间 查看代码执行于Server还是Client：
+
+```
+// UE4适用
+{,,UE4Editor-Engine.dll}::GPlayInEditorContextString
+
+// UE5适用
+{,,UnrealEditor-Engine.dll}::GPlayInEditorContextString
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251219150552634.png)
+
+### 参考文章
+
+- [Rider 使用笔记 - Zerol](https://kisspread.github.io/notes/Basic/C++/Rider.html)
+
+
+
 ## 崩溃闪退
 
 UE 会在游戏**崩溃闪退时** 收集本次运行的日志文件、生成**崩溃转存文件（Crash Dump File）**，通过该文件我们可以可以做到 **定位崩溃代码调用堆栈信息**
