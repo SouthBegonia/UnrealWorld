@@ -58,6 +58,7 @@
       - [FSoftObjectPath、FSoftClassPath](#fsoftobjectpathfsoftclasspath)
       - [TSoftObjectPtr、TSoftClassPtr](#tsoftobjectptrtsoftclassptr)
   - [参考文章](#参考文章-14)
+- [蓝图节点](#蓝图节点)
 
 
 
@@ -1377,6 +1378,18 @@ void [TESTCLASS]::LoadSourceCallback()
 - [UE4中资源的引用 - cnblogs](https://www.cnblogs.com/kekec/p/13357937.html)
 - [[UE C++] 资源加载(二) 查找资源——FindObject - CSDN](https://blog.csdn.net/qq_52179126/article/details/130114399)
 - [UE蓝图资源路径中“_C“的含义 - CSDN](https://blog.csdn.net/Mnsentinor/article/details/143088840)
+
+
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
+
+
+
+# 蓝图节点
+
+常用蓝图节点：[UE5 蓝图学习笔记 - 知乎](https://zhuanlan.zhihu.com/p/649828585)
+
+蓝图异步操作节点：[创建异步Blueprint节点 - UE5Wiki](https://ue5wiki.com/wiki/34346/)
 
 
 
