@@ -46,6 +46,7 @@
     - [参考文章](#参考文章-10)
   - [常用工具、函数、库](#常用工具函数库)
     - [UGamePlayStatic](#ugameplaystatic)
+    - [UKismetMathLibrary](#ukismetmathlibrary)
 - [GamePlay框架的 Runtime启动流程](#gameplay框架的-runtime启动流程)
   - [参考文章](#参考文章-11)
 
@@ -205,6 +206,8 @@
 - [《InsideUE4》GamePlay架构（一）Actor和Component ](https://zhuanlan.zhihu.com/p/22833151)
 
 - [[浅析UE4 Actor&Actor生命周期](https://www.cnblogs.com/CatSevenMillion/p/16653763.html)](https://www.cnblogs.com/CatSevenMillion/p/16653763.html)
+
+- [UE中Actor类图和时序图 - 知乎](https://zhuanlan.zhihu.com/p/1918748316289732878)
 
 - [Actor组件 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/components-in-unreal-engine)
 
@@ -670,6 +673,12 @@ if (UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::CreateSa
   - `LoadGameFromMomory()`、`LoadGameFromSlot()`
 - **时间获取相关**：
   - `GetWorldDeltaSeconds()`、`GetTimeSeconds()`、`GetRealTimeSeconds()`
+
+
+
+### [UKismetMathLibrary](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/UKismetMathLibrary)
+
+包含常用数值计算方法，实例：[UEC++：UKismetMathLibrary 常用方法 - CSDN](https://blog.csdn.net/weixin_52599679/article/details/141863408)
 
 
 
