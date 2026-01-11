@@ -127,6 +127,38 @@ UAbilitySystemComponent* AGASSampleCharacter::GetAbilitySystemComponent() const
 
 ![image-20250628172718541](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250628172718541.png)
 
+## 用法-常用成员及方法
+
+↓↓↓ 事件监听：目标`GameplayTag` 的增减
+
+```c++
+// 原型方法
+FOnGameplayEffectTagCountChanged& RegisterGameplayTagEvent(FGameplayTag Tag, EGameplayTagEventType::Type EventType=EGameplayTagEventType::NewOrRemoved);
+
+// 用法示例
+UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+ASC->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag("TestTag"), EGameplayTagEventType::NewOrRemoved).AddLambda([](const FGameplayTag Tag, int32 NewCount)
+{
+	// ...
+});
+```
+
+↓↓↓ 事件监听：`Attribute`值的变化
+
+```c++
+// 原型方法
+FOnGameplayAttributeValueChange& GetGameplayAttributeValueChangeDelegate(FGameplayAttribute Attribute);
+
+// 用法示例
+const FGameplayAttribute& HealthAttribute = UMyAttributeSet::GetHealthAttribute();
+UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+ASC->GetGameplayAttributeValueChangeDelegate(HealthAttribute).AddLambda([](const FOnAttributeChangeData& Data)
+{
+	// ...
+});
+```
+
+
 
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
