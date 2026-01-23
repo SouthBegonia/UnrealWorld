@@ -1329,6 +1329,32 @@ GameplayCue（GC）常用于处理 GAS系统内 **非游戏流程逻辑相关的
 
 ![image-20250705173205714](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250705173205714.png)
 
+## 功能 - GameplayCueNotifyPaths
+
+触发GC的流程中，核心参数是 `GameplayCueTag : FGameplayTag`，`GameplayCueManager  `**将通过此Tag 以检索对应的GC蓝图**
+
+而 **检索目录（GameplayCueNotifyPaths）** 默认下是未设定的（将全局检索），则会在控制台看到如下警告：
+
+```c++
+LogAbilitySystem: Warning: No GameplayCueNotifyPaths were specified in DefaultGame.ini under [/Script/GameplayAbilities.AbilitySystemGlobals]. Falling back to using all of /Game/. This may be slow on large projects. Consider specifying which paths are to be searched.
+```
+
+也就是说，在 *DefaultGame.ini* 内 **配置明确的 检索目录** 有助于提升`GameplayCueManager `检索Tag对应GC蓝图的效率：
+
+（注意：配置后 将**仅会检索 配置的目录**）
+
+```c++
+// DefaultGame.ini
+
+[/Script/GameplayAbilities.AbilitySystemGlobals]
++GameplayCueNotifyPaths="/Game/目录1"
++GameplayCueNotifyPaths="/Game/目录2"
+```
+
+## 参考文章
+
+- [虚幻插件GAS分析05 GameplayCue的使用 - 知乎](https://zhuanlan.zhihu.com/p/430239761)
+
 
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/CrossLine_01.png)
