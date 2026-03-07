@@ -710,7 +710,7 @@ Costs GE的配置要求：
 
 [UAbilityTask](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/gameplay-ability-tasks-in-unreal-engine?application_version=5.4) 是指GA蓝图专用的 **一段异步处理逻辑**
 
-UE已内置诸多常用节点（节点功能可参考 [AbilityTask原生类盘点 - 知乎](https://zhuanlan.zhihu.com/p/431081292)），亦可自行从 `UAbilityTask` 派生实现（可参考 [UE5 GAS RPG创建自定义的Ability Task - CSDN](https://blog.csdn.net/qq_30100043/article/details/137859611)
+UE已内置诸多常用节点（节点功能可参考 [AbilityTask原生类盘点 - 知乎](https://zhuanlan.zhihu.com/p/431081292)），亦可自行从 `UAbilityTask` 派生实现（可参考 [虚幻四Gameplay Ability System入门(12)-Ability Task](https://zhuanlan.zhihu.com/p/369200245)
 
 ![image-20250702113549438](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250702113549438.png)
 
