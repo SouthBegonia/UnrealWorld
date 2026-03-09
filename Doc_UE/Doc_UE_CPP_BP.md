@@ -9,10 +9,12 @@
 - [Marcro 宏](#marcro-宏)
   - [UPARAM](#uparam)
     - [ref](#ref)
+- [元数据说明符](#元数据说明符)
+  - [参考文章](#参考文章-2)
 - [指针与引用](#指针与引用)
   - [硬引用与软引用](#硬引用与软引用)
       - [使用注意事项](#使用注意事项)
-    - [参考文章](#参考文章-2)
+    - [参考文章](#参考文章-3)
   - [TObjectPtr](#tobjectptr)
   - [TWeakObjectPtr](#tweakobjectptr)
   - [TSubClassOf](#tsubclassof)
@@ -20,34 +22,34 @@
   - [TSharedPtr](#tsharedptr)
   - [TSharedRef](#tsharedref)
   - [TWeakPtr](#tweakptr)
-  - [参考文章](#参考文章-3)
+  - [参考文章](#参考文章-4)
 - [接口](#接口)
   - [蓝图接口](#蓝图接口)
     - [基本用法](#基本用法)
   - [C++接口](#c接口)
     - [基本用法](#基本用法-1)
-  - [参考文章](#参考文章-4)
-- [容器](#容器)
   - [参考文章](#参考文章-5)
-- [字符串](#字符串)
+- [容器](#容器)
   - [参考文章](#参考文章-6)
-- [枚举](#枚举)
+- [字符串](#字符串)
   - [参考文章](#参考文章-7)
-- [结构体](#结构体)
+- [枚举](#枚举)
   - [参考文章](#参考文章-8)
+- [结构体](#结构体)
+  - [参考文章](#参考文章-9)
 - [数据表 DataTables](#数据表-datatables)
   - [创建数据表](#创建数据表)
   - [数据表操作](#数据表操作)
   - [数据表导入导出](#数据表导入导出)
-  - [参考文章](#参考文章-9)
-- [委托](#委托)
   - [参考文章](#参考文章-10)
-- [断言](#断言)
+- [委托](#委托)
   - [参考文章](#参考文章-11)
-- [事件、函数、宏](#事件函数宏)
+- [断言](#断言)
   - [参考文章](#参考文章-12)
-- [DrawDebug](#drawdebug)
+- [事件、函数、宏](#事件函数宏)
   - [参考文章](#参考文章-13)
+- [DrawDebug](#drawdebug)
+  - [参考文章](#参考文章-14)
 - [资源](#资源)
   - [资源加载](#资源加载)
     - [硬引用资源](#硬引用资源)
@@ -57,7 +59,7 @@
     - [软引用资源](#软引用资源)
       - [FSoftObjectPath、FSoftClassPath](#fsoftobjectpathfsoftclasspath)
       - [TSoftObjectPtr、TSoftClassPtr](#tsoftobjectptrtsoftclassptr)
-  - [参考文章](#参考文章-14)
+  - [参考文章](#参考文章-15)
 - [蓝图节点](#蓝图节点)
 
 
@@ -201,6 +203,32 @@ Int32 BlueprintPureFalseFunction() const
 配合函数的 引用类型的输入参数，使该参数在蓝图为输入参数（不加该宏则会被UE解析为输出参数）
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20251124153950432.png)
+
+
+
+# 元数据说明符
+
+在声明 类、接口、结构体、列举、列举值、函数或属性时，可添加 **元数据说明符（Metadata）** 用以 **控制其在编辑器的表现、交互**
+
+其基本格式为 `{UCLASS/UENUM/UINTERFACE/USTRUCT/UFUNCTION/UPROPERTY}(SpecifierX, meta=(MetaTag1="Value1", MetaTag2, ..), SpecifierY)`
+
+```c++
+// 属性的meta
+UPROPERTY(EditDefaultsOnly, meta = (DisplayName = "MyCount", ClampMin = 1, ClampMax = 1000))
+int32 Count;
+
+// 函数的meta
+UFUNCTION(BlueprintPure, meta=(DefaultToSelf = "WorldContextObject", HidePin = "WorldContextObject"))
+static void TestFunc(const UObject* WorldContextObject, int32 Count);
+```
+
+## 参考文章
+
+- [Metadata - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/metadata-specifiers-in-unreal-engine)
+- [UE5标识符详解 - 大钊](https://zhuanlan.zhihu.com/p/717920216)
+- [Unreal Engine 元数据参数（meta）系统整理手册 - CSDN](https://blog.csdn.net/weixin_64798796/article/details/148746013)
+
+
 
 # 指针与引用
 
