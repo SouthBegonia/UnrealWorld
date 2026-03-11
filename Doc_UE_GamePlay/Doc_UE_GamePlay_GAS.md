@@ -758,25 +758,41 @@ public:
 	USampleAttributeSet();
 
 public:
-	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	UPROPERTY(BlueprintReadOnly, Category = "Health", ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(USampleAttributeSet, Health);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	UPROPERTY(BlueprintReadOnly, Category = "Health", ReplicatedUsing = OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth;
 	ATTRIBUTE_ACCESSORS(USampleAttributeSet, MaxHealth)
 
 public:
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    
 	// 属性修改前回调
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 
 	// GE执行后属性回调
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+
+protected:
+    UFUNCTION()
+	virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
+    UFUNCTION()
+	virtual void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth);
 };
 ```
 
 ```c++
 // SampleAttributeSet.cpp
+void USampleAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(USampleAttributeSet, Health, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USampleAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
+}
+
 void USampleAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
     // CurrentValue 被改变前调用
@@ -796,6 +812,15 @@ void USampleAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
     {
         SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
     }
+}
+
+void USampleAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USampleAttributeSet, Health, OldHealth);
+}
+void USampleAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USampleAttributeSet, MaxHealth, OldMaxHealth);
 }
 ```
 
