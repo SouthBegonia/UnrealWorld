@@ -61,6 +61,8 @@
       - [TSoftObjectPtr、TSoftClassPtr](#tsoftobjectptrtsoftclassptr)
   - [参考文章](#参考文章-15)
 - [蓝图节点](#蓝图节点)
+  - [异步节点](#异步节点)
+    - [参考文章](#参考文章-16)
 
 
 
@@ -1417,7 +1419,215 @@ void [TESTCLASS]::LoadSourceCallback()
 
 常用蓝图节点：[UE5 蓝图学习笔记 - 知乎](https://zhuanlan.zhihu.com/p/649828585)
 
-蓝图异步操作节点：[创建异步Blueprint节点 - UE5Wiki](https://ue5wiki.com/wiki/34346/)
+## 异步节点
+
+方式一：继承 `UBlueprintAsyncActionBase` 创建异步节点
+
+```c++
+// MyAsyncNodeTypeA.h
+#pragma once
+#include "CoreMinimal.h"
+#include "Kismet/BlueprintAsyncActionBase.h"
+#include "MyAsyncNodeTypeA.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAsyncNodeTest, FString, OutStr);
+
+UCLASS()
+class PROJECTNAME_API UMyAsyncNodeTypeA : public UBlueprintAsyncActionBase
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintCallable, DisplayName = "异步节点TypeA", meta=(BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"))
+	static UMyAsyncNodeTypeA* AsyncTest(UObject* WorldContextObject, FString InStr);
+
+	virtual void Activate() override;
+
+public:
+	UPROPERTY(BlueprintAssignable, DisplayName = "成功")
+	FAsyncNodeTest OnSuccess;
+	UPROPERTY(BlueprintAssignable)
+	FAsyncNodeTest OnFailure;
+
+private:
+	FString Str;
+};
+
+```
+
+```c++
+// MyAsyncNodeTypeA.cpp
+#include "MyAsyncNodeTypeA.h"
+
+UMyAsyncNodeTypeA* UMyAsyncNodeTypeA::AsyncTest(UObject* WorldContextObject, FString InStr)
+{
+	UMyAsyncNodeTypeA* Node = NewObject<UMyAsyncNodeTypeA>();
+	Node->Str = InStr;
+
+	return Node;
+}
+
+void UMyAsyncNodeTypeA::Activate()
+{
+	Super::Activate();
+
+	OnSuccess.Broadcast(Str);
+    //OnFailure.Broadcast(Str);
+}
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260319141245439.png)
+
+方法二：继承 `UK2Node_BaseAsyncTask` 创建、定制异步节点，另创建Proxy节点用以实质的异步逻辑处理
+
+可自行重写 `UK2Node_BaseAsyncTask` 内的各接口方法，以对节点做蓝图表现定制
+
+```c++
+// K2Node_MyAsyncNodeTypeB.h
+#pragma once
+#include "CoreMinimal.h"
+#include "EdGraph/EdGraphNode.h"
+#include "Internationalization/Text.h"
+#include "K2Node_BaseAsyncTask.h"
+#include "UObject/ObjectMacros.h"
+#include "UObject/UObjectGlobals.h"
+
+#include "K2Node_MyAsyncNodeTypeB.generated.h"
+
+class FString;
+class UEdGraph;
+class UObject;
+
+UCLASS()
+class PROJECTNAME_API UK2Node_MyAsyncNodeTypeB : public UK2Node_BaseAsyncTask
+{
+    // 备注：需要添加 BlueprintGraph 模块的引用
+	GENERATED_UCLASS_BODY()
+
+	//~ Begin UEdGraphNode Interface
+	virtual FText GetTooltipText() const override;
+	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
+	virtual void GetPinHoverText(const UEdGraphPin& Pin, FString& HoverTextOut) const override;
+	//~ End UEdGraphNode Interface
+
+	//~ Begin UK2Node Interface
+	virtual FText GetMenuCategory() const override;
+	//~ End UK2Node Interface
+};
+```
+
+```c++
+// K2Node_MyAsyncNodeTypeB.cpp
+#include "K2Node_MyAsyncNodeTypeB.h"
+#include "MyAsyncNodeTypeBProxy.h"
+
+#define LOCTEXT_NAMESPACE "K2Node"
+
+UK2Node_MyAsyncNodeTypeB::UK2Node_MyAsyncNodeTypeB(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	// 指定 Proxy类 及 工厂类、工厂方法
+	ProxyFactoryFunctionName = GET_FUNCTION_NAME_CHECKED(UMyAsyncNodeTypeBProxy, CreateProxyObjectForAsyncNodeTypeB);
+	ProxyFactoryClass = UMyAsyncNodeTypeBProxy::StaticClass();
+	ProxyClass = UMyAsyncNodeTypeBProxy::StaticClass();
+}
+
+FText UK2Node_MyAsyncNodeTypeB::GetTooltipText() const
+{
+	// 节点的描述
+	return LOCTEXT("K2Node_MyAsyncNodeTypeB_Tooltip", "异步节点TypeB的描述");
+}
+
+FText UK2Node_MyAsyncNodeTypeB::GetNodeTitle(ENodeTitleType::Type TitleType) const
+{
+	// 节点的标题
+	return LOCTEXT("MyAsyncNodeTypeB", "异步节点TypeB");
+}
+
+FText UK2Node_MyAsyncNodeTypeB::GetMenuCategory() const
+{
+	// 节点的目录
+	return LOCTEXT("MyAsyncNodeTypeBCategory", "MyCategory|异步节点");
+}
+
+void UK2Node_MyAsyncNodeTypeB::GetPinHoverText(const UEdGraphPin& Pin, FString& HoverTextOut) const
+{
+	Super::GetPinHoverText(Pin, HoverTextOut);
+
+	// 节点引脚的悬浮提示
+	// 备注：FName对应 UMyAsyncNodeTypeBProxy内的成员参数名
+	static const FName NAME_OnComplete = FName(TEXT("OnComplete"));
+	static const FName NAME_InStr = FName(TEXT("InStr"));
+
+	if (Pin.PinName == NAME_InStr)
+		HoverTextOut = FString::Printf(TEXT("【%s】\n异步节点InStr引脚的悬浮提示"), *HoverTextOut);
+	if (Pin.PinName == NAME_OnComplete)
+		HoverTextOut = FString::Printf(TEXT("【%s】\n异步节点onComplete引脚的悬浮提示"), *HoverTextOut);
+}
+
+#undef LOCTEXT_NAMESPACE
+```
+
+```c++
+// MyAsyncNodeTypeBProxy.h
+#pragma once
+#include "CoreMinimal.h"
+#include "MyAsyncNodeTypeBProxy.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMyAsyncNodeTypeBComplete, FString, OutStr);
+
+UCLASS()
+class PROJECTNAME_API UMyAsyncNodeTypeBProxy : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintCallable, DisplayName = "异步节点TypeB", meta=(BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"))
+	static UMyAsyncNodeTypeBProxy* CreateProxyObjectForAsyncNodeTypeB(UObject* WorldContextObject, FString InStr);
+
+	void StartMyAsyncTask(UObject* WorldContextObject);
+
+public:
+	UPROPERTY(BlueprintAssignable, DisplayName = "完成")
+	FOnMyAsyncNodeTypeBComplete OnComplete;
+
+	FTimerHandle TimerHandle;
+	FString Str;
+};
+```
+
+```c++
+// MyAsyncNodeTypeBProxy.cpp
+#include "MyAsyncNodeTypeBProxy.h"
+
+UMyAsyncNodeTypeBProxy* UMyAsyncNodeTypeBProxy::CreateProxyObjectForAsyncNodeTypeB(UObject* WorldContextObject, FString InStr)
+{
+	UMyAsyncNodeTypeBProxy* ProxyNode = NewObject<UMyAsyncNodeTypeBProxy>();
+	ProxyNode->SetFlags(RF_StrongRefOnFrame);	// 必要
+
+	ProxyNode->Str = InStr;
+	ProxyNode->StartMyAsyncTask(WorldContextObject);
+
+	return ProxyNode;
+}
+
+void UMyAsyncNodeTypeBProxy::StartMyAsyncTask(UObject* WorldContextObject)
+{
+	auto Check = [WorldContextObject, this]() {
+		OnComplete.Broadcast(Str);
+		WorldContextObject->GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+	};
+	WorldContextObject->GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda(Check), 3.f, false);
+}
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260319151432527.png)
+
+### 参考文章
+
+- [虚幻引擎蓝图节点原理机制源码剖析 - 知乎](https://zhuanlan.zhihu.com/p/706095370)
+- [第8期 UE4 异步蓝图节点设计与实现 - 知乎](https://zhuanlan.zhihu.com/p/185007308)
+- [UE4_异步操作_创建蓝图异步节点 - 知乎](https://zhuanlan.zhihu.com/p/371493461)
 
 
 
