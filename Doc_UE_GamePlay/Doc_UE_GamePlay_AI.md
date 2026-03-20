@@ -47,9 +47,15 @@
   - [寻路代理](#寻路代理)
     - [寻路查询筛选器](#寻路查询筛选器)
   - [寻路行为](#寻路行为)
-    - [AIMoveTo](#aimoveto)
-    - [UBTTask\_MoveTo](#ubttask_moveto)
-  - [参考文章](#参考文章-3)
+    - [寻路方法](#寻路方法)
+      - [SimpleMoveToActor/SimpleMoveToLocation](#simplemovetoactorsimplemovetolocation)
+      - [MoveToActor/MovetoLocation](#movetoactormovetolocation)
+      - [MoveToLocationorActor](#movetolocationoractor)
+      - [AIMoveTo](#aimoveto)
+      - [行为树 - UBTTask\_MoveTo](#行为树---ubttask_moveto)
+      - [状态树 - Move To](#状态树---move-to)
+    - [参考文章](#参考文章-3)
+  - [参考文章](#参考文章-4)
 - [感知系统](#感知系统)
   - [感知组件（AI Perception Component）](#感知组件ai-perception-component)
     - [感知属性（AI Perception Properties）](#感知属性ai-perception-properties)
@@ -83,7 +89,7 @@
     - [BehaviorTree 使用EQS](#behaviortree-使用eqs)
     - [StateTree 使用EQS](#statetree-使用eqs)
   - [调试](#调试)
-  - [参考文章](#参考文章-4)
+  - [参考文章](#参考文章-5)
 - [Smart Objects](#smart-objects)
   - [模块介绍](#模块介绍)
     - [智能对象子系统（Smart Object Subsystem）](#智能对象子系统smart-object-subsystem)
@@ -93,7 +99,7 @@
     - [智能对象组件（Smart Object Component）](#智能对象组件smart-object-component)
   - [流程介绍](#流程介绍)
   - [基本用法](#基本用法-6)
-  - [参考文章](#参考文章-5)
+  - [参考文章](#参考文章-6)
 - [MASS](#mass)
   - [MassEntity](#massentity)
     - [基本框架](#基本框架)
@@ -111,8 +117,8 @@
       - [Spawner](#spawner)
         - [基本用法](#基本用法-8)
     - [工作流](#工作流)
-  - [参考文章](#参考文章-6)
-- [参考文章](#参考文章-7)
+  - [参考文章](#参考文章-7)
+- [参考文章](#参考文章-8)
 
 
 
@@ -642,16 +648,163 @@ UE的[寻路系统](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/
 
 基于上文创建完成了 场景的寻路网格（核心是 Navigation Mesh Bounds Volume），现在我们就能 在移动代理（AI Agent）上调用**寻路相关方法**
 
-### AIMoveTo
+### 寻路方法
 
-蓝图常用的AIMoveTo节点，对应C++位于 `UAIBlueprintHelperLibrary::CreateMoveToProxyObject(UObject* WorldContextObject, APawn* Pawn, FVector Destination, AActor* TargetActor = NULL, float AcceptanceRadius = 5.f, bool bStopOnOverlap = false) `
+**寻路移动的 逻辑处理单元为 `APawn` 与 `AController`**。核心原理均为  `UNavigationSystemV1` 计算路径 + `UPathFollowingComponent` 执行移动
+
+此外，下述寻路方法，移动逻辑均涉及 `UPathFollowingComponent::RequestMove()` 方法，其内有要求Owner实现了`NavMovementInterface`，而 `ACharacter` 内有默认构造 `TObjectPtr<UCharacterMovementComponent> CharacterMovement`。简而言之可以说 **寻路移动的 `APawn` 常为 `ACharacter` 或其子类**（否则需要自行为Pawn接入`UNavMovementComponent`组件才可使用寻路）
+
+#### SimpleMoveToActor/SimpleMoveToLocation
+
+适用于 `AController`（`APlayerController` 或 `AIController` 均可）的简单寻路移动方法：
+
+```c++
+// UAIBlueprintHelperLibrary.h
+UFUNCTION(BlueprintCallable, Category = "AI|Navigation")
+static AIMODULE_API void SimpleMoveToActor(AController* Controller, const AActor* Goal);
+
+UFUNCTION(BlueprintCallable, Category = "AI|Navigation")
+static AIMODULE_API void SimpleMoveToLocation(AController* Controller, const FVector& Goal);
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260320172142804.png)
+
+#### MoveToActor/MovetoLocation
+
+适用于 `AIController` 的寻路移动方法，返回 寻路请求结果：
+
+```c++
+// AIController.h
+UFUNCTION(BlueprintCallable, Category = "AI|Navigation", Meta = (AdvancedDisplay = "bStopOnOverlap,bCanStrafe,bAllowPartialPath"))
+AIMODULE_API EPathFollowingRequestResult::Type MoveToActor(AActor* Goal, float AcceptanceRadius = -1, bool bStopOnOverlap = true,
+		bool bUsePathfinding = true, bool bCanStrafe = true,
+		TSubclassOf<UNavigationQueryFilter> FilterClass = NULL, bool bAllowPartialPath = true);
+
+UFUNCTION(BlueprintCallable, Category = "AI|Navigation", Meta = (AdvancedDisplay = "bStopOnOverlap,bCanStrafe,bAllowPartialPath"))
+AIMODULE_API EPathFollowingRequestResult::Type MoveToLocation(const FVector& Dest, float AcceptanceRadius = -1, bool bStopOnOverlap = true,
+		bool bUsePathfinding = true, bool bProjectDestinationToNavigation = false, bool bCanStrafe = true,
+		TSubclassOf<UNavigationQueryFilter> FilterClass = NULL, bool bAllowPartialPath = true);
+
+// PathFollowingComponent.h
+UENUM(BlueprintType)
+namespace EPathFollowingRequestResult
+{
+	enum Type : int
+	{
+		Failed,
+		AlreadyAtGoal,
+		RequestSuccessful
+	};
+}
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260320175926237.png)
+
+#### MoveToLocationorActor
+
+适用于 `AIController` 的寻路移动方法，带有 寻路请求失败回调、移动完成回调，及 `UAITask_MoveTo` 返值：
+
+```c++
+// UAITask_MoveTo.h
+class UAITask_MoveTo : public UAITask
+{
+    // ...
+
+    UFUNCTION(BlueprintCallable, Category = "AI|Tasks", meta = (AdvancedDisplay = "AcceptanceRadius,StopOnOverlap,AcceptPartialPath,bUsePathfinding,bUseContinuousGoalTracking,ProjectGoalOnNavigation,RequireNavigableEndLocation", DefaultToSelf = "Controller", BlueprintInternalUseOnly = "TRUE", DisplayName = "Move To Location or Actor"))
+	static AIMODULE_API UAITask_MoveTo* AIMoveTo(AAIController* Controller, FVector GoalLocation, AActor* GoalActor = nullptr,
+		float AcceptanceRadius = -1.f, EAIOptionFlag::Type StopOnOverlap = EAIOptionFlag::Default, EAIOptionFlag::Type AcceptPartialPath = EAIOptionFlag::Default,
+		bool bUsePathfinding = true, bool bLockAILogic = true, bool bUseContinuousGoalTracking = false, EAIOptionFlag::Type ProjectGoalOnNavigation = EAIOptionFlag::Default,
+		EAIOptionFlag::Type RequireNavigableEndLocation = EAIOptionFlag::Default);
+    
+    // ...
+}
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260320183928369.png)
+
+#### AIMoveTo
+
+适用于 `AIController` 的 蓝图 寻路移动方法，带有 移动完成、移动失败回调（对应结果参数）：
+
+```c++
+// UK2Node_AIMoveTo.h
+class AIGRAPH_API UK2Node_AIMoveTo : public UK2Node_BaseAsyncTask 
+{
+    // ...
+}
+
+// UAIBlueprintHelperLibrary.h
+UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject", BlueprintInternalUseOnly = "TRUE"))
+static AIMODULE_API UAIAsyncTaskBlueprintProxy* CreateMoveToProxyObject(UObject* WorldContextObject, APawn* Pawn, FVector Destination, AActor* TargetActor = NULL, float AcceptanceRadius = 5.f, bool bStopOnOverlap = false);
+
+// PathFollowingComponent.h
+UENUM(BlueprintType)
+namespace EPathFollowingResult
+{
+	enum Type : int
+	{
+		/** Reached destination */
+		Success,
+
+		/** Movement was blocked */
+		Blocked,
+
+		/** Agent is not on path */
+		OffPath,
+
+		/** Aborted and stopped (failure) */
+		Aborted,
+
+		/** DEPRECATED, use Aborted result instead */
+		Skipped_DEPRECATED UMETA(Hidden),
+
+		/** Request was invalid */
+		Invalid,
+	};
+}
+```
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827165945169.png)
 
-### UBTTask_MoveTo
+#### 行为树 - UBTTask_MoveTo
 
-行为树的 MoveTo 任务节点，对应C++位于 `UBTTask_MoveTo `
+适用于 BehaviorTree 的寻路移动任务节点：
+
+```c++
+// UBTTask_MoveTo.h
+class UBTTask_MoveTo : public UBTTask_BlackboardBase
+{
+    // ...
+    protected:
+
+	AIMODULE_API virtual EBTNodeResult::Type PerformMoveTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory);
+    // ...
+}
+```
+
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250827172627951.png)
+
+#### 状态树 - Move To
+
+适用于 StateTree 且 Schema为 `UStateTreeAIComponent` 的寻路移动任务节点：
+
+```c++
+USTRUCT(meta = (DisplayName = "Move To", Category = "AI|Action"))
+struct FStateTreeMoveToTask : public FStateTreeAIActionTaskBase
+{
+    // ...
+
+    GAMEPLAYSTATETREEMODULE_API virtual EStateTreeRunStatus PerformMoveTask(FStateTreeExecutionContext& Context, AAIController& Controller) const;
+
+    // ...
+}
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260320183001392.png)
+
+### 参考文章
+
+- [UE4 AIController - 知乎](https://zhuanlan.zhihu.com/p/120294058)
 
 ## 参考文章
 
