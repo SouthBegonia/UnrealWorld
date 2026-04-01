@@ -48,8 +48,14 @@
   - [参考文章](#参考文章-12)
 - [事件、函数、宏](#事件函数宏)
   - [参考文章](#参考文章-13)
-- [DrawDebug](#drawdebug)
+- [日志](#日志)
+  - [控制台日志](#控制台日志)
+    - [自定义日志标签](#自定义日志标签)
+  - [屏幕调试信息](#屏幕调试信息)
+  - [蓝图方法](#蓝图方法)
   - [参考文章](#参考文章-14)
+- [DrawDebug](#drawdebug)
+  - [参考文章](#参考文章-15)
 - [资源](#资源)
   - [资源加载](#资源加载)
     - [硬引用资源](#硬引用资源)
@@ -59,10 +65,10 @@
     - [软引用资源](#软引用资源)
       - [FSoftObjectPath、FSoftClassPath](#fsoftobjectpathfsoftclasspath)
       - [TSoftObjectPtr、TSoftClassPtr](#tsoftobjectptrtsoftclassptr)
-  - [参考文章](#参考文章-15)
+  - [参考文章](#参考文章-16)
 - [蓝图节点](#蓝图节点)
   - [异步节点](#异步节点)
-    - [参考文章](#参考文章-16)
+    - [参考文章](#参考文章-17)
 
 
 
@@ -1150,6 +1156,7 @@ if (MyHeroTable != nullptr)
 - [单播委托的基本使用 - CSDN](https://zhichao.blog.csdn.net/article/details/144314544)
 - [多播委托的基本使用 - CSDN](https://zhichao.blog.csdn.net/article/details/144510562)
 - [动态单播/多播的基本使用 - CSDN](https://zhichao.blog.csdn.net/article/details/144543843)
+- [一文理解透UE委托Delegate - 知乎](https://zhuanlan.zhihu.com/p/460092901)
 
 ## 参考文章
 
@@ -1191,6 +1198,109 @@ if (MyHeroTable != nullptr)
 
 - [【UE4】函数、宏和事件的区别 - 知乎](https://zhuanlan.zhihu.com/p/527787878)
 - [UE5 ＜事件、函数、宏＞ - CSDN](https://blog.csdn.net/CandyU2/article/details/147124582)
+
+
+
+# 日志
+
+通过C++/BP进行日志打印以便开发，目前有2类：
+
+- 控制台日志
+- 屏幕调试信息日志
+
+## 控制台日志
+
+通过 Output Log窗口，可以看到UE输出的日志信息
+
+控制台日志会自动保存到本地，其位于 **Saved/Logs** 目录
+
+```c++
+/**
+* A macro that logs a formatted message if the log category is active at the requested verbosity level.
+*
+* @param CategoryName   Name of the log category as provided to DEFINE_LOG_CATEGORY.
+* @param Verbosity      Verbosity level of this message. See ELogVerbosity.
+* @param Format         Format string literal in the style of printf.
+*/
+//UE_LOG(CategoryName, Verbosity, Format, ...)
+UE_LOG(LogTemp, Warning, TEXT("Hello World"));
+
+/**
+* Records a structured log event if this category is active at this level of verbosity.
+*
+* @param CategoryName   Name of a log category declared by DECLARE_LOG_CATEGORY_*.
+* @param Verbosity      Name of a log verbosity level from ELogVerbosity.
+* @param Format         Format string in the style of FLogTemplate.
+* @param Fields[0-16]   Zero to sixteen fields or field values.
+*/
+//UE_LOGFMT(CategoryName, Verbosity, Format, ...)
+UE_LOGFMT(LogCore, Warning, "LogName={name}, ErrorCode={code}", TEXT("Hello World"), 999);
+```
+
+### 自定义日志标签
+
+日志标签（`CategoryName`）方便我们在控制台内进行筛选。除了UE提供的日志标签（例如 `CoreGlobals.cpp` 内的 `LogTemp`），也可参照其用法 自行创建标签
+
+核心就是 `DECLARE_LOG_CATEGORY_EXTERN(<LOG_CATEGORY>, <VERBOSITY_LEVEL>, All)` 、`DEFINE_LOG_CATEGORY(<LOG_CATEGORY>)` 两个宏：
+
+```c++
+// MyCustomLog.h
+#include "CoreMinimal.h"
+#include  "Logging/LogMacros.h"
+
+DECLARE_LOG_CATEGORY_EXTERN(MyLogA, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(MyLogB, Log, All);
+
+// MyCustomLog.cpp
+#include "MyCustomLog.h"
+
+DEFINE_LOG_CATEGORY(MyLogA);
+DEFINE_LOG_CATEGORY(MyLogB);
+
+
+// MyGameModeXXX.cpp
+UE_LOG(MyLogA, Log, TEXT("My log string."));
+UE_LOGFMT(MyLogB, Warning, "LogName={name}, ErrorCode={code}", TEXT("Hello World"), 999);
+```
+
+## 屏幕调试信息
+
+可直接输出到屏幕上的日志信息，其不会被输出到 控制台或日志文件
+
+其可 设定持续时间、文字颜色等信息
+
+```c++
+/**
+*	This function will add a debug message to the onscreen message list.
+*	It will be displayed for FrameCount frames.
+*
+*	@param	Key				A unique key to prevent the same message from being added multiple times.
+*	@param	TimeToDisplay	How long to display the message, in seconds.
+*	@param	DisplayColor	The color to display the text in.
+*	@param	DebugMessage	The message to display.
+*/
+//void UEngine::AddOnScreenDebugMessage(uint64 Key, float TimeToDisplay, FColor DisplayColor, const FString& DebugMessage, bool bNewerOnTop, const FVector2D& TextScale)
+if (GEngine)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("Hello World"));
+}
+```
+
+## 蓝图方法
+
+常用的 `PrintString` 节点可实现 输出日志到控制台 或 打印到屏幕
+
+```c++
+// UKismetSystemLibrary.h
+UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject", CallableWithoutWorldContext, Keywords = "log print", AdvancedDisplay = "2", DevelopmentOnly), Category="Development")
+static ENGINE_API void PrintString(const UObject* WorldContextObject, const FString& InString = FString(TEXT("Hello")), bool bPrintToScreen = true, bool bPrintToLog = true, FLinearColor TextColor = FLinearColor(0.0f, 0.66f, 1.0f), float Duration = 2.f, const FName Key = NAME_None);
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260401200804996.png)
+
+## 参考文章
+
+- [虚幻中的日志记录 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/logging-in-unreal-engine)
 
 
 
