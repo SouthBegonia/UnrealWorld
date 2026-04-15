@@ -79,6 +79,34 @@
 
 
 
+### [FlowGraph](https://github.com/MothCocoon/FlowGraph)
+
+`FlowGraph` 是一个 **可视化流程编辑器**，目标是 **提供比传统蓝图 更适合处理复杂流程的解决方案**
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260415172229017.png)
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260415175307291.gif)
+
+特点：
+
+- 每个流程节点都是一个`UObject`，封装了逻辑及数据，较好支持同步/异步执行
+- 节点通过 发布订阅模式+GameplayTag，实现逻辑触发 与 模块解耦
+- 运行时可查看 执行流程 及 各节点上的信息
+
+适用场景：
+
+- 任务、剧情、对话
+- 游戏阶段控制（开始暂停跳过、成功失败等），关卡蓝图替品
+- 配合AI行为树、状态树（事件驱动行为以避免低效Tick）
+
+参考文章：
+
+- [FlowGraph - Github](https://github.com/MothCocoon/FlowGraph)
+
+- [FlowGraph-Concept - MothCocoon](https://mothcocoon.github.io/FlowGraph/Overview/Concept)
+- [Introducing Flow Graph for Unreal Engine - MothCocoon](https://www.youtube.com/watch?v=BAqhccgKx_k)
+- [深度解构虚幻引擎 FlowGraph 插件：从架构到实践 - 知乎](https://zhuanlan.zhihu.com/p/1926763086037123886)
+
 # 规范
 
 ## 资产规范
