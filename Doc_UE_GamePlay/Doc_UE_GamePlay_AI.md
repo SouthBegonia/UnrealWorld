@@ -55,6 +55,12 @@
       - [行为树 - UBTTask\_MoveTo](#行为树---ubttask_moveto)
       - [状态树 - Move To](#状态树---move-to)
     - [参考文章](#参考文章-3)
+  - [寻路相关模块](#寻路相关模块)
+    - [NavigationSystem](#navigationsystem)
+      - [功能1. 延迟自动生成网格体](#功能1-延迟自动生成网格体)
+      - [功能2. 常用工具方法](#功能2-常用工具方法)
+    - [NavigationPath](#navigationpath)
+  - [寻路系统优化](#寻路系统优化)
   - [参考文章](#参考文章-4)
 - [感知系统](#感知系统)
   - [感知组件（AI Perception Component）](#感知组件ai-perception-component)
@@ -816,6 +822,118 @@ struct FStateTreeMoveToTask : public FStateTreeAIActionTaskBase
 ### 参考文章
 
 - [UE4 AIController - 知乎](https://zhuanlan.zhihu.com/p/120294058)
+
+
+
+## 寻路相关模块
+
+### NavigationSystem
+
+`UNavigationSystemV1 : public UNavigationSystemBase`，其相当于 **寻路系统的管理器**，负责生成、维护寻路网格体，也提供 路径查询等方法
+
+常规下通过 `static NAVIGATIONSYSTEM_API UNavigationSystemV1* GetNavigationSystem(UObject* WorldContextObject)`方法获取（实质获取的是 `UWorld` 内的 `TObjectPtr<class UNavigationSystemBase> NavigationSystem;`）
+
+#### 功能1. 延迟自动生成网格体
+
+为解决 运行时资产动态加载完毕 才需生成寻路网格体问题，可配置 `bInitialBuildingLocked = True`，后按需调用 `UNavigationSystemV1::ReleaseInitialBuildingLock()` 即可解锁生成
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260421161955060.png)
+
+#### 功能2. 常用工具方法
+
+```c++
+UCLASS(Within=World, config=Engine, defaultconfig, MinimalAPI)
+class UNavigationSystemV1 : public UNavigationSystemBase
+{
+	// ...   
+public:
+    // 获取 NavigationSystem
+	UFUNCTION(BlueprintPure, Category = "AI|Navigation", meta = (WorldContext = "WorldContextObject"))
+	static NAVIGATIONSYSTEM_API UNavigationSystemV1* GetNavigationSystem(UObject* WorldContextObject);
+    
+	// 获取 某个点在寻路网格体上的投影坐标
+	UFUNCTION(BlueprintPure, Category = "AI|Navigation", meta = (WorldContext = "WorldContextObject", DisplayName = "Project Point to Navigation", ScriptName = "ProjectPointToNavigation"))
+	static NAVIGATIONSYSTEM_API bool K2_ProjectPointToNavigation(UObject* WorldContextObject, const FVector& Point, FVector& ProjectedLocation, ANavigationData* NavData, TSubclassOf<UNavigationQueryFilter> FilterClass, const FVector QueryExtent = FVector::ZeroVector);
+
+    
+    // 在以Origin为中心的一定范围内 随机获取一个坐标点，且Origin与该点之间可达
+	UFUNCTION(BlueprintPure, Category = "AI|Navigation", meta = (WorldContext = "WorldContextObject", DisplayName = "Get Random Reachable Point in Radius", ScriptName = "GetRandomReachablePointInRadius"))
+	static NAVIGATIONSYSTEM_API bool K2_GetRandomReachablePointInRadius(UObject* WorldContextObject, const FVector& Origin, FVector& RandomLocation, float Radius, ANavigationData* NavData = NULL, TSubclassOf<UNavigationQueryFilter> FilterClass = NULL);
+
+    // 在以Origin为中心的一定范围内 随机获取一个坐标点，且该坐标点位于寻路网格内
+	UFUNCTION(BlueprintCallable, Category = "AI|Navigation", meta = (WorldContext = "WorldContextObject", DisplayName = "Get Random Location in Navigable Radius", ScriptName = "GetRandomLocationInNavigableRadius"))
+	static NAVIGATIONSYSTEM_API bool K2_GetRandomLocationInNavigableRadius(UObject* WorldContextObject, const FVector& Origin, FVector& RandomLocation, float Radius, ANavigationData* NavData = NULL, TSubclassOf<UNavigationQueryFilter> FilterClass = NULL);
+
+
+    // 获取两点之间的 导航路径
+	UFUNCTION(BlueprintCallable, Category = "AI|Navigation", meta = (WorldContext="WorldContextObject"))
+	static NAVIGATIONSYSTEM_API UNavigationPath* FindPathToLocationSynchronously(UObject* WorldContextObject, const FVector& PathStart, const FVector& PathEnd, AActor* PathfindingContext = NULL, TSubclassOf<UNavigationQueryFilter> FilterClass = NULL);
+
+    // 获取起点到目标Actor之间的 导航路径。当目标Actor远离上一次计算的路径点 指定距离后，将会自动更新 导航路径
+	UFUNCTION(BlueprintCallable, Category = "AI|Navigation", meta = (WorldContext="WorldContextObject"))
+	static NAVIGATIONSYSTEM_API UNavigationPath* FindPathToActorSynchronously(UObject* WorldContextObject, const FVector& PathStart, AActor* GoalActor, float TetherDistance = 50.f, AActor* PathfindingContext = NULL, TSubclassOf<UNavigationQueryFilter> FilterClass = NULL);
+
+    // ...
+}
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260421162235284.png)
+
+### NavigationPath 
+
+`UNavigationPath : public UObject` 导航路径 用于表述NavigationSystem对某次寻路查询的计算结果。我们可以从中获取 当次导航路径的 具体路径点位置信息、路径完整性、可视化调试等：
+
+```c++
+// NavigationPath.h
+UCLASS(BlueprintType, MinimalAPI)
+class UNavigationPath : public UObject
+{
+	GENERATED_UCLASS_BODY()
+
+	UPROPERTY(BlueprintAssignable)
+	FOnNavigationPathUpdated PathUpdatedNotifier;
+	
+    // 路径点的 集合
+	UPROPERTY(BlueprintReadOnly, Category = Navigation)
+	TArray<FVector> PathPoints;
+
+    // ...
+
+public:
+
+    // 获取 基础Debug信息
+	UFUNCTION(BlueprintCallable, Category = "AI|Debug")
+	NAVIGATIONSYSTEM_API FString GetDebugString() const;
+
+    // 启用可视化调试（可查看 全部路径点及整体路径等）
+	UFUNCTION(BlueprintCallable, Category = "AI|Debug")
+	NAVIGATIONSYSTEM_API void EnableDebugDrawing(bool bShouldDrawDebugData, FLinearColor PathColor = FLinearColor::White);
+	
+    // 获取 路径的长度
+	UFUNCTION(BlueprintCallable, Category = "AI|Navigation")
+	NAVIGATIONSYSTEM_API double GetPathLength() const;
+	// 获取 路径的成本
+	UFUNCTION(BlueprintCallable, Category = "AI|Navigation")
+	NAVIGATIONSYSTEM_API double GetPathCost() const;
+
+    // 路径是否 有效
+	UFUNCTION(BlueprintCallable, Category = "AI|Navigation")
+	NAVIGATIONSYSTEM_API bool IsValid() const;
+    // 路径是否 完整
+    // 路径完整 = 从起点到目标点 路径连贯。执行寻路移动可确切抵达目标
+    // 路径不完整 = 因 起点到目标点之间存在阻碍，最后一个路径点将为 距离目标点 最近距的可达点
+    UFUNCTION(BlueprintCallable, Category = "AI|Navigation")
+	NAVIGATIONSYSTEM_API bool IsPartial() const;
+
+    // ...
+};
+```
+
+## 寻路系统优化
+
+网格生成：
+
+- [优化寻路网格体的生成速度 - UnrealEngine](https://dev.epicgames.com/documentation/unreal-engine/optimizing-navigation-mesh-generation-speed-in-unreal-engine)
 
 ## 参考文章
 
