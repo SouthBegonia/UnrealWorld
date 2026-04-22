@@ -100,7 +100,9 @@
   - [模块介绍](#模块介绍)
     - [智能对象子系统（Smart Object Subsystem）](#智能对象子系统smart-object-subsystem)
     - [游戏行为配置（Gameplay Behavior Config）](#游戏行为配置gameplay-behavior-config)
+      - [自定义 Gameplay Behavior Config](#自定义-gameplay-behavior-config)
     - [游戏行为（Gameplay Behavior）](#游戏行为gameplay-behavior)
+      - [自定义 GameplayBehavior](#自定义-gameplay-behavior)
     - [智能对象定义（Smart Object Definition）](#智能对象定义smart-object-definition)
     - [智能对象组件（Smart Object Component）](#智能对象组件smart-object-component)
   - [流程介绍](#流程介绍)
@@ -1295,6 +1297,36 @@ UE提供了 `AEQSTestingPawn : ACharacter` 以便于我们 **在编辑器下 直
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921174541462.png)
 
+#### 自定义 Gameplay Behavior Config
+
+可以看到 `UGameplayBehaviorConfig` 结构简单，核心就是 `TSubclassOf<UGameplayBehavior> BehaviorClass` 成员，其将会在 `UGameplayBehaviorSubsystem::TriggerBehaviorImpl()` 中触发 `UGameplayBehavior::Trigger()` 以执行游戏行为
+
+```c++
+// GameplayBehaviorConfig.h
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, CollapseCategories)
+class GAMEPLAYBEHAVIORSMODULE_API UGameplayBehaviorConfig : public UObject
+{
+	GENERATED_BODY()
+public:
+	//UGameplayBehavior(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	/** Depending on the specific UGameplayBehavior class returns an instance or CDO of BehaviorClass. */
+	virtual UGameplayBehavior* GetBehavior(UWorld& World) const;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = GameplayBehavior)
+	TSubclassOf<UGameplayBehavior> BehaviorClass;
+};
+```
+
+因此 自定义GameplayBehaviorConfig 核心主要就是 声明所需自定义数据成员+指定`BehaviorClass`：
+
+蓝图及C++方面 正常定义成员或Getter函数即可
+
+官方示例 `UGameplayBehaviorConfig_Animation : public UGameplayBehaviorConfig` 播放Montage行为配置：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260422174841196.png)
+
 ### 游戏行为（Gameplay Behavior）
 
 游戏行为 `UGameplayBehavior : public UObject`，负责 **让交互对象 实现具体的交互行为**（类似行为树的Task，触发->执行逻辑->结束任务）
@@ -1302,6 +1334,51 @@ UE提供了 `AEQSTestingPawn : ACharacter` 以便于我们 **在编辑器下 直
 例如下图 `BP_SO_Behavior_PlayMontage`游戏行为，在 `OnTriggeredCharacter`事件内 让交互对象播放了蒙太奇动画（动画对象引用来自于 游戏行为配置）：
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921180136692.png)
+
+#### 自定义 Gameplay Behavior
+
+从 `UGameplayBehavior` 即可派生自定义的GameplayBehavior，业务实现主要是 **重写 OnTrigger 及 OnFinished方法**
+
+蓝图方面 可重写 `OnTriggeredCharacter`、`OnTriggeredPawn`、`OnTriggered`（OnFinishedXXX同理）中的任意个方法即可（流程源码可查阅 `bool UGameplayBehavior::Trigger()`内）
+
+C++方面，常用的方法有：
+
+```c++
+// GameplayBehavior.h
+UCLASS(Abstract, Blueprintable, BlueprintType)
+class GAMEPLAYBEHAVIORSMODULE_API UGameplayBehavior : public UObject, public IGameplayTaskOwnerInterface
+{
+    // ...
+
+public:
+	/**
+	 * Default implementation will trigger the appropriate Blueprint event based on 
+	 * their presence in the script and in the following priority:
+	 *  1. OnTriggeredCharacter if used and Avatar is a Character
+	 *  2. OnTriggeredPawn if used and Avatar is a Pawn
+	 *  3. OnTriggered if used
+	 * 
+	 * Subclasses can override this method to control the whole flow
+	 * @param Avatar The actor on which the behavior should be execute
+	 * @param Config Configuration parameters of the behavior
+	 * @param SmartObjectOwner The actor associated to the smart object
+	 *
+	 * @return True if behavior was triggered and caller should register to OnBehaviorFinished to be notified on completion
+	 */
+	virtual bool Trigger(AActor& Avatar, const UGameplayBehaviorConfig* Config = nullptr, AActor* SmartObjectOwner = nullptr);
+	virtual void EndBehavior(AActor& Avatar, const bool bInterrupted = false);
+    
+    // ...
+}
+```
+
+官方示例 `UGameplayBehavior_AnimationBased : public UGameplayBehavior` 播放指定Montage：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260422173131728.png)
+
+官方示例 `UGameplayBehavior_BehaviorTree : public UGameplayBehavior` 运行指定BehaviorTree：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260422173423630.png)
 
 ### 智能对象定义（Smart Object Definition）
 
