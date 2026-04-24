@@ -1337,7 +1337,7 @@ protected:
 
 #### 自定义 Gameplay Behavior
 
-从 `UGameplayBehavior` 即可派生自定义的GameplayBehavior，业务实现主要是 **重写 OnTrigger 及 OnFinished方法**
+从 `UGameplayBehavior` 即可派生自定义的GameplayBehavior，业务实现主要是 **重写 OnTrigger 及 OnFinished方法**，以及外部正确处理GameplayBehavior生命周期流程
 
 蓝图方面 可重写 `OnTriggeredCharacter`、`OnTriggeredPawn`、`OnTriggered`（OnFinishedXXX同理）中的任意个方法即可（流程源码可查阅 `bool UGameplayBehavior::Trigger()`内）
 
@@ -1365,9 +1365,47 @@ public:
 	 *
 	 * @return True if behavior was triggered and caller should register to OnBehaviorFinished to be notified on completion
 	 */
+    // GameplayBehavior 触发回调
 	virtual bool Trigger(AActor& Avatar, const UGameplayBehaviorConfig* Config = nullptr, AActor* SmartObjectOwner = nullptr);
+    // GameplayBehavior 结束回调
 	virtual void EndBehavior(AActor& Avatar, const bool bInterrupted = false);
     
+    
+    //----------------------------------------------------------------------//
+	// BP API
+	//----------------------------------------------------------------------//
+    // GameplayBehavior 触发回调（蓝图方法）
+	UFUNCTION(BlueprintImplementableEvent, Category = GameplayBehavior, meta = (AdvancedDisplay="TagPayload", DisplayName="OnTriggered"))
+	void K2_OnTriggered(AActor* Avatar, const UGameplayBehaviorConfig* Config = nullptr, AActor* SmartObjectOwner = nullptr);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = GameplayBehavior, meta = (AdvancedDisplay = "TagPayload", DisplayName = "OnTriggeredPawn"))
+	void K2_OnTriggeredPawn(APawn* Avatar, const UGameplayBehaviorConfig* Config = nullptr, AActor* SmartObjectOwner = nullptr);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = GameplayBehavior, meta = (AdvancedDisplay = "TagPayload", DisplayName = "OnTriggeredCharacter"))
+	void K2_OnTriggeredCharacter(ACharacter* Avatar, const UGameplayBehaviorConfig* Config = nullptr, AActor* SmartObjectOwner = nullptr);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = GameplayBehavior, meta = (AdvancedDisplay = "TagPayload", DisplayName = "OnFinished"))
+	void K2_OnFinished(AActor* Avatar, bool bWasInterrupted);
+
+    // GameplayBehavior 结束回调（蓝图方法）
+	UFUNCTION(BlueprintImplementableEvent, Category = GameplayBehavior, meta = (AdvancedDisplay = "TagPayload", DisplayName = "OnFinishedPawn"))
+	void K2_OnFinishedPawn(APawn* Avatar, bool bWasInterrupted);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = GameplayBehavior, meta = (AdvancedDisplay = "TagPayload", DisplayName = "OnFinishedCharacter"))
+	void K2_OnFinishedCharacter(ACharacter* Avatar, bool bWasInterrupted);
+
+    // 结束 GameplayBehavior方法
+	UFUNCTION(BlueprintCallable, Category = GameplayBehavior, meta = (DisplayName = "EndBehavior"))
+	void K2_EndBehavior(AActor* Avatar);
+
+    // 结束 GameplayBehavior方法（等价于调用 EndBehavior(AActor& Avatar, const bool bInterrupted = true)）
+	UFUNCTION(BlueprintCallable, Category = GameplayBehavior, meta = (DisplayName = "AbortBehavior"))
+	void K2_AbortBehavior(AActor* Avatar);
+
+    // 触发 GameplayBehavior方法
+	UFUNCTION(BlueprintCallable, Category = GameplayBehavior, meta = (DisplayName = "TriggerBehavior"))
+	void K2_TriggerBehavior(AActor* Avatar, UGameplayBehaviorConfig* Config = nullptr, AActor* SmartObjectOwner = nullptr);
+
     // ...
 }
 ```
@@ -1428,6 +1466,10 @@ public:
 最终呈现效果：AI单位 与 圆柱型的智能对象进行交互（随机选择智能对象，随机选择红黄色Slot，Slot行为=在AI单位上播放 不同的蒙太奇动画）
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921191242808.gif)
+
+此外，UE 5.X+ 后，`USmartObjectBlueprintFunctionLibrary : public UBlueprintFunctionLibrary` 有着大部分SmartObject相关常用方法：
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260424200616105.png)
 
 ## 参考文章
 
