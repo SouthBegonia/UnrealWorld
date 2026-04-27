@@ -1422,7 +1422,7 @@ public:
 
 智能对象定义 `USmartObjectDefinition : public UDataAsset` 是一种**数据资产**，负责 **承载交互行为配置**（游戏行为配置、游戏行为）
 
-**交互行为配置的载体为 Slot插槽**，可以在一个智能对象定义内 创建多个Slot、各Slot可以指定交互行为定义（游戏行为配置、游戏行为）、各Slot可通过标签以限制交互条件等。**对象交互 就是占用某个Slot、读取其行为配置、执行其游戏行为**
+**交互行为配置的载体为 Slot插槽（`FSmartObjectSlotDefinition`）**，可以在一个智能对象定义内 创建多个Slot、各Slot可以指定交互行为定义（游戏行为配置、游戏行为）、各Slot可通过标签以限制交互条件等。**对象交互 就是占用某个Slot、读取其行为配置、执行其游戏行为**
 
 例如下图 `SO_Definition_PlayMontage`智能对象定义，其创建了2个Slot：
 
@@ -1430,6 +1430,26 @@ public:
 - `Slot_AM_Gesture`：自行指定了此Slot的 行为配置、游戏行为（传入`TargetMontage`=`AM_Gesture`）
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921181114374.png)
+
+#### 面板参数
+
+`USmartObjectDefinition` 面板主要有2个页签部分：**Smart Object页签** + **Slots页签**。可以看到2页签部分有几个 **类似成员**（BehaviorDefinitions、UserTagFilter、ActivityTag）
+
+- **Smart Object页签**：SmartObjectDefinition相关参数配置 + 为Slot上的类似成员提供默认值
+  - **Default Behavior Definitions**：默认的 Slot可能触发的游戏行为配置 的列表（当Slot上的Behavior Definitions为空，就读此参数）。对比规则可参阅源码 `static void FindMatchingSlotDefinitionIndices(const USmartObjectDefinition& Definition, const FSmartObjectRequestFilter& Filter, TArray<int32>& OutValidIndices);`
+  - **User Tag Filter**：默认的 用户标签 过滤器（用户标签 可理解为允许使用该对象的 角色身份标识Tag，例如 ：NPC.Male、NPC.Female）。该参数对比规则由 User Tag Filtering Policy 决定
+  - **Activity Tags**：默认的 活动标签（活动标签 可理解为描述Slot行为的Tag，例如：SOActivity.SitOnChair、SOActivity.TalkOnPhone）。该参数对比规则由 Activity Tag Merging Policy 决定
+  - **User Tag Filtering Policy、Activity Tag Merging Policy**：为Slot提供默认值的规则。Slot上参数非空+Override就 走Slot上参数；Combine 就是2边参数合并。源码同样位于上文所述 `FindMatchingSlotDefinitionIndices()`函数内
+- **Slots页签**：SmartObjectSlotDefinition相关参数配置
+  - Name：Slot名字
+  - Color、Shape、Size：智能对象交互范围，截止UE 5.5 仅用于DebugDraw相关
+  - **Offset、Rotation**：该Slot的位置信息。常通过`USmartObjectSystem`内的`GetSlotTransform()`、`GetSlotLocation()` 等方法获取
+  - **Enabled**：是否启用该Slot。同理 `USmartObjectSystem`内也有 `SetSlotEnabled()`相关方法
+  - **User Tag Filter**：Slot的 用户标签 过滤器（对比规则参阅上文）
+  - **Activity Tags**：Slot的 活动标签（对比规则参阅上文）
+  - **Behavior Definitions**：Slot的 游戏行为配置 的列表（对比规则参阅上文）
+
+
 
 ### 智能对象组件（Smart Object Component）
 
