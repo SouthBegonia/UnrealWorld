@@ -6,7 +6,9 @@
 
 
 - [Ability System Component（ASC）](#ability-system-componentasc)
-	- [用法-基本配置](#用法-基本配置)
+	- [用法-基本配置及初始化](#用法-基本配置及初始化)
+	- [用法-Replication](#用法-replication)
+	- [用法-常用成员及方法](#用法-常用成员及方法)
 - [Gameplay Tags](#gameplay-tags)
 	- [Tags的定义](#tags的定义)
 		- [从DataTable导入Tags](#从datatable导入tags)
@@ -66,13 +68,15 @@
 		- [1. 创建GC](#1-创建gc)
 		- [2. GC蓝图设置](#2-gc蓝图设置)
 		- [3. GC的使用](#3-gc的使用)
+	- [功能 - GameplayCueNotifyPaths](#功能---gameplaycuenotifypaths)
+	- [参考文章](#参考文章-5)
 - [GAS的调试方法](#gas的调试方法)
 	- [showdebug abilitysystem](#showdebug-abilitysystem)
 	- [AbilitySystem.DebugBasicHUD](#abilitysystemdebugbasichud)
 	- [Debug Widgets](#debug-widgets)
 	- [Gameplay Debugger](#gameplay-debugger)
 	- [GAS in Visual Logger](#gas-in-visual-logger)
-- [参考文章](#参考文章-5)
+- [参考文章](#参考文章-6)
 
 
 
@@ -93,7 +97,7 @@ ASC本质是一个 `UActorComponent`，用于处理 GAS框架下的 交互逻辑
 
 ASC所附着的Actor称为 ASC的`OwnerActor`，ASC实际作用的Actor称为 ASC的`AvatarActor`
 
-## 用法-基本配置
+## 用法-基本配置及初始化
 
 首先确保项目启用了GAS插件，后即可配置ASC组件：例如 在目标Actor上添加ASC组件，并继承实现`IAbilitySystemInterface`接口
 
@@ -126,6 +130,47 @@ UAbilitySystemComponent* AGASSampleCharacter::GetAbilitySystemComponent() const
 ```
 
 ![image-20250628172718541](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250628172718541.png)
+
+**ASC放置位置** 常见的有：
+
+| ASC的宿主Actor |               特点                |     适用场景     |
+| :------------: | :-------------------------------: | :--------------: |
+|  PlayerState   | Pawn变更后 相关属性、效果依然保留 |     多人游戏     |
+| Pawn/Character |   Pawn变更后 相关属性、效果重置   | 单人游戏；AI单位 |
+|   其他Actor    |      允许单位实现GAS相关功能      |  可交互场景物体  |
+
+实例化ASC组件后，就需要 **在 Server与Client 上都进行初始化**，以指定ASC的OwnerActor与AvatarActor。方法就是在合适位置调用 `InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)`：
+
+| 玩家ASC的 宿主Actor |   Init位置（Server）   |              Init位置（Client）              |
+| :-----------------: | :--------------------: | :------------------------------------------: |
+|     PlayerState     | `APawn::PossessedBy()` |         `APawn::OnRep_PlayerState()`         |
+|   Pawn/Character    | `APawn::PossessedBy()` | `APlayerController::AcknowledgePossession()` |
+
+## 用法-Replication
+
+ASC可设置 3种不同的混合模式（Replication），Server向Client 进行 GameplayEffects、GameplayTags 和 GameplayCues 的复制方式：
+
+| ReplicationMode |                             特点                             |       适用场景       |
+| :-------------: | :----------------------------------------------------------: | :------------------: |
+|      Full       | GE、GameplayTags 和 GameplayCues 会复制给 所有客户端。带宽高 |       单人游戏       |
+|      Mixed      | GE 只会复制给 拥有者客户端（AutonomousProxy）；<br />GameplayTags 和 GameplayCues 会复制给 所有客户端 | 多人游戏中 玩家的ASC |
+|     Minimal     | GE 不会复制给任何客户端；<br />GameplayTags 和 GameplayCues 会复制给 所有客户端 |  多人游戏中 AI的ASC  |
+
+设置方法为：
+
+```c++
+// AGASSampleCharacter.cpp
+AGASSampleCharacter::AGASSampleCharacter()
+{
+	// 实例化ASC
+	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
+
+    // 启用 Replicated
+    AbilitySystem->SetIsReplicated(true);
+    // 设置 ReplicationMode=Mixed
+    AbilitySystem->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+}
+```
 
 ## 用法-常用成员及方法
 
