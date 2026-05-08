@@ -43,6 +43,7 @@
     - [参考文章](#参考文章-9)
   - [SaveGame、LoadGame](#savegameloadgame)
     - [示例](#示例-1)
+    - [SaveGame标识符](#savegame标识符)
     - [参考文章](#参考文章-10)
   - [常用工具、函数、库](#常用工具函数库)
     - [UGamePlayStatic](#ugameplaystatic)
@@ -634,12 +635,123 @@ if (UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::CreateSa
 
 ![image-20250623170726088](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250623170726088.png)
 
+### SaveGame标识符
+
+基于上文可 我们可以通过创建`USaveGame`派生类、定义存档参数成员、存档参数成员赋值、SaveGameToSlot 完成存档，但**局限在于**：存档参数成员的 数据类型仅能为 基元变量和简单变量（`boolean`/`float`/`FString`/`FVector`/`FTransform`等），且需要人为逐一进行赋值操作。
+
+若是 想保存场景内Actor对象上的某些成员参数、加载后还原数据，就难以实现。一种办法就是：给Actor类中的 UProperty成员打上`SaveGame`标识符，将成员数据进行序列化/反序列化（序列化后的数据可 保存作为`USaveGame`成员 或另行保存）
+
+代码示例：保存、读取World内 各Actor上 打了SaveGame标识符的UProperty的数据
+
+```c++
+// 单个Actor的存档数据结构
+USTRUCT()
+struct FSavedActor
+{
+	GENERATED_BODY()
+
+    // 目标Actor的ActorName（便于我们匹配对应Actor 以还原存档数据）
+	UPROPERTY()
+	FName ActorName = FName();
+	
+    // 目标Actor的Transform信息（非必需，可用其还原数据）
+	UPROPERTY()
+	FTransform ActorTransform = FTransform();
+
+	// 系列化后的字节数组（存储着 全部 被打上SaveGame标识符的 成员数据）
+	UPROPERTY()
+	TArray<uint8> Bytes;
+
+	bool operator==(const FSavedActor& Target) const { return ActorName == Target.ActorName; }
+};
+
+UCLASS()
+class [PROJECTNAME]_API UMyTestSaveGame : public USaveGame
+{
+	GENERATED_BODY()
+
+public:
+    // World下 目标Actors的存档数据
+	UPROPERTY()
+	TArray<FSavedActor> SavedActors;
+}
+
+void XXXXMode::TestSaveGame(UMyTestSaveGame* SaveGameObject, const FString& SlotName, const int32 SlotIndex)
+{
+    // 保存World内 目标Actor上的SaveGame成员
+	for (FActorIterator ActorIterator(GetWorld()); ActorIterator; ++ActorIterator)
+	{
+		AActor* ItActor = *ActorIterator;
+		if (!IsValid(ItActor))	// 此处可按需筛分 可能保存成员的Actor，例如对Actor添加Interface
+			continue;
+
+		FSavedActor SavedActor;
+        // 记录ActorName及Transform
+		SavedActor.ActorName = ItActor->GetFName();
+		SavedActor.ActorTransform = ItActor->GetActorTransform();
+
+        // 创建 写入器
+		FMemoryWriter MemoryWriter(SavedActor.Bytes);
+        // 创建 翻译器
+		FObjectAndNameAsStringProxyArchive Archive(MemoryWriter, true);
+        // 设置 翻译器标识
+        //		ArIsSaveGame : 仅对打了SaveGame标识符的UProperty成员序列化
+		Archive.ArIsSaveGame = true;
+
+        // 序列化 ItActor上的数据 到 SavedActor.Bytes
+		ItActor->Serialize(Archive);
+
+        // 设置数据到USaveGame成员
+        SaveGameObject->SavedActors.AddUnique(SavedActor);
+	}
+
+    // 保存 USaveGame
+    UGameplayStatics::SaveGameToSlot(SaveGameObject, SlotName, SlotIndex);
+}
+
+void XXXXMode::TestLoadGame(const FString& SlotName, const int32 SlotIndex)
+{
+    // 获取 USaveGame
+    ULoadScreenSaveGame* MySaveGame = Cast<ULoadScreenSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, SlotIndex));
+
+    // 还原Actor存档数据到World内对应Actor上
+    for (FActorIterator ActorIterator(GetWorld()); ActorIterator; ++ActorIterator)
+	{
+		AActor* ItActor = *ActorIterator;
+		if (!IsValid(ItActor))	// 此处可按需筛分 可能保存成员的Actor，例如对Actor添加Interface
+			continue;
+
+        for (FSavedActor& SavedActor : MySaveGame->SavedActors)
+        {
+            // 查找处理 与存档数据符合的Actor
+            if (SavedActor.ActorName == ItActor->GetFName())
+            {
+                // 还原Transform数据
+				ItActor->SetActorTransform(SavedActor.ActorTransform);
+                
+                // 创建 阅读器
+                FMemoryReader MemoryReader(SavedActor.Bytes);
+                // 创建 翻译器
+                FObjectAndNameAsStringProxyArchive Archive(MemoryReader, true);
+                Archive.ArIsSaveGame = true;
+                
+         		// 反序列化 SavedActor.Bytes上的数据 到 ItActor
+                //	均使用 UObject的Serialize 来执行序列化/反序列化，区别在于使用 FMemoryReader或FMemoryWriter
+                ItActor->Serialize(Archive);
+            }
+        }
+	}
+}
+```
+
 ### 参考文章
 
 - [保存和加载游戏 - UnRealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/saving-and-loading-your-game-in-unreal-engine?application_version=5.5)
 - [UGameplayStatics::SaveGameToSlot - UnrealEngineAPI](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Kismet/UGameplayStatics/SaveGameToSlot?application_version=5.5)
 - [Save Game - what User Index is for? - UnrealEngineDev](https://forums.unrealengine.com/t/save-game-what-user-index-is-for/319803)
 - [保存和加载游戏 - 博客园](https://www.cnblogs.com/CodeWithMe/p/13201689.html)
+- [UE4/UE5中保存游戏的基础知识 —— Basics about SaveGame in UE4/UE5 - 知乎](https://zhuanlan.zhihu.com/p/445800413)
+- [UnrealSpecifiers-SaveGame - 大钊](https://github.com/fjz13/UnrealSpecifiers/blob/main/Doc/zh/Specifier/UPROPERTY/Serialization/SaveGame/SaveGame.md)
 
 
 
