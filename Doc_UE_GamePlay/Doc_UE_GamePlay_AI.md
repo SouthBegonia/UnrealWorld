@@ -1459,6 +1459,124 @@ public:
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20250921182505577.png)
 
+此外，`USmartObjectComponent ` 也提供了部分工具方法（大部分方法内部实质仍走的 `USmartObjectSubsystem`）：
+
+```c++
+// SmartObjectComponent.h
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSmartObjectComponentEventSignature, const FSmartObjectEventData&, EventData, const AActor*, Interactor);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FSmartObjectComponentEventNativeSignature, const FSmartObjectEventData& EventData, const AActor* Interactor);
+
+class SMARTOBJECTSMODULE_API USmartObjectComponent : public USceneComponent
+{
+	// ...
+
+public:
+	/* 获取 当前设定的 SmartObjectDefinition */
+	UFUNCTION(BlueprintGetter)
+	const USmartObjectDefinition* GetDefinition() const;
+	/* 设置 当前的 SmartObjectDefinition */
+	UFUNCTION(BlueprintSetter)
+	void SetDefinition(USmartObjectDefinition* DefinitionAsset);
+    
+	/* 设置 该SmartObject的 Enable状态 */
+	UFUNCTION(BlueprintCallable, Category = "SmartObject", meta=(DisplayName="Set SmartObject Enabled (default reason: Gameplay)", ReturnDisplayName="Status changed"))
+	bool SetSmartObjectEnabled(const bool bEnable) const;
+	/* 设置 该SmartObject的 Enable状态 */
+	UFUNCTION(BlueprintCallable, Category = "SmartObject", meta=(DisplayName="Set SmartObject Enabled (specific reason)", ReturnDisplayName="Status changed"))
+	bool SetSmartObjectEnabledForReason(FGameplayTag ReasonTag, const bool bEnabled) const;
+	/* 获取 该SmartObject的 Enable状态 */
+	UFUNCTION(BlueprintCallable, Category = "SmartObject", meta=(DisplayName="Is SmartObject Enabled (for any reason)", ReturnDisplayName="Enabled"))
+	bool IsSmartObjectEnabled() const;
+	/* 获取 该SmartObject的 Enable状态 */
+	UFUNCTION(BlueprintCallable, Category = "SmartObject", meta=(DisplayName="Is SmartObject Enabled (for specific reason)", ReturnDisplayName="Enabled"))
+	bool IsSmartObjectEnabledForReason(FGameplayTag ReasonTag) const;
+
+	/** 判断 该SmartObject 是否已正确注册到SmartObjectSubsystem
+     *	通常会在 USmartObjectComponent::BeginPlay()/EndPlay()内 自动注册/注销
+     */
+	UFUNCTION(BlueprintCallable, Category = "SmartObject")
+	bool IsBoundToSimulation() const { return EventDelegateHandle.IsValid(); }
+
+    /* SmartObject通用事件 接收处理函数*/
+    UFUNCTION(BlueprintImplementableEvent, Category = SmartObject, meta=(DisplayName = "OnSmartObjectEventReceived"))
+	void ReceiveOnEvent(const FSmartObjectEventData& EventData, const AActor* Interactor);
+    
+    /* SmartObject通用事件 动态委托 */
+	UPROPERTY(BlueprintAssignable, Category = SmartObject, meta=(DisplayName = "OnSmartObjectEvent"))
+	FSmartObjectComponentEventSignature OnSmartObjectEvent;
+    /* SmartObject通用事件 委托 */
+	FSmartObjectComponentEventNativeSignature OnSmartObjectEventNative;
+    
+    // ...
+}
+
+// ESmartObjectTypes.h
+USTRUCT(BlueprintType)
+struct SMARTOBJECTSMODULE_API FSmartObjectEventData	//SmartObject通用事件 数据结构
+{
+	GENERATED_BODY()
+
+	/** Handle to the changed Smart Object. */
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "SmartObject")
+	FSmartObjectHandle SmartObjectHandle;
+
+	/** Handle to the changed slot, if invalid, the event is for the object. */
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "SmartObject")
+	FSmartObjectSlotHandle SlotHandle;
+
+	/** Change reason. */
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "SmartObject")
+	ESmartObjectChangeReason Reason = ESmartObjectChangeReason::None;
+
+	/** Added/Removed tag, or event tag, depending on Reason. */
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "SmartObject")
+	FGameplayTag Tag;
+
+	/**
+	 * Event payload.
+	 * For external event (i.e. SendSlotEvent) payload is provided by the caller.
+	 * For internal event types (e.g. OnClaimed, OnReleased, etc.)
+	 * payload is the user data struct provided on claim.
+	 **/
+	FConstStructView EventPayload;
+};
+/**
+ * Describes how Smart Object or slot was changed.
+ */
+UENUM(BlueprintType)
+enum class ESmartObjectChangeReason : uint8
+{
+	/** No Change. */
+	None,
+	/** External event sent. */
+	OnEvent,
+	/** A tag was added. */
+	OnTagAdded,
+	/** A tag was removed. */
+	OnTagRemoved,
+	/** Slot was claimed. */
+	OnClaimed,
+	/** Slot is now occupied*/
+	OnOccupied,
+	/** Slot claim was released. */
+	OnReleased,
+	/** Slot was enabled. */
+	OnSlotEnabled,
+	/** Slot was disabled. */
+	OnSlotDisabled,
+	/** Object was enabled. */
+	OnObjectEnabled,
+	/** Object was disabled. */
+	OnObjectDisabled,
+	/** Related Smart Object Component is bound to simulation. */
+	OnComponentBound,
+	/** Related Smart Object Component is unbound from simulation. */
+	OnComponentUnbound,
+};
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260513203619205.png)
+
 ## 流程介绍
 
 1. 运行前准备：
@@ -1645,6 +1763,7 @@ MassGamePlay下 各Processor的执行（执行哪个、何时执行、执行顺�
 ## 参考文章
 
 - [City Sample - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/city-sample-project-unreal-engine-demonstration) 
+- [UOD2022 不Mass怎么Meta - 大钊](https://www.bilibili.com/video/BV13D4y1v7xx)
 - [UE5 Mass初体验 - 知乎](https://zhuanlan.zhihu.com/p/656677641)
 - [UE5的ECS：MASS框架(三) - 知乎](https://zhuanlan.zhihu.com/p/477803528)
 - [Unity ECS架构深度解析：从传统OOP到数据驱动的范式革命 - 知乎](https://blog.csdn.net/oWanMeiShiKong/article/details/146615175)
