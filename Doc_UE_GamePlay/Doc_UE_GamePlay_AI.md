@@ -1,131 +1,136 @@
 
 - [总览](#总览)
 - [Behavior Tree](#behavior-tree)
-  - [黑板（BlackBoard）](#黑板blackboard)
-    - [黑板键的使用](#黑板键的使用)
-  - [行为树](#行为树)
-    - [行为树 - 基本用法](#行为树---基本用法)
-    - [行为树节点](#行为树节点)
-      - [根节点](#根节点)
-      - [合成节点](#合成节点)
-      - [装饰器节点](#装饰器节点)
-        - [基本用法](#基本用法)
-        - [面板说明](#面板说明)
-        - [参考文章](#参考文章)
-      - [任务节点](#任务节点)
-        - [基本用法](#基本用法-1)
-      - [服务节点](#服务节点)
-        - [基本用法](#基本用法-2)
-        - [参考文章](#参考文章-1)
+	- [黑板（BlackBoard）](#黑板blackboard)
+		- [黑板键的使用](#黑板键的使用)
+	- [行为树](#行为树)
+		- [行为树 - 基本用法](#行为树---基本用法)
+		- [行为树节点](#行为树节点)
+			- [根节点](#根节点)
+			- [合成节点](#合成节点)
+			- [装饰器节点](#装饰器节点)
+				- [基本用法](#基本用法)
+				- [面板说明](#面板说明)
+				- [参考文章](#参考文章)
+			- [任务节点](#任务节点)
+				- [基本用法](#基本用法-1)
+			- [服务节点](#服务节点)
+				- [基本用法](#基本用法-2)
+				- [参考文章](#参考文章-1)
 - [StateTree](#statetree)
-  - [状态树（StateTree）](#状态树statetree)
-    - [配置与使用](#配置与使用)
-    - [状态树模块](#状态树模块)
-      - [输入条件（Enter Conditions）](#输入条件enter-conditions)
-        - [自定义实现 输入条件](#自定义实现-输入条件)
-      - [任务（Tasks）](#任务tasks)
-        - [自定义实现 任务](#自定义实现-任务)
-      - [过渡（Transitions）](#过渡transitions)
-      - [求值器（Evaluators）](#求值器evaluators)
-        - [自定义实现 求值器](#自定义实现-求值器)
-      - [全局任务（Global Tasks）](#全局任务global-tasks)
-  - [用法示例](#用法示例)
-    - [示例1](#示例1)
-    - [示例2](#示例2)
-  - [参考文章](#参考文章-2)
+	- [状态树（StateTree）](#状态树statetree)
+		- [配置与使用](#配置与使用)
+		- [状态树模块](#状态树模块)
+			- [输入条件（Enter Conditions）](#输入条件enter-conditions)
+				- [自定义实现 输入条件](#自定义实现-输入条件)
+			- [任务（Tasks）](#任务tasks)
+				- [自定义实现 任务](#自定义实现-任务)
+			- [过渡（Transitions）](#过渡transitions)
+			- [求值器（Evaluators）](#求值器evaluators)
+				- [自定义实现 求值器](#自定义实现-求值器)
+			- [全局任务（Global Tasks）](#全局任务global-tasks)
+	- [用法示例](#用法示例)
+		- [示例1](#示例1)
+		- [示例2](#示例2)
+	- [参考文章](#参考文章-2)
 - [寻路系统](#寻路系统)
-  - [寻路网格体](#寻路网格体)
-    - [寻路网格体 运行态时的生成规则](#寻路网格体-运行态时的生成规则)
-    - [寻路网格体的生成](#寻路网格体的生成)
-    - [寻路网格体的修改](#寻路网格体的修改)
-      - [寻路修饰体积](#寻路修饰体积)
-      - [寻路链接代理](#寻路链接代理)
-        - [简单链接](#简单链接)
-        - [智能链接](#智能链接)
-      - [寻路区域/区域类](#寻路区域区域类)
-    - [寻路网格体的优化](#寻路网格体的优化)
-  - [寻路代理](#寻路代理)
-    - [寻路查询筛选器](#寻路查询筛选器)
-  - [寻路行为](#寻路行为)
-    - [寻路方法](#寻路方法)
-      - [SimpleMoveToActor/SimpleMoveToLocation](#simplemovetoactorsimplemovetolocation)
-      - [MoveToActor/MovetoLocation](#movetoactormovetolocation)
-      - [MoveToLocationorActor](#movetolocationoractor)
-      - [AIMoveTo](#aimoveto)
-      - [行为树 - UBTTask\_MoveTo](#行为树---ubttask_moveto)
-      - [状态树 - Move To](#状态树---move-to)
-    - [参考文章](#参考文章-3)
-  - [寻路相关模块](#寻路相关模块)
-    - [NavigationSystem](#navigationsystem)
-      - [功能1. 延迟自动生成网格体](#功能1-延迟自动生成网格体)
-      - [功能2. 常用工具方法](#功能2-常用工具方法)
-    - [NavigationPath](#navigationpath)
-  - [寻路系统优化](#寻路系统优化)
-  - [参考文章](#参考文章-4)
+	- [寻路网格体](#寻路网格体)
+		- [寻路网格体 运行态时的生成规则](#寻路网格体-运行态时的生成规则)
+		- [寻路网格体的生成](#寻路网格体的生成)
+		- [寻路网格体的修改](#寻路网格体的修改)
+			- [寻路修饰体积](#寻路修饰体积)
+			- [寻路链接代理](#寻路链接代理)
+				- [简单链接](#简单链接)
+				- [智能链接](#智能链接)
+			- [寻路区域/区域类](#寻路区域区域类)
+		- [寻路网格体的优化](#寻路网格体的优化)
+	- [寻路代理](#寻路代理)
+		- [寻路查询筛选器](#寻路查询筛选器)
+	- [寻路行为](#寻路行为)
+		- [寻路方法](#寻路方法)
+			- [SimpleMoveToActor/SimpleMoveToLocation](#simplemovetoactorsimplemovetolocation)
+			- [MoveToActor/MovetoLocation](#movetoactormovetolocation)
+			- [MoveToLocationorActor](#movetolocationoractor)
+			- [AIMoveTo](#aimoveto)
+			- [行为树 - UBTTask\_MoveTo](#行为树---ubttask_moveto)
+			- [状态树 - Move To](#状态树---move-to)
+		- [参考文章](#参考文章-3)
+	- [寻路相关模块](#寻路相关模块)
+		- [NavigationSystem](#navigationsystem)
+			- [功能1. 延迟自动生成网格体](#功能1-延迟自动生成网格体)
+			- [功能2. 常用工具方法](#功能2-常用工具方法)
+		- [NavigationPath](#navigationpath)
+	- [寻路系统优化](#寻路系统优化)
+	- [参考文章](#参考文章-4)
 - [感知系统](#感知系统)
-  - [感知组件（AI Perception Component）](#感知组件ai-perception-component)
-    - [感知属性（AI Perception Properties）](#感知属性ai-perception-properties)
-      - [感知类型（AI Sense）](#感知类型ai-sense)
+	- [感知组件（AI Perception Component）](#感知组件ai-perception-component)
+		- [感知属性（AI Perception Properties）](#感知属性ai-perception-properties)
+			- [感知类型（AI Sense）](#感知类型ai-sense)
 - [EQS](#eqs)
-  - [生成器（Generators）](#生成器generators)
-    - [Item的类型](#item的类型)
-    - [基本用法](#基本用法-3)
-    - [生成器节点](#生成器节点)
-      - [Actors of Class](#actors-of-class)
-      - [Composite](#composite)
-      - [Current Location](#current-location)
-      - [Points: XXXX](#points-xxxx)
-      - [自定义生成器](#自定义生成器)
-        - [蓝图实现](#蓝图实现)
-        - [C++实现](#c实现)
-  - [情景（Contexts）](#情景contexts)
-    - [基本用法](#基本用法-4)
-    - [自定义情景](#自定义情景)
-      - [蓝图实现](#蓝图实现-1)
-      - [C++实现](#c实现-1)
-  - [测试（Test）](#测试test)
-    - [基本用法](#基本用法-5)
-      - [细节面板 - 测试](#细节面板---测试)
-    - [测试节点](#测试节点)
-      - [Distance](#distance)
-      - [Dot](#dot)
-      - [Trace](#trace)
-      - [Overlap](#overlap)
-  - [EQS用法示例](#eqs用法示例)
-    - [BehaviorTree 使用EQS](#behaviortree-使用eqs)
-    - [StateTree 使用EQS](#statetree-使用eqs)
-  - [调试](#调试)
-  - [参考文章](#参考文章-5)
+	- [生成器（Generators）](#生成器generators)
+		- [Item的类型](#item的类型)
+		- [基本用法](#基本用法-3)
+		- [生成器节点](#生成器节点)
+			- [Actors of Class](#actors-of-class)
+			- [Composite](#composite)
+			- [Current Location](#current-location)
+			- [Points: XXXX](#points-xxxx)
+			- [自定义生成器](#自定义生成器)
+				- [蓝图实现](#蓝图实现)
+				- [C++实现](#c实现)
+	- [情景（Contexts）](#情景contexts)
+		- [基本用法](#基本用法-4)
+		- [自定义情景](#自定义情景)
+			- [蓝图实现](#蓝图实现-1)
+			- [C++实现](#c实现-1)
+	- [测试（Test）](#测试test)
+		- [基本用法](#基本用法-5)
+			- [细节面板 - 测试](#细节面板---测试)
+		- [测试节点](#测试节点)
+			- [Distance](#distance)
+			- [Dot](#dot)
+			- [Trace](#trace)
+			- [Overlap](#overlap)
+	- [EQS用法示例](#eqs用法示例)
+		- [BehaviorTree 使用EQS](#behaviortree-使用eqs)
+		- [StateTree 使用EQS](#statetree-使用eqs)
+	- [调试](#调试)
+	- [参考文章](#参考文章-5)
 - [Smart Objects](#smart-objects)
-  - [模块介绍](#模块介绍)
-    - [智能对象子系统（Smart Object Subsystem）](#智能对象子系统smart-object-subsystem)
-    - [游戏行为配置（Gameplay Behavior Config）](#游戏行为配置gameplay-behavior-config)
-      - [自定义 Gameplay Behavior Config](#自定义-gameplay-behavior-config)
-    - [游戏行为（Gameplay Behavior）](#游戏行为gameplay-behavior)
-      - [自定义 GameplayBehavior](#自定义-gameplay-behavior)
-    - [智能对象定义（Smart Object Definition）](#智能对象定义smart-object-definition)
-    - [智能对象组件（Smart Object Component）](#智能对象组件smart-object-component)
-  - [流程介绍](#流程介绍)
-  - [基本用法](#基本用法-6)
-  - [参考文章](#参考文章-6)
+	- [模块介绍](#模块介绍)
+		- [智能对象子系统（Smart Object Subsystem）](#智能对象子系统smart-object-subsystem)
+		- [游戏行为配置（Gameplay Behavior Config）](#游戏行为配置gameplay-behavior-config)
+			- [自定义 Gameplay Behavior Config](#自定义-gameplay-behavior-config)
+		- [游戏行为（Gameplay Behavior）](#游戏行为gameplay-behavior)
+			- [自定义 Gameplay Behavior](#自定义-gameplay-behavior)
+		- [智能对象定义（Smart Object Definition）](#智能对象定义smart-object-definition)
+			- [面板参数](#面板参数)
+		- [智能对象组件（Smart Object Component）](#智能对象组件smart-object-component)
+		- [SmartObject与Slot](#smartobject与slot)
+			- [SmartObject](#smartobject)
+			- [Slot](#slot)
+			- [生命周期](#生命周期)
+	- [流程介绍](#流程介绍)
+	- [基本用法](#基本用法-6)
+	- [参考文章](#参考文章-6)
 - [MASS](#mass)
-  - [MassEntity](#massentity)
-    - [基本框架](#基本框架)
-      - [Entity](#entity)
-      - [Component](#component)
-      - [System](#system)
-    - [调试](#调试-1)
-      - [Mass Debugger](#mass-debugger)
-  - [MassGamePlay](#massgameplay)
-    - [模块介绍](#模块介绍-1)
-      - [Trait](#trait)
-        - [基本用法](#基本用法-7)
-        - [Trait - UMassAssortedFragmentsTrait](#trait---umassassortedfragmentstrait)
-        - [Trait - UMassCrowdVisualizationTrait](#trait---umasscrowdvisualizationtrait)
-      - [Spawner](#spawner)
-        - [基本用法](#基本用法-8)
-    - [工作流](#工作流)
-  - [参考文章](#参考文章-7)
+	- [MassEntity](#massentity)
+		- [基本框架](#基本框架)
+			- [Entity](#entity)
+			- [Component](#component)
+			- [System](#system)
+		- [调试](#调试-1)
+			- [Mass Debugger](#mass-debugger)
+	- [MassGamePlay](#massgameplay)
+		- [模块介绍](#模块介绍-1)
+			- [Trait](#trait)
+				- [基本用法](#基本用法-7)
+				- [Trait - UMassAssortedFragmentsTrait](#trait---umassassortedfragmentstrait)
+				- [Trait - UMassCrowdVisualizationTrait](#trait---umasscrowdvisualizationtrait)
+			- [Spawner](#spawner)
+				- [基本用法](#基本用法-8)
+		- [工作流](#工作流)
+	- [参考文章](#参考文章-7)
 - [参考文章](#参考文章-8)
 
 
@@ -1576,6 +1581,335 @@ enum class ESmartObjectChangeReason : uint8
 ```
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260513203619205.png)
+
+### SmartObject与Slot
+
+#### SmartObject
+
+基于上文我们知道，Actor添加 `USmartObjectComponent` 后，就能被 `USmartObjectSubsystem` 识别为 **SmartObject**（抽象意义。下文简称 **SO**）
+
+在业务上 我们对 **SO** 的 操作/数据获取 则通过 `FSmartObjectHandle`（其类似Entity，仅包含一个标识ID。下文简称 **SOHandle**），一个 **SOHandle** 唯一映射一个 **SO**：
+
+```c++
+// SmartObjectTypes.h
+USTRUCT(BlueprintType)
+struct SMARTOBJECTSMODULE_API FSmartObjectHandle
+{
+	// ...
+
+public:
+	FSmartObjectHandle() {}
+
+	bool operator==(const FSmartObjectHandle Other) const { return ID == Other.ID; }
+	bool operator!=(const FSmartObjectHandle Other) const { return !(*this == Other); }
+
+private:
+	explicit FSmartObjectHandle(const uint64 InID) : ID(InID) {}
+
+	UPROPERTY(VisibleAnywhere, Category = SmartObject)
+	uint64 ID = InvalidID;
+
+	static constexpr uint64 InvalidID = 0;
+
+	// ...
+}
+```
+
+```c++
+// SmartObjectSubsystem.h
+class SMARTOBJECTSMODULE_API USmartObjectSubsystem : public UWorldSubsystem
+{
+    // ...
+    
+public:
+    // 设置 目标SO的 Enable状态
+	UFUNCTION(BlueprintCallable, Category = "SmartObject", meta=(DisplayName="Set SmartObject Enabled (default reason: Gameplay)", ReturnDisplayName="Status changed"))
+	bool SetEnabled(const FSmartObjectHandle Handle, const bool bEnabled);
+	
+    // 获取 目标SO的 全部SlotHandle
+	UFUNCTION(BlueprintCallable, Category = "SmartObject")
+	void GetAllSlots(const FSmartObjectHandle Handle, TArray<FSmartObjectSlotHandle>& OutSlots) const;
+
+protected:
+    // SOHandle 与 FSmartObjectRuntime数据 的映射表
+    UPROPERTY(Transient)
+	TMap<FSmartObjectHandle, FSmartObjectRuntime> RuntimeSmartObjects;
+    
+    // ...
+}
+```
+
+**SOHandle** 无实体数据，其最终处理的数据 存放于 `FSmartObjectRuntime` 结构体中，其专用于存放 **SO** 在运行态时的相关数据（OwnerComponent、Slot数据等）：
+
+```c++
+// SmartObjectRuntime.h
+USTRUCT()
+struct FSmartObjectRuntime
+{
+    // ...
+
+public:
+    // 获取 该SO数据对应的 SOHandle
+	FSmartObjectHandle GetRegisteredHandle() const { return RegisteredHandle; }
+
+	// 该SO数据的 OwnerComponent
+	UPROPERTY()
+	TWeakObjectPtr<USmartObjectComponent> OwnerComponent;
+
+    // 获取 SO的 Enable状态
+	bool IsEnabled() const { return DisableFlags == 0; }
+
+	// 获取 目标Slot数据
+	const FSmartObjectRuntimeSlot& GetSlot(const int32 Index) const { return Slots[Index]; }
+
+    // 获取 SO当前配置的 SmartObjectDefinition
+	const USmartObjectDefinition& GetDefinition() const { checkf(Definition != nullptr, TEXT("Initialized from a valid reference from the constructor")); return *Definition; }
+
+private:
+	UPROPERTY(Transient, VisibleAnywhere, Category=SmartObjects)
+	uint16 DisableFlags = 0;
+
+    UPROPERTY(Transient)
+	TArray<FSmartObjectRuntimeSlot> Slots;
+
+	UPROPERTY()
+	TObjectPtr<const USmartObjectDefinition> Definition = nullptr;
+    
+	UPROPERTY(Transient, VisibleAnywhere, Category=SmartObjects)
+	FSmartObjectHandle RegisteredHandle;
+
+    // ...
+}
+```
+
+虽然可以通过 **SOHandle** 获取 `FSmartObjectRuntime` ，但不建议 外部业务直接使用`FSmartObjectRuntime`，而是通过 `USmartObjectSubsystem`、`USmartObjectBlueprintFunctionLibrary` 内提供的方法进行操作，业务上直接使用 **SOHandle** 更合适：
+
+```c++
+// SmartObjectSubsystem.h
+class SMARTOBJECTSMODULE_API USmartObjectSubsystem : public UWorldSubsystem
+{
+    // ...
+
+	/** Returns the runtime instance associated to the provided handle */
+	FSmartObjectRuntime* GetRuntimeInstance(const FSmartObjectHandle SmartObjectHandle) { return RuntimeSmartObjects.Find(SmartObjectHandle); }
+
+	/**
+	* Returns the const runtime instance associated to the provided handle.
+	* Method produces log messages with provided context if provided handle is not set or associated instance can't be found.
+	*/
+	const FSmartObjectRuntime* GetValidatedRuntime(const FSmartObjectHandle Handle, const ANSICHAR* Context) const;
+
+    // ...
+}
+```
+
+#### Slot
+
+**Slot** 同样也是抽象概念，最终也还是采用 **SOHandle**、`FSmartObjectRuntime` 类似的结构实现，即  `FSmartObjectSlotHandle`（下文简称 **SlotHandle**）、`FSmartObjectRuntimeSlot` 等
+
+**SlotHandle** 主要信息有 标识ID（`int32 SlotIndex`）、所属的 **SO** 信息（依旧是通过 **SOHandle**）等：
+
+```c++
+// SmartObjectTypes.h
+USTRUCT(BlueprintType)
+struct SMARTOBJECTSMODULE_API FSmartObjectSlotHandle
+{
+	// ...
+
+public:
+	FSmartObjectHandle GetSmartObjectHandle() const { return SmartObjectHandle; }
+	int32 GetSlotIndex() const { return SlotIndex; }
+
+	bool operator==(const FSmartObjectSlotHandle Other) const { return SmartObjectHandle == Other.SmartObjectHandle && SlotIndex == Other.SlotIndex; }
+	bool operator!=(const FSmartObjectSlotHandle Other) const { return !(*this == Other); }
+
+protected:
+	FSmartObjectHandle SmartObjectHandle;
+	int32 SlotIndex = INDEX_NONE;
+}
+```
+
+`FSmartObjectRuntimeSlot` 结构体用于存放 **Slot** 在运行态时的相关数据（State、Enabled、Location/Rotation等）：
+
+```c++
+// SmartObjectRuntime.h
+USTRUCT()
+struct FSmartObjectRuntimeSlot
+{
+    // ...
+
+public:
+	/** @return Current claim state of the slot. */
+	ESmartObjectSlotState GetState() const { return State; }
+    
+	/** @return true if both the slot and its parent smart object are enabled. */
+	bool IsEnabled() const { return bSlotEnabled && bObjectEnabled; }
+
+    FVector3f GetSlotOffset() const { return Offset; }
+	FRotator3f GetSlotRotation() const { return Rotation; }
+
+	FTransform GetSlotLocalTransform() const
+	{
+		return FTransform(FRotator(Rotation), FVector(Offset));
+	}
+	FTransform GetSlotWorldTransform(const FTransform& OwnerTransform) const
+	{
+		return FTransform(FRotator(Rotation), FVector(Offset)) * OwnerTransform;
+	}
+
+protected:
+	/** Offset of the slot relative to the Smart Object. */
+	UPROPERTY(Transient, VisibleAnywhere, Category=SmartObjects)
+	FVector3f Offset = FVector3f::ZeroVector;
+
+	/** Rotation of the slot relative to the Smart Object. */
+	UPROPERTY(Transient, VisibleAnywhere, Category=SmartObjects)
+	FRotator3f Rotation = FRotator3f::ZeroRotator;
+
+    /** Current availability state of the slot */
+	UPROPERTY(Transient, VisibleAnywhere, Category=SmartObjects)
+	ESmartObjectSlotState State = ESmartObjectSlotState::Free;
+    
+	/** True if the slot is enabled */
+	UPROPERTY(Transient, VisibleAnywhere, Category=SmartObjects)
+	uint8 bSlotEnabled : 1;
+
+	/** True if the parent smart object is enabled */
+	UPROPERTY(Transient, VisibleAnywhere, Category=SmartObjects)
+	uint8 bObjectEnabled : 1;
+    
+    // ...
+}
+
+```
+
+通过 **SlotHandle** 可以获取 `FSmartObjectRuntimeSlot` 相关数据，任然是推荐走 `USmartObjectSubsystem`、`USmartObjectBlueprintFunctionLibrary` 内提供的方法进行操作：
+
+```c++
+// SmartObjectSubsystem.cpp
+// 通过 SlotHandle获取 SO及Slot的数据
+bool USmartObjectSubsystem::GetValidatedRuntimeAndSlot(const FSmartObjectSlotHandle SlotHandle, const FSmartObjectRuntime*& OutSmartObjectRuntime, const FSmartObjectRuntimeSlot*& OutSlot, const ANSICHAR* Context) const
+{
+	if (SlotHandle.IsValid())
+	{
+		if (const FSmartObjectRuntime* SmartObjectRuntime = RuntimeSmartObjects.Find(SlotHandle.GetSmartObjectHandle()))
+		{
+			if (SmartObjectRuntime->Slots.IsValidIndex(SlotHandle.GetSlotIndex()))
+			{
+				OutSmartObjectRuntime = SmartObjectRuntime;
+				OutSlot = SmartObjectRuntime != nullptr ? &SmartObjectRuntime->Slots[SlotHandle.GetSlotIndex()] : nullptr;	
+				return true;
+			}
+		}
+	}
+
+    // ...
+
+	OutSmartObjectRuntime = nullptr;
+	OutSlot = nullptr;
+	return false;
+}
+
+// 获取 目标Slot的State
+ESmartObjectSlotState USmartObjectSubsystem::GetSlotState(const FSmartObjectSlotHandle SlotHandle) const
+{
+	const FSmartObjectRuntime* SmartObjectRuntime = nullptr;
+	const FSmartObjectRuntimeSlot* Slot = nullptr;
+	if (GetValidatedRuntimeAndSlot(SlotHandle, SmartObjectRuntime, Slot, __FUNCTION__))
+	{
+		return Slot->GetState();
+	}
+	return ESmartObjectSlotState::Invalid;
+}
+```
+
+#### 生命周期
+
+**SO** 与 **Slot** 的相关数据，均存放于 `USmartObjectSubsystem` 内，因此其数据的创建、更新、销毁也通过其处理：
+
+```c++
+// SmartObjectSubsystem.h
+class SMARTOBJECTSMODULE_API USmartObjectSubsystem : public UWorldSubsystem
+{
+    // ...
+protected:
+    // SOHandle 与 FSmartObjectRuntime数据 的映射表
+    UPROPERTY(Transient)
+	TMap<FSmartObjectHandle, FSmartObjectRuntime> RuntimeSmartObjects;
+}
+
+
+// SmartObjectSubsystem.cpp
+// SO及Slot的Runtime数据构建
+FSmartObjectRuntime* USmartObjectSubsystem::CreateRuntimeInstance(const FSmartObjectHandle Handle, const USmartObjectDefinition& Definition, const FBox Bounds, USmartObjectComponent* OwnerComponent)
+{
+    // ...
+
+	FSmartObjectRuntime& Runtime = RuntimeSmartObjects.Emplace(Handle, FSmartObjectRuntime(Definition));
+	Runtime.SetRegisteredHandle(Handle);
+	Runtime.OwnerComponent = OwnerComponent;
+	
+	// Create runtime data and entity for each slot
+	Runtime.Slots.Reserve(Definition.GetSlots().Num());
+
+	int32 SlotIndex = 0;
+	for (const FSmartObjectSlotDefinition& SlotDefinition : Definition.GetSlots())
+	{
+		FSmartObjectRuntimeSlot& Slot = Runtime.Slots.AddDefaulted_GetRef();
+
+		// Setup initial state from slot definition and current object state
+		Slot.Offset = SlotDefinition.Offset;
+		Slot.Rotation = SlotDefinition.Rotation;
+		Slot.bSlotEnabled = SlotDefinition.bEnabled;
+		Slot.Tags = SlotDefinition.RuntimeTags;
+		Slot.bObjectEnabled = Runtime.IsEnabled();
+
+		// Always initialize state (handles empty conditions)
+		Slot.PreconditionState.Initialize(*this, SlotDefinition.SelectionPreconditions);
+		
+		SlotIndex++;
+	}
+    
+	// Notify that the object became in use.
+	if (Runtime.OnEvent.IsBound())
+	{
+		FSmartObjectEventData Data;
+		Data.SmartObjectHandle = Runtime.GetRegisteredHandle();
+		Data.Reason = ESmartObjectChangeReason::OnObjectEnabled;
+		Runtime.OnEvent.Broadcast(Data);
+	}
+    
+    // ...
+	
+	return &Runtime;
+}
+
+// SORuntime数据销毁
+bool USmartObjectSubsystem::RemoveRuntimeInstanceFromSimulation(FSmartObjectRuntime& SmartObjectRuntime, USmartObjectComponent* SmartObjectComponent)
+{
+    // ...
+
+	const FSmartObjectHandle Handle = SmartObjectRuntime.GetRegisteredHandle();
+
+	if (SmartObjectComponent != nullptr)
+	{
+		UnbindComponentFromSimulationInternal(*SmartObjectComponent, SmartObjectRuntime);
+	}
+
+	DestroyRuntimeInstanceInternal(Handle, SmartObjectRuntime);
+
+	// Remove object runtime data
+	RuntimeSmartObjects.Remove(Handle);
+
+	return true;
+}
+```
+
+以一个SmartObject（例如 带有`USmartObjectComponent`的Actor）为例，其相关生命周期简要流程为：
+
+1. 注册为SmartObject：`USmartObjectComponent::BeginPlay()`->`USmartObjectComponent::RegisterToSubsystem()`->`USmartObjectSubsystem::RegisterSmartObject()`
+2. SmartObject功能使用：`USmartObjectComponent`有监听方法/部分工具方法、 `USmartObjectSubsystem`/`USmartObjectBlueprintFunctionLibrary`有完整工具方法
+3. 注销SmartObject资格：`USmartObjectComponent::EndPlay()`->`USmartObjectComponent::UnregisterFromSubsystem(const ESmartObjectUnregistrationType UnregistrationType)`->`USmartObjectSubsystem::RemoveSmartObject(USmartObjectComponent& SmartObjectComponent)`/`USmartObjectSubsystem::UnregisterSmartObject(USmartObjectComponent& SmartObjectComponent)`
 
 ## 流程介绍
 
