@@ -1158,6 +1158,48 @@ if (MyHeroTable != nullptr)
 - [动态单播/多播的基本使用 - CSDN](https://zhichao.blog.csdn.net/article/details/144543843)
 - [一文理解透UE委托Delegate - 知乎](https://zhuanlan.zhihu.com/p/460092901)
 
+基于UE内各模块的使用示例，针对委托在 C++/BP层的使用，一种较规范的使用方法为：**C++层/BP层 使用各自定义的 Native/Dynamic委托**。例如：
+
+```c++
+// SmartObjectComponent.h
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSmartObjectComponentEventSignature, const FSmartObjectEventData&, EventData, const AActor*, Interactor);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FSmartObjectComponentEventNativeSignature, const FSmartObjectEventData& EventData, const AActor* Interactor);
+
+class SMARTOBJECTSMODULE_API USmartObjectComponent : public USceneComponent
+{
+    // ...
+
+protected:
+	void OnRuntimeEventReceived(const FSmartObjectEventData& Event);
+
+    /* 接收到Event（蓝图实现函数） */
+    UFUNCTION(BlueprintImplementableEvent, Category = SmartObject, meta=(DisplayName = "OnSmartObjectEventReceived"))
+	void ReceiveOnEvent(const FSmartObjectEventData& EventData, const AActor* Interactor);
+
+    /* 接收到Event（动态多播委托） */
+	UPROPERTY(BlueprintAssignable, Category = SmartObject, meta=(DisplayName = "OnSmartObjectEvent"))
+	FSmartObjectComponentEventSignature OnSmartObjectEvent;
+
+    /* 接收到Event（原生多播委托） */
+	FSmartObjectComponentEventNativeSignature OnSmartObjectEventNative;
+
+    // ...
+}
+```
+
+```c++
+// SmartObjectComponent.cpp
+void USmartObjectComponent::OnRuntimeEventReceived(const FSmartObjectEventData& Event)
+{
+    const AActor* Interactor = nullptr;
+    // ...
+
+	ReceiveOnEvent(Event, Interactor);
+	OnSmartObjectEvent.Broadcast(Event, Interactor);
+	OnSmartObjectEventNative.Broadcast(Event, Interactor);
+}
+```
+
 ## 参考文章
 
 - [委托 - UnrealEngine](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/delegates-and-lambda-functions-in-unreal-engine?application_version=5.5)
