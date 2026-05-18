@@ -203,6 +203,28 @@ ASC->GetGameplayAttributeValueChangeDelegate(HealthAttribute).AddLambda([](const
 });
 ```
 
+↓↓↓ 事件监听：接收到GameplayEvent事件（Event事件触发例如 `UAbilitySystemBlueprintLibrary::SendGameplayEventToActor()`）
+
+```c++
+// AbilityTask_WaitGameplayEvent.cpp
+void UAbilityTask_WaitGameplayEvent::Activate()
+{
+	UAbilitySystemComponent* ASC = GetTargetASC();
+	if (ASC)
+	{
+		if (OnlyMatchExact)
+		{
+			MyHandle = ASC->GenericGameplayEventCallbacks.FindOrAdd(Tag).AddUObject(this, &UAbilityTask_WaitGameplayEvent::GameplayEventCallback);
+		}
+		else
+		{
+			MyHandle = ASC->AddGameplayEventTagContainerDelegate(FGameplayTagContainer(Tag), FGameplayEventTagMulticastDelegate::FDelegate::CreateUObject(this, &UAbilityTask_WaitGameplayEvent::GameplayEventContainerCallback));
+		}	
+	}
+
+	Super::Activate();
+}
+```
 
 
 
