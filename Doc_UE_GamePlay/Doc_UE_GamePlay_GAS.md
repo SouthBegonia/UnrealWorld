@@ -12,6 +12,7 @@
 - [Gameplay Tags](#gameplay-tags)
 	- [Tags的定义](#tags的定义)
 		- [从DataTable导入Tags](#从datatable导入tags)
+		- [C++层创建Tags](#c层创建tags)
 	- [Tags的规划](#tags的规划)
 		- [ARPG类的Tags规划](#arpg类的tags规划)
 	- [参考文章](#参考文章)
@@ -260,6 +261,39 @@ Tags可以通过如下方式进行定义、修改：
 
 ![image-20250807144326996](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250807144326996.png)
 
+### C++层创建Tags
+
+首先在 *Build.cs* 内引入GameplayTag模块：
+
+```c++
+PublicDependencyModuleNames.AddRange(new string[]
+{
+    // ... 
+	"GameplayTags"
+});
+```
+
+后通过 *NativeGameplayTags.h* 内定义的宏，就可以方便的创建Tag并使用：
+
+```c++
+// MyCustomGameplayTags.h
+#pragma once
+
+#include "CoreMinimal.h"
+#include "NativeGameplayTags.h"
+
+NINJAGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Tag_GAS_Ability_Skill_FireBolt);
+NINJAGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Tag_GAS_Ability_Jump);
+```
+
+```c++
+// MyCustomGameplayTags.cpp
+#include "MyCustomGameplayTags.h"
+
+UE_DEFINE_GAMEPLAY_TAG_COMMENT(Tag_GAS_Ability_Skill_FireBolt, "Ability.Skill.FireBolt", "A skill that releases fireballs.");
+UE_DEFINE_GAMEPLAY_TAG(Tag_GAS_Ability_Jump, "Ability.Jump");
+```
+
 ## Tags的规划
 
 因Tags可能会用于不同的业务模块（例如 技能功能、数值计算、特效表现、冷却等），因此需要Tags的规划尽量 分层合理、维护成本低、可移植性好
@@ -315,6 +349,7 @@ Status（状态）
 
 - [GAS 1. GameplayTag用法与源码浅析 - 知乎](https://zhuanlan.zhihu.com/p/12124335222)
 - [UE C++ GAS GameplayTag的注册 - 知乎](https://zhuanlan.zhihu.com/p/1969084836514866258)
+- [GameplayTag的定义与基本用法 - 知乎](https://zhuanlan.zhihu.com/p/28621176265)
 - [UE4 Gameplay Tags怎么划分合理？ - 知乎](https://www.zhihu.com/question/377026014/answer/1068575405)
 - [GASDocumentation - Github](https://github.com/tranek/GASDocumentation)
 
