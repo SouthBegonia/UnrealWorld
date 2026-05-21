@@ -21,9 +21,11 @@
 		- [1. 创建GA](#1-创建ga)
 		- [2. 添加GA到ASC](#2-添加ga到asc)
 		- [3.1 GA的激活](#31-ga的激活)
-		- [3-2. GA的激活 - Input触发](#3-2-ga的激活---input触发)
-			- [常规Input输入以激活GA](#常规input输入以激活ga)
-			- [EnhancedInput增强输入以激活GA](#enhancedinput增强输入以激活ga)
+			- [装备时激活](#装备时激活)
+			- [工具方法及SendEvent激活](#工具方法及sendevent激活)
+			- [Input触发](#input触发)
+				- [常规Input输入以激活GA](#常规input输入以激活ga)
+				- [EnhancedInput增强输入以激活GA](#enhancedinput增强输入以激活ga)
 			- [参考文章](#参考文章-1)
 	- [GA细节面板](#ga细节面板)
 		- [Tags](#tags)
@@ -439,19 +441,41 @@ void AGASSampleCharacter::BeginPlay()
 
 ### 3.1 GA的激活
 
-激活某个GA的方式有：
+#### 装备时激活
 
-A. 主动调用ASC组件提供的 `TryActivateAbilityByClass`、`TryActivateAbilitiesByTag` 方法
+类似于GiveAbility方法，也存在 GiveAbility+Activate 的方法：
 
-B. GA自身配置Trigger条件，当ASC收到Trigger后将触发激活 其拥有的、满足Trigger条件的 GA。常用方法是 `UAbilitySystemBlueprintLibrary::SendGameplayEventToActor`
+```c++
+// AbilityComponent.h
+
+/*
+* Grants an ability and attempts to activate it exactly one time, which will cause it to be removed.
+* Only valid on the server, and the ability's Net Execution Policy cannot be set to Local or Local Predicted
+* 
+* @param AbilitySpec FGameplayAbilitySpec containing information about the ability class, level and input ID to bind it to.
+* @param GameplayEventData Optional activation event data. If provided, Activate Ability From Event will be called instead of ActivateAbility, passing the Event Data
+*/
+UE_API FGameplayAbilitySpecHandle GiveAbilityAndActivateOnce(FGameplayAbilitySpec& AbilitySpec, const FGameplayEventData* GameplayEventData = nullptr);
+```
+
+#### 工具方法及SendEvent激活
+
+工具方法：
+
+- ASC提供的 `TryActivateAbilityByClass` 方法
+- ASC提供的 `TryActivateAbilitiesByTag` 方法（Tag对应GA上的 AssetTags，即标识GA的Tag）
+
+SendEvent：
+
+- GA自身配置Trigger条件（TriggerSource=GameplayEvent），当ASC收到Trigger后将触发激活 其拥有的、满足Trigger条件的 GA。常用方法是 `UAbilitySystemBlueprintLibrary::SendGameplayEventToActor`
 
 ![image-20250629174728912](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250629174728912.png)
 
-### 3-2. GA的激活 - Input触发
+#### Input触发
 
 GA的激活，还可以通过绑定Input输入进行触发，触发将直接进入GA的 `事件ActivateAbility`。Input方式则可以用 **常规Input输入** 或 **EnhancedInput增强输入**
 
-#### 常规Input输入以激活GA
+##### 常规Input输入以激活GA
 
 以 [GASDocumentation - Github](https://github.com/tranek/GASDocumentation#462-binding-input-to-the-asc) 为例子，其基本用法为：
 
@@ -527,7 +551,7 @@ void AGDHeroCharacter::BindASCInput()
 {
 	if (!ASCInputBound && AbilitySystemComponent.IsValid() && IsValid(InputComponent))
 	{
-		FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/GASDocumentation"), FName("EGDAbilityInputID"));
+		FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/GASDocumentation"), FName("EGDAbilityInputID"));	// InPackName=ContentDrawer找到目标代码文件，右键CopyPackagePath，InAssetName=枚举名
 		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, FGameplayAbilityInputBinds(FString("ConfirmTarget"),
 			FString("CancelTarget"), AbilityEnumAssetPath, static_cast<int32>(EGDAbilityInputID::Confirm), static_cast<int32>(EGDAbilityInputID::Cancel)));
 
@@ -569,28 +593,20 @@ FGameplayAbilitySpec::FGameplayAbilitySpec(UGameplayAbility* InAbility, int32 In
 }
 ```
 
-#### EnhancedInput增强输入以激活GA
+##### EnhancedInput增强输入以激活GA
 
-1. 按常规EnhancedInput用法创建IMC、IA、接入使用
-2. 复用上例1、2内的 `EGDAbilityInputID`枚举 和 自行派生的`UGDGameplayAbility : UGameplayAbility`。后需新创建 `EGDAbilityInputID` 与 `UInputAction` 的映射关系，例如 创建一个 `TMap<EGDAbilityInputID, TObjectPtr<UInputAction>> AbilityEnumToAction` 
+相比于旧版输入，我们不再需要往ProjectSetting->Input内添加 操作映射，而是按常规 EnhancedInput用法创建IMC、IA、接入使用
 
-```c++
-// AGDCharacterBase.cpp
-class GASDOCUMENTATION_API AGDCharacterBase : public ACharacter, public IAbilitySystemInterface
-{
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "GASDocumentation|Abilities")
-	TMap<EGDAbilityInputID, TObjectPtr<UInputAction>> AbilityEnumToAction;
+首先完全同上文旧版输入的 
 
-	virtual TMap<EGDAbilityInputID, TObjectPtr<UInputAction>> GetAbilityEnumMap();
-}
-```
+- 步骤2：创建`EGDAbilityInputID`枚举、在GA上建立其相互映射
 
-![image-20250815230413771](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/image-20250815230413771.png)
+- 步骤3：执行`AbilitySystemComponent->BindAbilityActivationToInputComponent` 以绑定 `EGDAbilityInputID`
 
-3. 重写改造 ASC组件执行 绑定Input激活Ability方法：`UGDAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputComponent* InputComponent, FGameplayAbilityInputBinds BindInfo)` 。因为其内部绑定逻辑是针对 常规Input输入，即 `UInputComponent`，而我们则是需要对 `UEnhancedInputComponent` 进行绑定
+（核心区别）后需要 **重写改造 ASC组件的 绑定Input激活Ability方法**（即 `BindAbilityActivationToInputComponent`），因为其内部绑定逻辑是针对 常规Input输入，即 `UInputComponent`，而我们则是需要对 `UEnhancedInputComponent` 进行绑定：
 
 ```c++
-// UGDAbilitySystemComponent.cpp
+// （重写方法）UGDAbilitySystemComponent.cpp
 void UGDAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputComponent* InputComponent, FGameplayAbilityInputBinds BindInfo)
 {
 	Super::BindAbilityActivationToInputComponent(InputComponent, BindInfo);
@@ -626,7 +642,7 @@ void UGDAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputComp
 	}
 }
 
-// AbilitySystemComponent_Abilities.cpp
+// （原生方法）AbilitySystemComponent_Abilities.cpp
 void UAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputComponent* InputComponent, FGameplayAbilityInputBinds BindInfo)
 {
 	UEnum* EnumBinds = BindInfo.GetBindEnum();
@@ -678,12 +694,13 @@ void UAbilitySystemComponent::BindAbilityActivationToInputComponent(UInputCompon
 }
 ```
 
-4. 同上例步骤4：运行态时 在添加GA时 绑定激活此GA的InputID
+最终同上文步骤4：GiveAbility时 设定其InputID为 `EGDAbilityInputID`枚举值，即可实现EnhancedInput输入以激活GA
 
 #### 参考文章
 
 - [GASDocumentation - Github](https://github.com/tranek/GASDocumentation)
 - [UE5中GAS接入增强输入(EnhancedInput)](https://mytechplayer.com/archives/ue5中gas接入增强输入enhancedinput)
+- [虚幻插件GAS分析00 激活技能的几种机制 - 知乎](https://zhuanlan.zhihu.com/p/417226776)
 
 
 
