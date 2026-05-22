@@ -15,6 +15,7 @@
 		- [C++层创建Tags](#c层创建tags)
 	- [Tags的规划](#tags的规划)
 		- [ARPG类的Tags规划](#arpg类的tags规划)
+		- [Tags相关工具方法](#tags相关工具方法)
 	- [参考文章](#参考文章)
 - [Gameplay Ability（GA）](#gameplay-abilityga)
 	- [用法](#用法)
@@ -345,6 +346,96 @@ Status（状态）
     |──DamageImmune
     └──Debuff
         └──Stun
+```
+
+### Tags相关工具方法
+
+```c++
+// AbilitySystemComponent.h
+
+UCLASS(ClassGroup=AbilitySystem, hidecategories=(Object,LOD,Lighting,Transform,Sockets,TextureStreaming), editinlinenew, meta=(BlueprintSpawnableComponent), MinimalAPI)
+class UAbilitySystemComponent : public UGameplayTasksComponent, public IGameplayTagAssetInterface, public IAbilitySystemReplicationProxyInterface
+{
+    // ...
+ 
+	// ----------------------------------------------------------------------------------------------------------------
+	//  Gameplay tag operations
+	//  Implements IGameplayTagAssetInterface using the TagCountContainer
+	// ----------------------------------------------------------------------------------------------------------------
+	FORCEINLINE bool HasMatchingGameplayTag(FGameplayTag TagToCheck) const override
+	{
+		return GameplayTagCountContainer.HasMatchingGameplayTag(TagToCheck);
+	}
+	FORCEINLINE bool HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override
+	{
+		return GameplayTagCountContainer.HasAllMatchingGameplayTags(TagContainer);
+	}
+
+	FORCEINLINE bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override
+	{
+		return GameplayTagCountContainer.HasAnyMatchingGameplayTags(TagContainer);
+	}
+
+	FORCEINLINE void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override
+	{
+		TagContainer.Reset();
+		TagContainer.AppendTags(GetOwnedGameplayTags());
+	}
+
+	FORCEINLINE int32 GetTagCount(FGameplayTag TagToCheck) const
+	{
+		return GameplayTagCountContainer.GetTagCount(TagToCheck);
+	}
+    
+	FORCEINLINE void AddLooseGameplayTag(const FGameplayTag& GameplayTag, int32 Count=1)
+	{
+		UpdateTagMap(GameplayTag, Count);
+	}
+	FORCEINLINE void AddReplicatedLooseGameplayTag(const FGameplayTag& GameplayTag)
+	{
+		GetReplicatedLooseTags_Mutable().AddTag(GameplayTag);
+	}
+    
+	/** Allow events to be registered for specific gameplay tags being added or removed */
+	UE_API FOnGameplayEffectTagCountChanged& RegisterGameplayTagEvent(FGameplayTag Tag, EGameplayTagEventType::Type EventType=EGameplayTagEventType::NewOrRemoved);
+
+	/** Unregister previously added events */
+	UE_API bool UnregisterGameplayTagEvent(FDelegateHandle DelegateHandle, FGameplayTag Tag, EGameplayTagEventType::Type EventType=EGameplayTagEventType::NewOrRemoved);
+
+}
+```
+
+```c++
+// AbilitySystemBlueprintLibrary.h
+
+UFUNCTION(BlueprintCallable, Category="Ability|GameplayEffect")
+static UE_API bool AddLooseGameplayTags(AActor* Actor, const FGameplayTagContainer& GameplayTags, bool bShouldReplicate=false);
+
+UFUNCTION(BlueprintCallable, Category="Ability|GameplayEffect")
+static UE_API bool RemoveLooseGameplayTags(AActor* Actor, const FGameplayTagContainer& GameplayTags, bool bShouldReplicate=false);
+```
+
+```c++
+// BlueprintGameplayTagLibrary.h
+
+UFUNCTION(BlueprintPure, Category="GameplayTags", meta = (Keywords = "DoGameplayTagsMatch", BlueprintThreadSafe))
+static GAMEPLAYTAGS_API bool MatchesTag(FGameplayTag TagOne, FGameplayTag TagTwo, bool bExactMatch);
+
+UFUNCTION(BlueprintPure, Category = "GameplayTags", meta = (BlueprintThreadSafe))
+static GAMEPLAYTAGS_API bool IsGameplayTagValid(FGameplayTag GameplayTag);
+
+/** Returns FName of this tag */
+UFUNCTION(BlueprintPure, Category = "GameplayTags", meta = (BlueprintThreadSafe))
+static GAMEPLAYTAGS_API FName GetTagName(const FGameplayTag& GameplayTag);
+
+/** Creates a literal FGameplayTag */
+UFUNCTION(BlueprintPure, Category = "GameplayTags", meta = (BlueprintThreadSafe))
+static GAMEPLAYTAGS_API FGameplayTag MakeLiteralGameplayTag(FGameplayTag Value);
+
+UFUNCTION(BlueprintPure, Category="GameplayTags", meta = (Keywords = "DoesContainerHaveTag", BlueprintThreadSafe))
+static GAMEPLAYTAGS_API bool HasTag(const FGameplayTagContainer& TagContainer, FGameplayTag Tag, bool bExactMatch);
+
+// ...
 ```
 
 ## 参考文章
