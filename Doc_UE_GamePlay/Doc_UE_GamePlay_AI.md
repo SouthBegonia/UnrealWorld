@@ -112,6 +112,8 @@
 			- [生命周期](#生命周期)
 	- [流程介绍](#流程介绍)
 	- [基本用法](#基本用法-6)
+	- [扩展用法](#扩展用法)
+		- [SO的查找与申明](#so的查找与申明)
 	- [参考文章](#参考文章-6)
 - [MASS](#mass)
 	- [MassEntity](#massentity)
@@ -1942,6 +1944,365 @@ bool USmartObjectSubsystem::RemoveRuntimeInstanceFromSimulation(FSmartObjectRunt
 此外，UE 5.X+ 后，`USmartObjectBlueprintFunctionLibrary : public UBlueprintFunctionLibrary` 有着大部分SmartObject相关常用方法：
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260424200616105.png)
+
+## 扩展用法
+
+截止 UE 5.5版本，官方提供的SO相关的工具方法有：
+
+- BehaviorTree
+  - `UBTTask_FindAndUseGameplayBehaviorSmartObject : public UBTTaskNode`：寻找、移动至并使用SmartObject的 行为树任务节点
+- AITask
+  - `UAITask_UseGameplayBehaviorSmartObject : public UAITask`：根据SO的ClaimHandle 移动至并使用SmartObject的 AITask
+
+但上述工具方法存在一些问题：
+
+- **移动逻辑固定** 且 **移动逻辑中的 GoalLocation固定为 SlotLocation**（源码位于 `UAITask_UseGameplayBehaviorSmartObject::Activate()`）。而实际应用场景中 Slot是可能包含 一个或多个Entrance的，且可能有需求 **需要移动到Entrance再对Slot进行交互的**（例如 驾驶汽车需要先移动至车门（Entrance），而后在交互的同时更新位置到驾驶座（Slot））
+- 除了节点自身 外界很难获取SO相关信息（ClaimHandle、Slot）
+
+
+
+因此 **想实现细致化SO交互全流程 需要对流程（寻找SO、移动至SO、SO交互）进行功能拆分/融合**：
+
+### SO的查找与申明
+
+SO的查找核心方法就是 `bool USmartObjectSubsystem::FindSmartObjects(const FSmartObjectRequest& Request, TArray<FSmartObjectRequestResult>& OutResults, const FConstStructView UserData)`，查找后通常就需要 当即ClaimSlot：
+
+```c++
+FSmartObjectClaimHandle USmartObjectBlueprintFunctionLibrary::MarkSmartObjectSlotAsClaimed(
+    UObject* WorldContextObject,
+    const FSmartObjectSlotHandle SlotHandle,
+    const AActor* UserActor,
+    ESmartObjectClaimPriority ClaimPriority)
+{
+```
+
+通过这2段逻辑最终能拿到我们需要的 `FSmartObjectClaimHandle`，我们可将其合并为一项功能：**SO的查找与申明**
+
+例如：**寻找并申明SmartObject的 行为树任务节点**
+
+```c++
+// BTTask_FindAndClaimSmartObject.h
+
+/*
+ * 本质是对官方 UBTTask_FindAndUseGameplayBehaviorSmartObject 的改造：
+ *	- 移除了移动逻辑
+ *	- 设定了 FSmartObjectClaimHandle类型的 BlackBoardKey 供BT使用
+ *
+ * 功能特点：
+ *	- 提供 简单ActivityTag+Radius查询SO 或 EQS详细查询SO 二选一
+ *	- 设置 ClaimHandle结果到黑板键
+ *
+ * 尚可优化：
+ *	- 因SO查询结果为数组，故可对Result进行再筛选（另行添加QueryParam 或 在EQS内另实现Test）
+ *
+*/
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "SmartObjectSubsystem.h"
+#include "SmartObjectTypes.h"
+#include "BehaviorTree/BTTaskNode.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
+#include "BTTask_FindAndClaimSmartObject.generated.h"
+
+struct FSmartObjectClaimHandle;
+
+struct FBTQuerySOMemory
+{
+	int32 EQSRequestID;
+};
+
+UCLASS()
+class [PROJECTNAME]_API UBTTask_FindAndClaimSmartObject : public UBTTaskNode
+{
+	GENERATED_BODY()
+
+public:
+	UBTTask_FindAndClaimSmartObject();
+
+protected:
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	virtual void OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult) override;
+	virtual uint16 GetInstanceMemorySize() const override { return sizeof(FBTQuerySOMemory); }
+	virtual void InitializeMemory(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTMemoryInit::Type InitType) const override;
+	virtual void CleanupMemory(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTMemoryClear::Type CleanupType) const override;
+
+	virtual FString GetStaticDescription() const override;
+
+	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
+
+	void OnQueryFinished(TSharedPtr<FEnvQueryResult> Result);
+protected:
+
+	UPROPERTY(EditAnywhere, Category = SmartObjects)
+	FBlackboardKeySelector SOClaimHandleKey;
+
+	/** Additional tag query to filter available smart objects. We'll query for smart
+	 *	objects that support activities tagged in a way matching the filter.
+	 *	Note that regular tag-base filtering is going to take place as well */
+	UPROPERTY(EditAnywhere, Category = SmartObjects)
+	FGameplayTagQuery ActivityRequirements;
+
+	UPROPERTY(EditAnywhere, Category = SmartObjects)
+	ESmartObjectClaimPriority ClaimPriority = ESmartObjectClaimPriority::Normal;
+
+
+	UPROPERTY(EditAnywhere, Category = SmartObjects)
+	FEQSParametrizedQueryExecutionRequest EQSRequest;
+
+	/** Used for smart object querying if EQSRequest is not configured */
+	UPROPERTY(EditAnywhere, Category = SmartObjects, meta=(DisplayName="Fallback Radius"))
+	float Radius;
+
+
+	FQueryFinishedSignature EQSQueryFinishedDelegate;
+};
+```
+
+```c++
+// BTTask_FindAndClaimSmartObject.cpp
+
+#include "BTTask_FindAndClaimSmartObject.h"
+#include "AIController.h"
+#include "BlackboardKeyType_SOClaimHandle.h"
+#include "GameplayTagAssetInterface.h"
+#include "GameplayBehaviorSmartObjectBehaviorDefinition.h"
+#include "SmartObjectSubsystem.h"
+#include "VisualLogger/VisualLogger.h"
+#include "EnvironmentQuery/EnvQueryManager.h"
+#include "EnvQueryItemType_SmartObject.h"
+#include "BehaviorTree/BlackboardComponent.h"
+
+UBTTask_FindAndClaimSmartObject::UBTTask_FindAndClaimSmartObject()
+{
+	Radius = 500.f;
+	EQSQueryFinishedDelegate = FQueryFinishedSignature::CreateUObject(this, &UBTTask_FindAndClaimSmartObject::OnQueryFinished);
+	EQSRequest.RunMode = EEnvQueryRunMode::AllMatching;
+	bNotifyTaskFinished = true;
+}
+
+void UBTTask_FindAndClaimSmartObject::InitializeMemory(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTMemoryInit::Type InitType) const
+{
+	InitializeNodeMemory<FBTQuerySOMemory>(NodeMemory, InitType);
+}
+
+void UBTTask_FindAndClaimSmartObject::CleanupMemory(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTMemoryClear::Type CleanupType) const
+{
+	CleanupNodeMemory<FBTQuerySOMemory>(NodeMemory, CleanupType);
+}
+
+EBTNodeResult::Type UBTTask_FindAndClaimSmartObject::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+	EBTNodeResult::Type NodeResult = EBTNodeResult::Failed;
+
+	UWorld* World = GetWorld();
+	USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(World);
+	AAIController* MyController = OwnerComp.GetAIOwner();
+	if (SmartObjectSubsystem == nullptr || MyController == nullptr
+		|| MyController->GetPawn() == nullptr)
+	{
+		return EBTNodeResult::Failed;
+	}
+
+	FBTQuerySOMemory* MyMemory = reinterpret_cast<FBTQuerySOMemory*>(NodeMemory);
+	MyMemory->EQSRequestID = INDEX_NONE;
+
+	AActor& Avatar = *MyController->GetPawn();
+
+	if (EQSRequest.IsValid() && (EQSRequest.EQSQueryBlackboardKey.IsSet() || EQSRequest.QueryTemplate))
+	{
+		const UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
+		MyMemory->EQSRequestID = EQSRequest.Execute(Avatar, BlackboardComponent, EQSQueryFinishedDelegate);
+
+		if (MyMemory->EQSRequestID != INDEX_NONE)
+		{
+			NodeResult = EBTNodeResult::InProgress;
+		}
+	}
+	else 
+	{
+		const FVector UserLocation = Avatar.GetActorLocation();
+
+		// Create filter
+		FSmartObjectRequestFilter Filter;
+		Filter.ActivityRequirements = ActivityRequirements;
+		Filter.BehaviorDefinitionClasses = { UGameplayBehaviorSmartObjectBehaviorDefinition::StaticClass() };
+		const IGameplayTagAssetInterface* TagsSource = Cast<const IGameplayTagAssetInterface>(&Avatar);
+		if (TagsSource != nullptr)
+		{
+			TagsSource->GetOwnedGameplayTags(Filter.UserTags);
+		}
+
+		// Create request
+		FSmartObjectRequest Request(FBox(UserLocation, UserLocation).ExpandBy(FVector(Radius), FVector(Radius)), Filter);
+		TArray<FSmartObjectRequestResult> Results;
+		const FSmartObjectActorUserData ActorUserData(&Avatar);
+		const FConstStructView ActorUserDataView(FConstStructView::Make(ActorUserData));
+	
+		if (SmartObjectSubsystem->FindSmartObjects(Request, Results, ActorUserDataView))
+		{
+			for (const FSmartObjectRequestResult& Result : Results)
+			{
+				FSmartObjectClaimHandle ClaimHandle = SmartObjectSubsystem->MarkSlotAsClaimed(Result.SlotHandle, ClaimPriority, ActorUserDataView);
+				if (ClaimHandle.IsValid())
+				{
+					OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_SOClaimHandle>(SOClaimHandleKey.SelectedKeyName, ClaimHandle);
+					NodeResult = EBTNodeResult::Succeeded;
+					break;
+				}
+			}
+
+			UE_CVLOG_UELOG(NodeResult == EBTNodeResult::Failed, MyController, LogSmartObject, Warning, TEXT("%s failed to claim smart object"), *GetNodeName());
+		}
+		else
+		{
+			UE_VLOG_UELOG(MyController, LogSmartObject
+				, Verbose, TEXT("%s failed to find smart objects for request: %s")
+				, *GetNodeName(), *Avatar.GetName());
+		}
+	}
+
+	return NodeResult;
+}
+
+EBTNodeResult::Type UBTTask_FindAndClaimSmartObject::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+	check(NodeMemory);
+
+	FBTQuerySOMemory* MyMemory = reinterpret_cast<FBTQuerySOMemory*>(NodeMemory);
+
+	if (MyMemory->EQSRequestID != INDEX_NONE)
+	{
+		if (UWorld* World = OwnerComp.GetWorld())
+		{
+			if (UEnvQueryManager* EnvQueryManager = UEnvQueryManager::GetCurrent(World))
+			{
+				EnvQueryManager->AbortQuery(MyMemory->EQSRequestID);
+			}
+		}
+		MyMemory->EQSRequestID = INDEX_NONE;
+	}
+
+	return EBTNodeResult::Aborted;
+}
+
+void UBTTask_FindAndClaimSmartObject::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
+{
+	FBTQuerySOMemory* MyMemory = reinterpret_cast<FBTQuerySOMemory*>(NodeMemory);
+	check(MyMemory->EQSRequestID == INDEX_NONE);
+}
+
+FString UBTTask_FindAndClaimSmartObject::GetStaticDescription() const
+{
+	FString Result;
+	if (!SOClaimHandleKey.IsSet())
+	{
+		Result += FString::Printf(TEXT("SOClaimHandleKey can't be none"));
+	}
+
+	if (ActivityRequirements.IsEmpty() == false)
+	{
+		Result += FString::Printf(TEXT("Object requirements: %s")
+			, *ActivityRequirements.GetDescription());
+	}
+
+	return Result.Len() > 0
+		? Result
+		: Super::GetStaticDescription();
+}
+
+void UBTTask_FindAndClaimSmartObject::InitializeFromAsset(UBehaviorTree& Asset)
+{
+	Super::InitializeFromAsset(Asset);
+	EQSRequest.InitForOwnerAndBlackboard(*this, GetBlackboardAsset());
+}
+
+void UBTTask_FindAndClaimSmartObject::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result)
+{
+	if (!Result)
+	{
+		return;
+	}
+
+	AActor* MyOwner = Cast<AActor>(Result->Owner.Get());
+	if (APawn* PawnOwner = Cast<APawn>(MyOwner))
+	{
+		MyOwner = PawnOwner->GetController();
+	}
+
+	UBehaviorTreeComponent* BTComponent = MyOwner ? MyOwner->FindComponentByClass<UBehaviorTreeComponent>() : NULL;
+	if (!BTComponent)
+	{
+		UE_LOG(LogBehaviorTree, Warning, TEXT("%s [%s]: Unable to find behavior tree to notify about finished query!")
+			, ANSI_TO_TCHAR(__FUNCTION__), *GetNameSafe(MyOwner));
+		return;
+	}
+
+	const FEnvQueryResult& QueryResult = *Result.Get();
+
+	uint8* RawMemory = BTComponent->GetNodeMemory(this, BTComponent->FindInstanceContainingNode(this));
+	check(RawMemory);
+	FBTQuerySOMemory* MyMemory = reinterpret_cast<FBTQuerySOMemory*>(RawMemory);
+	if (MyMemory->EQSRequestID != QueryResult.QueryID)
+	{
+		UE_VLOG_UELOG(BTComponent, LogBehaviorTree, Log, TEXT("%s [%s] ignoring EQS result due to QueryID mismatch.")
+			, ANSI_TO_TCHAR(__FUNCTION__), *GetNameSafe(MyOwner));
+
+		check(MyMemory->EQSRequestID != INDEX_NONE)
+
+		return;
+	}
+	else if (QueryResult.IsAborted())
+	{
+		UE_VLOG_UELOG(BTComponent, LogBehaviorTree, Log, TEXT("%s [%s] observed EQS query finished as Aborted. Aborting the BT node as well.")
+			, ANSI_TO_TCHAR(__FUNCTION__), *GetNameSafe(MyOwner));
+
+		FinishLatentTask(*BTComponent, EBTNodeResult::Aborted);
+		return;
+	}
+
+	// at this point we've already confirmed that QueryResult does indeed corresponds to the the query we're waiting for
+	// so we need to clear the EQSRequestID here in case the next task we're about to issue (the UAITask_UseGameplayBehaviorSmartObject)
+	// might fail instantly and we do check EQSRequestID on tasks end to make sure everything has been cleaned up properly.
+	MyMemory->EQSRequestID = INDEX_NONE;
+
+	bool bSmartObjectClaimed = false;
+
+	if (QueryResult.IsSuccessful() && (QueryResult.Items.Num() >= 1))
+	{
+		if (QueryResult.ItemType->IsChildOf(UEnvQueryItemType_SmartObject::StaticClass()) == false)
+		{
+			UE_VLOG_UELOG(BTComponent, LogSmartObject, Error, TEXT("%s used EQS query that did not generate EnvQueryItemType_SmartObject items"), *GetNodeName());
+		}
+		else if (USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(MyOwner->GetWorld()))
+		{
+			const FSmartObjectActorUserData ActorUserData(Cast<AActor>(Result->Owner.Get()));
+			const FConstStructView ActorUserDataView(FConstStructView::Make(ActorUserData));
+
+			// we could use QueryResult.GetItemAsTypeChecked, but the below implementation is more efficient
+			for (int i = 0; i < QueryResult.Items.Num(); ++i)
+			{
+				const FSmartObjectSlotEQSItem& Item = UEnvQueryItemType_SmartObject::GetValue(QueryResult.GetItemRawMemory(i));
+				const FSmartObjectClaimHandle ClaimHandle = SmartObjectSubsystem->MarkSlotAsClaimed(Item.SlotHandle, ClaimPriority, ActorUserDataView);
+				if (ClaimHandle.IsValid())
+				{
+					BTComponent->GetBlackboardComponent()->SetValue<UBlackboardKeyType_SOClaimHandle>(SOClaimHandleKey.SelectedKeyName, ClaimHandle);
+					bSmartObjectClaimed = true;
+
+					UE_VLOG_UELOG(BTComponent, LogSmartObject, Verbose, TEXT("%s claimed EQS-found smart object: %s"), *GetNodeName(), *LexToString(ClaimHandle));
+					break;
+				}
+			}
+		}
+	}
+
+	FinishLatentTask(*BTComponent, bSmartObjectClaimed ? EBTNodeResult::Succeeded : EBTNodeResult::Failed);
+}
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260525225401254.png)
 
 ## 参考文章
 
