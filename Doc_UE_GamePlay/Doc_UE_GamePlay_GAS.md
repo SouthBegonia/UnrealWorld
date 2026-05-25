@@ -320,6 +320,13 @@ Cooldown（技能冷却：存在即代表技能处于冷却状态）
 |   └──Skill
 |   	└──Skill_A
 |
+Cost（技能消耗类型）
+|   └──Mana
+|   └──Energy
+|
+DataTag（数据标识键：例如用于 SetByCaller）
+|   └──IncomingDamage
+|
 Event（事件）
 |   └──Montage 
 |        |──Player
@@ -344,8 +351,11 @@ Status（状态）
     |──Dead
     |──Sprinting
     |──DamageImmune
-    └──Debuff
-        └──Stun
+    |──Debuff
+    |   └──Stun
+    └──HasWeapon
+        └──Staff
+        └──Gun
 ```
 
 ### Tags相关工具方法
