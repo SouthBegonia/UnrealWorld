@@ -114,6 +114,7 @@
 	- [基本用法](#基本用法-6)
 	- [扩展用法](#扩展用法)
 		- [SO的查找与申明](#so的查找与申明)
+		- [获取Slot或Entrance的Transform信息](#获取slot或entrance的transform信息)
 	- [参考文章](#参考文章-6)
 - [MASS](#mass)
 	- [MassEntity](#massentity)
@@ -1952,7 +1953,9 @@ bool USmartObjectSubsystem::RemoveRuntimeInstanceFromSimulation(FSmartObjectRunt
 - BehaviorTree
   - `UBTTask_FindAndUseGameplayBehaviorSmartObject : public UBTTaskNode`：寻找、移动至并使用SmartObject的 行为树任务节点
 - AITask
-  - `UAITask_UseGameplayBehaviorSmartObject : public UAITask`：根据SO的ClaimHandle 移动至并使用SmartObject的 AITask
+  - `UAITask_UseGameplayBehaviorSmartObject : public UAITask`：
+    - `static UAITask_UseGameplayBehaviorSmartObject* UseSmartObjectWithGameplayBehavior()`：根据SO的ClaimHandle 直接使用SmartObject的 AITask
+    - `static UAITask_UseGameplayBehaviorSmartObject* MoveToAndUseSmartObjectWithGameplayBehavior()`：根据SO的ClaimHandle 移动至并使用SmartObject的 AITask
 
 但上述工具方法存在一些问题：
 
@@ -2197,9 +2200,9 @@ void UBTTask_FindAndClaimSmartObject::OnTaskFinished(UBehaviorTreeComponent& Own
 FString UBTTask_FindAndClaimSmartObject::GetStaticDescription() const
 {
 	FString Result;
-	if (!SOClaimHandleKey.IsSet())
+	if (SOClaimHandleKey.SelectedKeyType != UBlackboardKeyType_SOClaimHandle::StaticClass())
 	{
-		Result += FString::Printf(TEXT("SOClaimHandleKey can't be none"));
+		Result += FString::Printf(TEXT("SOClaimHandleKey must be type of SOClaimHandle"));
 	}
 
 	if (ActivityRequirements.IsEmpty() == false)
@@ -2208,9 +2211,11 @@ FString UBTTask_FindAndClaimSmartObject::GetStaticDescription() const
 			, *ActivityRequirements.GetDescription());
 	}
 
-	return Result.Len() > 0
-		? Result
-		: Super::GetStaticDescription();
+	if (Result.Len() > 0)
+		return Result;
+
+	FString KeyDesc = SOClaimHandleKey.SelectedKeyName.ToString();
+	return FString::Printf(TEXT("Result ClaimedHandle in BBKey : %s"), *KeyDesc);
 }
 
 void UBTTask_FindAndClaimSmartObject::InitializeFromAsset(UBehaviorTree& Asset)
@@ -2303,6 +2308,209 @@ void UBTTask_FindAndClaimSmartObject::OnQueryFinished(TSharedPtr<FEnvQueryResult
 ```
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260525225401254.png)
+
+### 获取Slot或Entrance的Transform信息
+
+一个Slot其持有 自身Transform信息（也就是我们最常见的Slot点位的信息），此外其也可 通过配置DefinitionData以添加 Entrance信息（Entrance可包含多个，主要分Entry/Exit类型），Entrance也同样有Transform信息。因此 可以添加一个工具方法：**获取Slot或Entrance的Transform信息**
+
+例如：**根据ClaimedHandle 获取SlotTransform或EntranceTransform的 行为树任务节点**
+
+```c++
+// BTTask_GetClaimedSmartObjectSlotTransform.h
+
+/*
+ * 功能特点：
+ *	- 根据 ClaimedHandle 获取Slot或Entrance的 Transform信息到 黑板键
+ *
+ * 尚可优化：
+ *	- 目前默认 优先获取Entrance的信息，其次才是Slot的信息，可自行开关进行逻辑分流
+ *
+*/
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "SmartObjectSubsystem.h"
+#include "BehaviorTree/BTTaskNode.h"
+#include "BTTask_GetClaimedSmartObjectSlotTransform.generated.h"
+
+UCLASS()
+class [PROJECTNAME]_API UBTTask_GetClaimedSmartObjectSlotTransform : public UBTTaskNode
+{
+	GENERATED_BODY()
+
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Blackboard")
+	FBlackboardKeySelector SOClaimedHandleBlackboardKey;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Blackboard")
+	FName ResultLocationKeyName;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Blackboard")
+	FName ResultRotatorKeyName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="SmartObject")
+	FSmartObjectSlotEntranceLocationRequest EntranceRequest;
+
+	virtual FString GetStaticDescription() const override;
+
+protected:
+	bool GetSOClaimHandle(const UBehaviorTreeComponent& OwnerComp, const FBlackboardKeySelector& ClaimHandleKey, FSmartObjectClaimHandle& OutClaimHandle);
+
+	bool IsClaimedSmartObjectValid(const UBehaviorTreeComponent& OwnerComp, const FSmartObjectClaimHandle& ClaimHandle) const;
+
+	bool GetClaimedSlotTransform(const UBehaviorTreeComponent& OwnerComp, const FSmartObjectClaimHandle& ClaimHandle, FTransform& OutSlotTransform);
+	bool GetClaimedSlotEntranceTransform(const UBehaviorTreeComponent& OwnerComp, const FSmartObjectClaimHandle& ClaimHandle, FTransform& OutEntranceTransform);
+};
+```
+
+```c++
+// BTTask_GetClaimedSmartObjectSlotTransform.cpp
+
+#include "BTTask_GetClaimedSmartObjectSlotTransform.h"
+#include "AIController.h"
+#include "BlackboardKeyType_SOClaimHandle.h"
+#include "BehaviorTree/BlackboardComponent.h"
+
+EBTNodeResult::Type UBTTask_GetClaimedSmartObjectSlotTransform::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+	USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(GetWorld());
+	UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
+
+	if (SmartObjectSubsystem == nullptr
+		|| BlackboardComp == nullptr)
+	{
+		return EBTNodeResult::Failed;
+	}
+
+	// Check ClaimHandle is valid.
+	FSmartObjectClaimHandle ClaimHandle;
+	GetSOClaimHandle(OwnerComp, SOClaimedHandleBlackboardKey, ClaimHandle);
+	if (!IsClaimedSmartObjectValid(OwnerComp, ClaimHandle))
+	{
+		return EBTNodeResult::Failed;
+	}
+
+	bool bHasResult = false;
+	FTransform TargetTransform;
+
+	FTransform EntranceTransform;
+	bHasResult = GetClaimedSlotEntranceTransform(OwnerComp, ClaimHandle, EntranceTransform);
+	if (bHasResult)
+	{
+		TargetTransform = EntranceTransform;
+	}
+	else
+	{
+		FTransform SlotTransform;
+		bHasResult = GetClaimedSlotTransform(OwnerComp, ClaimHandle, SlotTransform);
+		TargetTransform = SlotTransform;
+	}
+
+	if (bHasResult)
+	{
+		if (!ResultLocationKeyName.IsNone())
+			BlackboardComp->SetValueAsVector(ResultLocationKeyName, TargetTransform.GetLocation());
+		if (!ResultRotatorKeyName.IsNone())
+			BlackboardComp->SetValueAsRotator(ResultRotatorKeyName, TargetTransform.GetRotation().Rotator());
+	}
+
+	return bHasResult ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;
+}
+
+bool UBTTask_GetClaimedSmartObjectSlotTransform::GetClaimedSlotTransform(const UBehaviorTreeComponent& OwnerComp, const FSmartObjectClaimHandle& ClaimHandle, FTransform& OutSlotTransform)
+{
+	bool bHasResult = false;
+
+	USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(OwnerComp.GetWorld());
+	if (SmartObjectSubsystem != nullptr)
+	{
+		const TOptional<FTransform> GoalTransform = SmartObjectSubsystem->GetSlotTransform(ClaimHandle);
+
+		if (GoalTransform.IsSet())
+		{
+			OutSlotTransform = GoalTransform.GetValue();
+			bHasResult = true;
+		}
+	}
+
+	return bHasResult;
+}
+
+bool UBTTask_GetClaimedSmartObjectSlotTransform::GetClaimedSlotEntranceTransform(const UBehaviorTreeComponent& OwnerComp, const FSmartObjectClaimHandle& ClaimHandle, FTransform& OutEntranceTransform)
+{
+	bool bHasResult = false;
+
+	const USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(OwnerComp.GetWorld());
+	if (SmartObjectSubsystem != nullptr)
+	{
+		FSmartObjectSlotEntranceLocationRequest& Request = EntranceRequest;
+		Request.UserActor = Cast<AAIController>(OwnerComp.GetOwner())->GetPawn();
+		FSmartObjectSlotEntranceLocationResult Result;
+		if (SmartObjectSubsystem->FindEntranceLocationForSlot(ClaimHandle.SlotHandle, Request, Result))
+		{
+			OutEntranceTransform = FTransform(Result.Rotation, Result.Location);
+			bHasResult = true;
+		}
+	}
+
+	return bHasResult;
+}
+
+
+bool UBTTask_GetClaimedSmartObjectSlotTransform::IsClaimedSmartObjectValid(const UBehaviorTreeComponent& OwnerComp, const FSmartObjectClaimHandle& ClaimHandle) const
+{
+	if (!ClaimHandle.IsValid())
+		return false;
+
+	const USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(OwnerComp.GetWorld());
+	if (SmartObjectSubsystem != nullptr)
+	{
+		return SmartObjectSubsystem->IsClaimedSmartObjectValid(ClaimHandle);
+	}
+
+	return false;
+}
+
+FString UBTTask_GetClaimedSmartObjectSlotTransform::GetStaticDescription() const
+{
+	FString Result;
+	if (SOClaimedHandleBlackboardKey.SelectedKeyType != UBlackboardKeyType_SOClaimHandle::StaticClass())
+	{
+		Result += FString::Printf(TEXT("SOClaimedHandleBlackboardKey must be type of SOClaimHandle"));
+	}
+
+	if (ResultLocationKeyName.IsNone() && ResultRotatorKeyName.IsNone())
+	{
+		Result += FString::Printf(TEXT("ResultLocationKeyName or ResultRotatorKeyName can't be none"));
+	}
+
+	if (Result.Len() > 0)
+		return Result;
+
+	Result += FString(TEXT("Result in BBKey : "));
+	if (!ResultLocationKeyName.IsNone())
+		Result += FString::Printf(TEXT(" %s "), *ResultLocationKeyName.ToString());
+	if (!ResultRotatorKeyName.IsNone())
+		Result += FString::Printf(TEXT(" %s "), *ResultRotatorKeyName.ToString());
+
+    return Result;
+}
+
+bool UBTTask_GetClaimedSmartObjectSlotTransform::GetSOClaimHandle(const UBehaviorTreeComponent& OwnerComp, const FBlackboardKeySelector& ClaimHandleKey, FSmartObjectClaimHandle& OutClaimHandle)
+{
+	if (const UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent())
+	{
+		OutClaimHandle = BlackboardComp->GetValue<UBlackboardKeyType_SOClaimHandle>(ClaimHandleKey.SelectedKeyName);
+		return true;
+	}
+
+	return false;
+}
+```
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260526211734413.png)
 
 ## 参考文章
 
