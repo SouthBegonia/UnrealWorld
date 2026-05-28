@@ -2313,6 +2313,83 @@ void UBTTask_FindAndClaimSmartObject::OnQueryFinished(TSharedPtr<FEnvQueryResult
 
 一个Slot其持有 自身Transform信息（也就是我们最常见的Slot点位的信息），此外其也可 通过配置DefinitionData以添加 Entrance信息（Entrance可包含多个，主要分Entry/Exit类型），Entrance也同样有Transform信息。因此 可以添加一个工具方法：**获取Slot或Entrance的Transform信息**
 
+例如：根据 SlotHandle/ClaimHandle 获取 Slot或Entrance的 Transform信息的工具方法
+
+```c++
+// MySmartObjectBlueprintFunctionLibrary.h
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "SmartObjectSubsystem.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
+#include "MySmartObjectBlueprintFunctionLibrary.generated.h"
+
+UCLASS()
+class [PROJECTNAME]_API UMySmartObjectBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+    // 通过 SlotHandle 获取 SlotTransform信息
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SmartObject", meta=(WorldContext="WorldContextObject"))
+	static void GetSlotTransformWithSlotHandle(UObject* WorldContextObject, FTransform& OutSlotTransform, const FSmartObjectSlotHandle& SlotHandle);
+	// 通过 SlotHandle 获取 EntranceTransform信息
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SmartObject", meta=(WorldContext="WorldContextObject"))
+	static void GetSlotEntranceTransformWithSlotHandle(UObject* WorldContextObject, FTransform& OutEntranceTransform, const FSmartObjectSlotHandle& SlotHandle, FSmartObjectSlotEntranceLocationRequest EntranceRequest = FSmartObjectSlotEntranceLocationRequest());
+
+    // 通过 ClaimHandle 获取 SlotTransform信息
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SmartObject", meta=(WorldContext="WorldContextObject"))
+	static void GetSlotTransformWithClaimHandle(UObject* WorldContextObject, FTransform& OutSlotTransform, const FSmartObjectClaimHandle& ClaimHandle) { GetSlotTransformWithSlotHandle(WorldContextObject, OutSlotTransform, ClaimHandle.SlotHandle); }
+	// 通过 ClaimHandle 获取 EntranceTransform信息
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SmartObject", meta=(WorldContext="WorldContextObject"))
+	static void GetSlotEntranceTransformWithClaimHandle(UObject* WorldContextObject, FTransform& OutEntranceTransform, const FSmartObjectClaimHandle& ClaimHandle, FSmartObjectSlotEntranceLocationRequest EntranceRequest = FSmartObjectSlotEntranceLocationRequest()) { GetSlotEntranceTransformWithSlotHandle(WorldContextObject, OutEntranceTransform, ClaimHandle.SlotHandle, EntranceRequest); }
+};
+```
+
+```c++
+// MySmartObjectBlueprintFunctionLibrary.h
+
+#include "MySmartObjectBlueprintFunctionLibrary.h"
+#include "Logging/StructuredLog.h"
+
+void UMySmartObjectBlueprintFunctionLibrary::GetSlotTransformWithSlotHandle(UObject* WorldContextObject, FTransform& OutSlotTransform, const FSmartObjectSlotHandle& SlotHandle)
+{
+	USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(WorldContextObject->GetWorld());
+	if (SmartObjectSubsystem == nullptr)
+	{
+		UE_LOGFMT(LogTemp, Warning, "[{FUNC}] : SmartObjectSubsystem is invalid.", __FUNCTION__);
+		return;
+	}
+
+	const TOptional<FTransform> GoalTransform = SmartObjectSubsystem->GetSlotTransform(SlotHandle);
+	if (GoalTransform.IsSet())
+	{
+		OutSlotTransform = GoalTransform.GetValue();
+	}
+	else
+		UE_LOGFMT(LogTemp, Warning, "[{FUNC}] : Get SlotTransform failed.", __FUNCTION__);
+}
+
+void UMySmartObjectBlueprintFunctionLibrary::GetSlotEntranceTransformWithSlotHandle(UObject* WorldContextObject, FTransform& OutEntranceTransform, const FSmartObjectSlotHandle& SlotHandle,
+	FSmartObjectSlotEntranceLocationRequest EntranceRequest)
+{
+	USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(WorldContextObject->GetWorld());
+	if (SmartObjectSubsystem == nullptr)
+	{
+		UE_LOGFMT(LogTemp, Warning, "[{FUNC}] : SmartObjectSubsystem is invalid.", __FUNCTION__);
+		return;
+	}
+
+	FSmartObjectSlotEntranceLocationRequest& Request = EntranceRequest;
+	FSmartObjectSlotEntranceLocationResult Result;
+	if (SmartObjectSubsystem->FindEntranceLocationForSlot(SlotHandle, Request, Result))
+	{
+		OutEntranceTransform = FTransform(Result.Rotation, Result.Location);
+	}
+}
+```
+
 例如：**根据ClaimedHandle 获取SlotTransform或EntranceTransform的 行为树任务节点**
 
 ```c++
