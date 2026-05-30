@@ -2928,6 +2928,7 @@ bool UBTTask_MoveAndUseSmartObject::GetEntranceLocation(FVector& OutLocation, co
 	if (const USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(GetWorld()); SmartObjectSubsystem != nullptr)
 	{
 		FSmartObjectSlotEntranceLocationRequest& Request = InEntranceRequest;
+		Request.UserActor = AIOwner->GetPawn();
 		FSmartObjectSlotEntranceLocationResult Result;
 		if (SmartObjectSubsystem->FindEntranceLocationForSlot(InClaimHandle.SlotHandle, Request, Result))
 		{
