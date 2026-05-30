@@ -1926,6 +1926,8 @@ bool USmartObjectSubsystem::RemoveRuntimeInstanceFromSimulation(FSmartObjectRunt
    2. AI单位 通过智能对象子系统 查阅到附近有 智能对象
    3. 当 此智能对象有 空闲Slot，则宣称占用此Slot，后即可与此Slot进行交互，交互完成后才会释放Slot
 
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260530154545970.png)
+
 ## 基本用法
 
 基于 [官方示例](https://dev.epicgames.com/documentation/zh-cn/unreal-engine/smart-objects-in-unreal-engine---quick-start) 后，有以下调整：
