@@ -2668,6 +2668,7 @@ protected:
 
 	FSmartObjectClaimHandle ClaimedHandle;
 	FDelegateHandle OnBehaviorFinishedNotifyHandle;
+	FDelegateHandle OnReceiveSmartObjectEventDelegateHandle;
 
 	bool bBehaviorFinished;
 
@@ -2677,6 +2678,8 @@ protected:
 
 	void OnSmartObjectBehaviorFinished(UGameplayBehavior& Behavior, AActor& Avatar, const bool bInterrupted);
 	void OnSlotInvalidated(const FSmartObjectClaimHandle& ClaimHandle, ESmartObjectSlotState State);
+	void OnReceiveSmartObjectEvent( const FSmartObjectEventData& Event);
+
 
 	bool GetGoalLocation(EGoalLocationTypeForMoveAndUseSmartObjectTask InGoalLocationType, const FSmartObjectClaimHandle& InClaimHandle, FVector& OutGoalLocation);
 	bool GetSlotLocation(FVector& OutLocation, const FSmartObjectClaimHandle& InClaimHandle) const;
@@ -2736,6 +2739,11 @@ EBTNodeResult::Type UBTTask_MoveAndUseSmartObject::ExecuteTask(UBehaviorTreeComp
 
 	// Register SlotInvalidationEvent
 	SmartObjectSubsystem->RegisterSlotInvalidationCallback(ClaimedHandle, FOnSlotInvalidated::CreateUObject(this, &UBTTask_MoveAndUseSmartObject::OnSlotInvalidated));
+	// Register SmartObjectEvent
+	if (FOnSmartObjectEvent* SmartObjectDelegate = SmartObjectSubsystem->GetSlotEventDelegate(ClaimedHandle.SlotHandle))
+	{
+		OnReceiveSmartObjectEventDelegateHandle = SmartObjectDelegate->AddUObject(this, &UBTTask_MoveAndUseSmartObject::OnReceiveSmartObjectEvent);
+	}
 
 	// Start Moving
 	{
@@ -2762,10 +2770,18 @@ void UBTTask_MoveAndUseSmartObject::OnTaskFinished(UBehaviorTreeComponent& Owner
 {
 	if (TaskResult != EBTNodeResult::InProgress)
 	{
+		USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(AIOwner->GetWorld());
+		check(SmartObjectSubsystem);
+
+		if (OnReceiveSmartObjectEventDelegateHandle.IsValid())
+		{
+			if (FOnSmartObjectEvent* SmartObjectDelegate = SmartObjectSubsystem->GetSlotEventDelegate(ClaimedHandle.SlotHandle))
+				SmartObjectDelegate->Remove(OnReceiveSmartObjectEventDelegateHandle);
+			OnReceiveSmartObjectEventDelegateHandle.Reset();
+		}
+
 		if (ClaimedHandle.IsValid())
 		{
-			USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(AIOwner->GetWorld());
-			check(SmartObjectSubsystem);
 			SmartObjectSubsystem->MarkSlotAsFree(ClaimedHandle);
 			SmartObjectSubsystem->UnregisterSlotInvalidationCallback(ClaimedHandle);
 			ClaimedHandle.Invalidate();
@@ -2890,6 +2906,13 @@ void UBTTask_MoveAndUseSmartObject::OnSlotInvalidated(const FSmartObjectClaimHan
 	Abort();
 }
 
+void UBTTask_MoveAndUseSmartObject::OnReceiveSmartObjectEvent(const FSmartObjectEventData& Event)
+{
+	if (Event.Reason == ESmartObjectChangeReason::OnSlotDisabled || Event.Reason == ESmartObjectChangeReason::OnObjectDisabled)
+	{
+		Abort();
+	}
+}
 
 bool UBTTask_MoveAndUseSmartObject::GetGoalLocation(EGoalLocationTypeForMoveAndUseSmartObjectTask InGoalLocationType, const FSmartObjectClaimHandle& InClaimHandle, FVector& OutGoalLocation)
 {
