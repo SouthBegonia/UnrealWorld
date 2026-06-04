@@ -105,6 +105,7 @@
 			- [自定义 Gameplay Behavior](#自定义-gameplay-behavior)
 		- [智能对象定义（Smart Object Definition）](#智能对象定义smart-object-definition)
 			- [面板参数](#面板参数)
+			- [关于 Behavior Definition](#关于-behavior-definition)
 		- [智能对象组件（Smart Object Component）](#智能对象组件smart-object-component)
 		- [SmartObject与Slot](#smartobject与slot)
 			- [SmartObject](#smartobject)
@@ -1458,7 +1459,176 @@ public:
   - **Activity Tags**：Slot的 活动标签（对比规则参阅上文）
   - **Behavior Definitions**：Slot的 游戏行为配置 的列表（对比规则参阅上文）
 
+#### 关于 Behavior Definition
 
+以Slot页签上的 **Behavior Definitions** 为例，其源码如下：
+
+```c++
+/**
+ * Persistent and sharable definition of a smart object slot.
+ */
+USTRUCT(BlueprintType)
+struct SMARTOBJECTSMODULE_API FSmartObjectSlotDefinition
+{
+	// ...
+    
+	/**
+	 * All available definitions associated to this slot.
+	 * This allows multiple frameworks to provide their specific behavior definition to the slot.
+	 * Note that there should be only one definition of each type since the first one will be selected.
+	 */
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Slot", Instanced)
+	TArray<TObjectPtr<USmartObjectBehaviorDefinition>> BehaviorDefinitions;
+    
+    // ...
+}
+```
+
+而我们最常用的则是 `UGameplayBehaviorSmartObjectBehaviorDefinition : public USmartObjectBehaviorDefinition`，其包含关键的 `TObjectPtr<UGameplayBehaviorConfig> GameplayBehaviorConfig;`
+
+```c++
+/**
+ * SmartObject behavior definition for the GameplayBehavior framework
+ */
+UCLASS()
+class GAMEPLAYBEHAVIORSMARTOBJECTSMODULE_API UGameplayBehaviorSmartObjectBehaviorDefinition : public USmartObjectBehaviorDefinition
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditDefaultsOnly, Category = SmartObject, Instanced)
+	TObjectPtr<UGameplayBehaviorConfig> GameplayBehaviorConfig;
+};
+
+/**
+ * Abstract class that can be extended to bind a new type of behavior framework
+ * to the smart objects by defining the required definition.
+ */
+UCLASS(Abstract, NotBlueprintable, EditInlineNew, CollapseCategories, HideDropdown)
+class SMARTOBJECTSMODULE_API USmartObjectBehaviorDefinition : public UObject
+{
+	GENERATED_BODY()
+};
+```
+
+而 `GameplayBehaviorConfig` 内则包含我们最关心的 **游戏行为类** `TSubclassOf<UGameplayBehavior> BehaviorClass`
+
+```c++
+UCLASS(Blueprintable, BlueprintType, EditInlineNew, CollapseCategories)
+class GAMEPLAYBEHAVIORSMODULE_API UGameplayBehaviorConfig : public UObject
+{
+	GENERATED_BODY()
+public:
+	//UGameplayBehavior(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	/** Depending on the specific UGameplayBehavior class returns an instance or CDO of BehaviorClass. */
+	virtual UGameplayBehavior* GetBehavior(UWorld& World) const;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = GameplayBehavior)
+	TSubclassOf<UGameplayBehavior> BehaviorClass;
+};
+```
+
+至此形成了 **BehaviorClass->BehaviorConfig->BehaviorDefinition 三层关联**。结合开头 `BehaviorDefinitions` 的注释，及具体业务代码，有2项注意事项：
+
+`BehaviorDefinitions`内的元素，建议均为 **非重复的Definition类型**。因为最终仅会选择BehaviorDefinitions数组内的首个匹配类型的元素：
+
+```c++
+// Step1: 使用Slot
+const USmartObjectBehaviorDefinition* USmartObjectSubsystem::MarkSlotAsOccupied(
+	FSmartObjectRuntime& SmartObjectRuntime,
+	const FSmartObjectClaimHandle& ClaimHandle,
+	const TSubclassOf<USmartObjectBehaviorDefinition> DefinitionClass
+	)
+{
+    // ...
+	
+    // Step2：获取 BehaviorDefinition
+	const USmartObjectBehaviorDefinition* BehaviorDefinition = GetBehaviorDefinition(SmartObjectRuntime, ClaimHandle.SlotHandle, DefinitionClass);
+    
+    // ...
+
+	return nullptr;
+}
+
+// Step2：获取 BehaviorDefinition
+const USmartObjectBehaviorDefinition* USmartObjectSubsystem::GetBehaviorDefinition(
+	const FSmartObjectRuntime& SmartObjectRuntime,
+	const FSmartObjectSlotHandle SlotHandle,
+	TSubclassOf<USmartObjectBehaviorDefinition> DefinitionClass
+	)
+{
+	const USmartObjectDefinition& Definition = SmartObjectRuntime.GetDefinition();
+	return Definition.GetBehaviorDefinition(SlotHandle.GetSlotIndex(), DefinitionClass);
+}
+
+// Step2：获取 BehaviorDefinition
+const USmartObjectBehaviorDefinition* USmartObjectDefinition::GetBehaviorDefinition(const int32 SlotIndex, const TSubclassOf<USmartObjectBehaviorDefinition>& DefinitionClass) const
+{
+	const USmartObjectBehaviorDefinition* Definition = nullptr;
+	if (Slots.IsValidIndex(SlotIndex))
+	{
+		Definition = GetBehaviorDefinitionByType(Slots[SlotIndex].BehaviorDefinitions, DefinitionClass);
+	}
+
+	if (Definition == nullptr)
+	{
+		Definition = GetBehaviorDefinitionByType(DefaultBehaviorDefinitions, DefinitionClass);
+	}
+
+	return Definition;
+}
+
+// Step2：获取 BehaviorDefinition
+const USmartObjectBehaviorDefinition* USmartObjectDefinition::GetBehaviorDefinitionByType(const TArray<USmartObjectBehaviorDefinition*>& BehaviorDefinitions, const TSubclassOf<USmartObjectBehaviorDefinition>& DefinitionClass)
+{
+    // Step3：获取 BehaviorDefinition，要求是BehaviorDefinitions内的首个 DefinitionClass派生类的元素
+	USmartObjectBehaviorDefinition* const* BehaviorDefinition = BehaviorDefinitions.FindByPredicate([&DefinitionClass](const USmartObjectBehaviorDefinition* SlotBehaviorDefinition)
+		{
+			return SlotBehaviorDefinition != nullptr && SlotBehaviorDefinition->GetClass()->IsChildOf(*DefinitionClass);
+		});
+
+	return BehaviorDefinition != nullptr ? *BehaviorDefinition : nullptr;
+}
+```
+
+ 其次`BehaviorDefinitions`内的元素，建议均为 **UGameplayBehaviorSmartObjectBehaviorDefinition或其派生类型**。且业务层也尽量使用`UGameplayBehaviorSmartObjectBehaviorDefinition : public USmartObjectBehaviorDefinition` 的派生类、而不是使用 `USmartObjectBehaviorDefinition` 的派生类。这是现有部分代码的原因，例如通过行为树使用Slot时，逻辑流程中 硬性指定了BehaviorConfig类型：
+
+```c++
+bool UAITask_UseGameplayBehaviorSmartObject::StartInteraction()
+{
+	check(OwnerController);
+	UWorld* World = OwnerController->GetWorld();
+	USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(World);
+	if (!ensure(SmartObjectSubsystem))
+	{
+		return false;
+	}
+
+    // 使用Slot，并选用UGameplayBehaviorSmartObjectBehaviorDefinition或其派生类型的 Definition
+	const UGameplayBehaviorSmartObjectBehaviorDefinition* SmartObjectGameplayBehaviorDefinition = SmartObjectSubsystem->MarkSlotAsOccupied<UGameplayBehaviorSmartObjectBehaviorDefinition>(ClaimedHandle);
+    // 使用 UGameplayBehaviorSmartObjectBehaviorDefinition->GameplayBehaviorConfig 作为即将触发的Behavior
+	const UGameplayBehaviorConfig* GameplayBehaviorConfig = SmartObjectGameplayBehaviorDefinition != nullptr ? SmartObjectGameplayBehaviorDefinition->GameplayBehaviorConfig : nullptr;
+	GameplayBehavior = GameplayBehaviorConfig != nullptr ? GameplayBehaviorConfig->GetBehavior(*World) : nullptr;
+	if (GameplayBehavior == nullptr)
+	{
+		return false;
+	}
+
+	const USmartObjectComponent* SmartObjectComponent = SmartObjectSubsystem->GetSmartObjectComponent(ClaimedHandle);
+	AActor& InteractorActor = *OwnerController->GetPawn();
+	AActor* InteracteeActor = SmartObjectComponent ? SmartObjectComponent->GetOwner() : nullptr;
+	const bool bBehaviorActive = UGameplayBehaviorSubsystem::TriggerBehavior(*GameplayBehavior, InteractorActor, GameplayBehaviorConfig, InteracteeActor);
+	// Behavior can be successfully triggered AND ended synchronously. We are only interested to register callback when still running
+	if (bBehaviorActive)
+	{
+		OnBehaviorFinishedNotifyHandle = GameplayBehavior->GetOnBehaviorFinishedDelegate().AddUObject(this, &UAITask_UseGameplayBehaviorSmartObject::OnSmartObjectBehaviorFinished);
+	}
+
+	return bBehaviorActive;
+}
+```
 
 ### 智能对象组件（Smart Object Component）
 
