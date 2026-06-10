@@ -2482,6 +2482,230 @@ void UBTTask_FindAndClaimSmartObject::OnQueryFinished(TSharedPtr<FEnvQueryResult
 
 ![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260525225401254.png)
 
+例如：**寻找并申明SmartObject的 状态树任务**
+
+```c++
+// STTask_FindSmartObject.h
+#pragma once
+
+#include "BTTask_GetClaimedSmartObjectSlotTransform.h"
+#include "StateTreePropertyRef.h"
+#include "StateTreeTaskBase.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
+#include "STTask_FindSmartObject.generated.h"
+
+USTRUCT()
+struct FStateTreeFindSmartObjectInstanceData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = Output)
+	FSmartObjectClaimHandle SOClaimHandle;
+
+
+	// The query will be run with this actor has the owner object.
+	UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<AActor> QueryOwner = nullptr;
+
+	// The query template to run
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	TObjectPtr<UEnvQuery> QueryTemplate;
+
+	// Query config associated with the query template.
+	UPROPERTY(EditAnywhere, EditFixedSize, Category = Parameter)
+	TArray<FAIDynamicParam> QueryConfig;
+
+	/** determines which item will be stored (All = only first matching) */
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	TEnumAsByte<EEnvQueryRunMode::Type> RunMode = EEnvQueryRunMode::SingleResult;
+
+
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	FGameplayTagQuery ActivityRequirements;
+
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	ESmartObjectClaimPriority ClaimPriority = ESmartObjectClaimPriority::Normal;
+
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	FEQSParametrizedQueryExecutionRequest EQSRequest;
+
+	/** Used for smart object querying if EQSRequest is not configured */
+	UPROPERTY(EditAnywhere, Category = Parameter, meta=(DisplayName="Fallback Radius"))
+	float Radius;
+
+
+	TSharedPtr<FEnvQueryResult> QueryResult = nullptr;
+
+	int32 RequestId = INDEX_NONE;
+};
+
+
+USTRUCT(meta = (DisplayName = "Find SmartObject", Category = "AI|SmartObject"))
+struct FSTTask_FindSmartObject : public FStateTreeTaskCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FStateTreeFindSmartObjectInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override { return FInstanceDataType::StaticStruct(); }
+
+	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+	virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
+
+#if WITH_EDITOR
+	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = Text) const override;
+	virtual FName GetIconName() const override
+	{
+		return FName("StateTreeEditorStyle|Node.Find");
+	}
+	virtual FColor GetIconColor() const override
+	{
+		return UE::StateTree::Colors::Grey;
+	}
+#endif // WITH_EDITOR
+};
+```
+
+```c++
+// STTask_FindSmartObject.cpp
+
+#include "STTask_FindSmartObject.h"
+
+#include "EnvQueryItemType_SmartObject.h"
+#include "GameplayBehaviorSmartObjectBehaviorDefinition.h"
+#include "GameplayTagAssetInterface.h"
+#include "EnvironmentQuery/EnvQueryManager.h"
+#include "Logging/StructuredLog.h"
+
+#define LOCTEXT_NAMESPACE "GameplayStateTree"
+
+EStateTreeRunStatus FSTTask_FindSmartObject::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	EStateTreeRunStatus NodeResult = EStateTreeRunStatus::Failed;
+
+
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+	check(InstanceData.QueryOwner)
+
+	USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(Context.GetWorld());
+	if (SmartObjectSubsystem == nullptr)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	if (InstanceData.QueryTemplate)
+	{
+		FEnvQueryRequest Request(InstanceData.QueryTemplate, InstanceData.QueryOwner);
+
+		for (FAIDynamicParam& DynamicParam : InstanceData.QueryConfig)
+		{
+			Request.SetDynamicParam(DynamicParam, nullptr);
+		}
+
+		InstanceData.RequestId = Request.Execute(InstanceData.RunMode,
+	FQueryFinishedSignature::CreateLambda([InstanceDataRef = Context.GetInstanceDataStructRef(*this)](TSharedPtr<FEnvQueryResult> QueryResult) mutable
+		{
+			if (FInstanceDataType* InstanceData = InstanceDataRef.GetPtr())
+			{
+				InstanceData->QueryResult = QueryResult;
+				InstanceData->RequestId = INDEX_NONE;
+			}
+		}));
+
+		if (InstanceData.RequestId != INDEX_NONE)
+			NodeResult = EStateTreeRunStatus::Running;
+	}else
+	{
+		AActor& Avatar = *InstanceData.QueryOwner;
+		float Radius = InstanceData.Radius;
+		const FVector UserLocation = Avatar.GetActorLocation();
+
+		// Create filter
+		FSmartObjectRequestFilter Filter;
+		Filter.ActivityRequirements = InstanceData.ActivityRequirements;
+		Filter.BehaviorDefinitionClasses = { UGameplayBehaviorSmartObjectBehaviorDefinition::StaticClass() };
+		const IGameplayTagAssetInterface* TagsSource = Cast<const IGameplayTagAssetInterface>(&Avatar);
+		if (TagsSource != nullptr)
+		{
+			TagsSource->GetOwnedGameplayTags(Filter.UserTags);
+		}
+
+		// Create request
+		FSmartObjectRequest Request(FBox(UserLocation, UserLocation).ExpandBy(FVector(Radius), FVector(Radius)), Filter);
+		TArray<FSmartObjectRequestResult> Results;
+		const FSmartObjectActorUserData ActorUserData(&Avatar);
+		const FConstStructView ActorUserDataView(FConstStructView::Make(ActorUserData));
+
+		if (SmartObjectSubsystem->FindSmartObjects(Request, Results, ActorUserDataView))
+		{
+			for (const FSmartObjectRequestResult& Result : Results)
+			{
+				FSmartObjectClaimHandle ClaimHandle = SmartObjectSubsystem->MarkSlotAsClaimed(Result.SlotHandle, InstanceData.ClaimPriority, ActorUserDataView);
+				if (ClaimHandle.IsValid())
+				{
+					InstanceData.SOClaimHandle = ClaimHandle;
+					NodeResult = EStateTreeRunStatus::Succeeded;
+					break;
+				}
+			}
+		}
+	}
+
+	return NodeResult;
+}
+
+EStateTreeRunStatus FSTTask_FindSmartObject::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+	if (InstanceData.QueryResult)
+	{
+		if (InstanceData.QueryResult->IsSuccessful() && InstanceData.QueryResult->Items.Num() >= 1)
+		{
+			if (InstanceData.QueryResult->ItemType->IsChildOf(UEnvQueryItemType_SmartObject::StaticClass()) == false)
+			{
+				UE_LOGFMT(LogTemp, Error, "[{FUNC}] : STTask_FindSmartObject EQS query did not generate EnvQueryItemType_SmartObject items", __FUNCTION__);
+			}
+			else if (USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(Context.GetWorld()))
+			{
+				const FSmartObjectActorUserData ActorUserData(Cast<AActor>(InstanceData.QueryOwner));
+				const FConstStructView ActorUserDataView(FConstStructView::Make(ActorUserData));
+
+				// we could use QueryResult.GetItemAsTypeChecked, but the below implementation is more efficient
+				for (int i = 0; i < InstanceData.QueryResult->Items.Num(); ++i)
+				{
+					const FSmartObjectSlotEQSItem& Item = UEnvQueryItemType_SmartObject::GetValue(InstanceData.QueryResult->GetItemRawMemory(i));
+					const FSmartObjectClaimHandle ClaimHandle = SmartObjectSubsystem->MarkSlotAsClaimed(Item.SlotHandle, InstanceData.ClaimPriority, ActorUserDataView);
+					if (ClaimHandle.IsValid())
+					{
+						InstanceData.SOClaimHandle = ClaimHandle;
+
+						return EStateTreeRunStatus::Succeeded;
+					}
+				}
+			}
+		}
+		else
+		{
+			return EStateTreeRunStatus::Failed;
+		}
+	}
+
+	return EStateTreeRunStatus::Running;
+}
+
+#if WITH_EDITOR
+
+FText FSTTask_FindSmartObject::GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting) const
+{
+	return FText(LOCTEXT("FindSmartObject", "Find SmartObject"));
+}
+#endif // WITH_EDITOR
+
+#undef LOCTEXT_NAMESPACE
+```
+
+
+
 ### 获取Slot或Entrance的Transform信息
 
 一个Slot其持有 自身Transform信息（也就是我们最常见的Slot点位的信息），此外其也可 通过配置DefinitionData以添加 Entrance信息（Entrance可包含多个，主要分Entry/Exit类型），Entrance也同样有Transform信息。因此 可以添加一个工具方法：**获取Slot或Entrance的Transform信息**
