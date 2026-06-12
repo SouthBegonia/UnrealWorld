@@ -2156,6 +2156,8 @@ FSmartObjectClaimHandle USmartObjectBlueprintFunctionLibrary::MarkSmartObjectSlo
 
 例如：**寻找并申明SmartObject的 行为树任务节点**
 
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260525225401254.png)
+
 ```c++
 // BTTask_FindAndClaimSmartObject.h
 
@@ -2480,9 +2482,9 @@ void UBTTask_FindAndClaimSmartObject::OnQueryFinished(TSharedPtr<FEnvQueryResult
 }
 ```
 
-![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260525225401254.png)
-
 例如：**寻找并申明SmartObject的 状态树任务**
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260612172709554.png)
 
 ```c++
 // STTask_FindSmartObject.h
@@ -2499,13 +2501,35 @@ struct FStateTreeFindSmartObjectInstanceData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category = Output)
+	#pragma region Output
+
+	//UPROPERTY(EditAnywhere, Category = Output)
 	FSmartObjectClaimHandle SOClaimHandle;
 
+	UPROPERTY(EditAnywhere, Category = Out, meta = (RefType = "/Script/SmartObjectsModule.SmartObjectClaimHandle"))
+	FStateTreePropertyRef SOClaimHandleResult;
+
+	#pragma endregion
+
+	#pragma region Input/Context
 
 	// The query will be run with this actor has the owner object.
 	UPROPERTY(EditAnywhere, Category = Context)
 	TObjectPtr<AActor> QueryOwner = nullptr;
+
+	UPROPERTY()//UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<AAIController> AIController = nullptr;
+
+	#pragma endregion
+
+	#pragma region Parameter
+
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	FGameplayTagQuery ActivityRequirements;
+
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	ESmartObjectClaimPriority ClaimPriority = ESmartObjectClaimPriority::Normal;
+
 
 	// The query template to run
 	UPROPERTY(EditAnywhere, Category = Parameter)
@@ -2520,18 +2544,11 @@ struct FStateTreeFindSmartObjectInstanceData
 	TEnumAsByte<EEnvQueryRunMode::Type> RunMode = EEnvQueryRunMode::SingleResult;
 
 
-	UPROPERTY(EditAnywhere, Category = Parameter)
-	FGameplayTagQuery ActivityRequirements;
-
-	UPROPERTY(EditAnywhere, Category = Parameter)
-	ESmartObjectClaimPriority ClaimPriority = ESmartObjectClaimPriority::Normal;
-
-	UPROPERTY(EditAnywhere, Category = Parameter)
-	FEQSParametrizedQueryExecutionRequest EQSRequest;
-
-	/** Used for smart object querying if EQSRequest is not configured */
-	UPROPERTY(EditAnywhere, Category = Parameter, meta=(DisplayName="Fallback Radius"))
+	/** Used for smart object querying if QueryTemplate is not configured */
+	UPROPERTY(EditAnywhere, Category = Parameter , meta=(DisplayName="Fallback Radius"))
 	float Radius;
+
+	#pragma endregion
 
 
 	TSharedPtr<FEnvQueryResult> QueryResult = nullptr;
@@ -2570,12 +2587,12 @@ struct FSTTask_FindSmartObject : public FStateTreeTaskCommonBase
 // STTask_FindSmartObject.cpp
 
 #include "STTask_FindSmartObject.h"
-
+#include "BlackboardKeyType_SOClaimHandle.h"
 #include "EnvQueryItemType_SmartObject.h"
 #include "GameplayBehaviorSmartObjectBehaviorDefinition.h"
 #include "GameplayTagAssetInterface.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
-#include "Logging/StructuredLog.h"
 
 #define LOCTEXT_NAMESPACE "GameplayStateTree"
 
@@ -2644,6 +2661,11 @@ EStateTreeRunStatus FSTTask_FindSmartObject::EnterState(FStateTreeExecutionConte
 				if (ClaimHandle.IsValid())
 				{
 					InstanceData.SOClaimHandle = ClaimHandle;
+
+					auto ClaimHandlePtr = InstanceData.SOClaimHandleResult.GetMutablePtr<FSmartObjectClaimHandle>(Context);
+					if (ClaimHandlePtr)
+						*ClaimHandlePtr = ClaimHandle;
+
 					NodeResult = EStateTreeRunStatus::Succeeded;
 					break;
 				}
@@ -2656,6 +2678,8 @@ EStateTreeRunStatus FSTTask_FindSmartObject::EnterState(FStateTreeExecutionConte
 
 EStateTreeRunStatus FSTTask_FindSmartObject::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
 {
+	EStateTreeRunStatus RunStatus = EStateTreeRunStatus::Running;
+
 	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
 	if (InstanceData.QueryResult)
 	{
@@ -2663,7 +2687,8 @@ EStateTreeRunStatus FSTTask_FindSmartObject::Tick(FStateTreeExecutionContext& Co
 		{
 			if (InstanceData.QueryResult->ItemType->IsChildOf(UEnvQueryItemType_SmartObject::StaticClass()) == false)
 			{
-				UE_LOGFMT(LogTemp, Error, "[{FUNC}] : STTask_FindSmartObject EQS query did not generate EnvQueryItemType_SmartObject items", __FUNCTION__);
+				UE_VLOG(Context.GetOwner(), LogStateTree, Error, TEXT("FSTTask_FindSmartObject failed since EQS query did not generate EnvQueryItemType_SmartObject items."));
+				RunStatus = EStateTreeRunStatus::Failed;
 			}
 			else if (USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(Context.GetWorld()))
 			{
@@ -2679,18 +2704,27 @@ EStateTreeRunStatus FSTTask_FindSmartObject::Tick(FStateTreeExecutionContext& Co
 					{
 						InstanceData.SOClaimHandle = ClaimHandle;
 
-						return EStateTreeRunStatus::Succeeded;
+						auto ClaimHandlePtr = InstanceData.SOClaimHandleResult.GetMutablePtr<FSmartObjectClaimHandle>(Context);
+						if (ClaimHandlePtr)
+							*ClaimHandlePtr = ClaimHandle;
+
+						// TODO : set ClaimHandle as BlackboardValue
+						/*if (UBlackboardComponent* BB = InstanceData.AIController->GetBlackboardComponent())
+							BB->SetValue<UBlackboardKeyType_SOClaimHandle>(FName(TEXT("SOClaimHandle")), ClaimHandle);*/
+
+						RunStatus = EStateTreeRunStatus::Succeeded;
 					}
 				}
 			}
 		}
 		else
 		{
-			return EStateTreeRunStatus::Failed;
+			// Query failed or QueryResult is empty
+			RunStatus = EStateTreeRunStatus::Failed;
 		}
 	}
 
-	return EStateTreeRunStatus::Running;
+	return RunStatus;
 }
 
 #if WITH_EDITOR
@@ -2703,8 +2737,6 @@ FText FSTTask_FindSmartObject::GetDescription(const FGuid& ID, FStateTreeDataVie
 
 #undef LOCTEXT_NAMESPACE
 ```
-
-
 
 ### 获取Slot或Entrance的Transform信息
 
@@ -2788,6 +2820,8 @@ void UMySmartObjectBlueprintFunctionLibrary::GetSlotEntranceTransformWithSlotHan
 ```
 
 例如：**根据ClaimedHandle 获取SlotTransform或EntranceTransform的 行为树任务节点**
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260526211734413.png)
 
 ```c++
 // BTTask_GetClaimedSmartObjectSlotTransform.h
@@ -2984,13 +3018,195 @@ bool UBTTask_GetClaimedSmartObjectSlotTransform::GetSOClaimHandle(const UBehavio
 }
 ```
 
-![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260526211734413.png)
+例如：**根据ClaimedHandle 获取SlotTransform或EntranceTransform的 状态树任务**
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260612173707036.png)
+
+```c++
+// STTask_GetSOClaimedSlotTransform.h
+#pragma once
+
+#include "BTTask_GetClaimedSmartObjectSlotTransform.h"
+#include "StateTreePropertyRef.h"
+#include "StateTreeTaskBase.h"
+#include "STTask_GetSOClaimedSlotTransform.generated.h"
+
+UENUM(BlueprintType, DisplayName="GoalLocationType")
+enum class EGoalLocationTypeForGetSOClaimedSlotTransformTask : uint8
+{
+	EntranceOrSlot,
+	OnlyEntrance,
+	OnlySlot,
+};
+
+USTRUCT()
+struct FStateTreeGetSOClaimedSlotTransformInstanceData
+{
+	GENERATED_BODY()
+
+	#pragma region Output
+
+	UPROPERTY(EditAnywhere, Category = Out, meta = (RefType = "/Script/CoreUObject.Transform"))
+	FStateTreePropertyRef GoalTransform;
+
+	#pragma endregion
+
+	#pragma region Input/Context
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	FSmartObjectClaimHandle SOClaimHandle;
+
+	UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<AActor> QueryOwner = nullptr;
+
+	#pragma endregion
+
+	#pragma region Parameter
+
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	FSmartObjectSlotEntranceLocationRequest EntranceRequest;
+
+	UPROPERTY(EditAnywhere, Category = Parameter, DisplayName="Types of GoalTransform")
+	EGoalLocationTypeForGetSOClaimedSlotTransformTask GoalLocationType = EGoalLocationTypeForGetSOClaimedSlotTransformTask::EntranceOrSlot;
+
+	#pragma endregion
+};
+
+
+USTRUCT(meta = (DisplayName = "Get Slot Transform", Category = "AI|SmartObject"))
+struct FSTTask_GetSOClaimedSlotTransform : public FStateTreeTaskCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FStateTreeGetSOClaimedSlotTransformInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override { return FInstanceDataType::StaticStruct(); }
+
+	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+
+	bool GetGoalLocation(FTransform& OutGoalTransform, FStateTreeExecutionContext& Context) const;
+	bool GetSlotLocation(FTransform& OutTransform, FStateTreeExecutionContext& Context) const;
+	bool GetEntranceLocation(FTransform& OutTransform, FStateTreeExecutionContext& Context, AActor* UserActor) const;
+
+
+#if WITH_EDITOR
+	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = Text) const override;
+	virtual FName GetIconName() const override
+	{
+		return FName("StateTreeEditorStyle|Node.Task");
+	}
+	virtual FColor GetIconColor() const override
+	{
+		return UE::StateTree::Colors::Grey;
+	}
+#endif // WITH_EDITOR
+};
+```
+
+```c++
+// STTask_GetSOClaimedSlotTransform.cpp
+
+#include "STTask_GetSOClaimedSlotTransform.h"
+#include "StateTreeExecutionContext.h"
+
+#define LOCTEXT_NAMESPACE "GameplayStateTree"
+
+EStateTreeRunStatus FSTTask_GetSOClaimedSlotTransform::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+
+	check(InstanceData.QueryOwner)
+
+	FTransform GoalTransform;
+	if (GetGoalLocation(GoalTransform, Context))
+	{
+		auto GoalTransformPtr = InstanceData.GoalTransform.GetMutablePtr<FTransform>(Context);
+		if (GoalTransformPtr)
+		{
+			*GoalTransformPtr = GoalTransform;
+			return EStateTreeRunStatus::Running;
+		}
+	}
+
+	return EStateTreeRunStatus::Failed;
+}
+
+bool FSTTask_GetSOClaimedSlotTransform::GetGoalLocation(FTransform& OutGoalTransform, FStateTreeExecutionContext& Context) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+
+	if (InstanceData.GoalLocationType == EGoalLocationTypeForGetSOClaimedSlotTransformTask::EntranceOrSlot)
+	{
+		return GetEntranceLocation(OutGoalTransform, Context, InstanceData.QueryOwner)
+			|| GetSlotLocation(OutGoalTransform, Context);
+	}
+	if (InstanceData.GoalLocationType == EGoalLocationTypeForGetSOClaimedSlotTransformTask::OnlyEntrance)
+	{
+		return GetEntranceLocation(OutGoalTransform, Context, InstanceData.QueryOwner);
+	}
+	if (InstanceData.GoalLocationType == EGoalLocationTypeForGetSOClaimedSlotTransformTask::OnlySlot)
+	{
+		return GetSlotLocation(OutGoalTransform, Context);
+	}
+
+	return false;
+}
+
+bool FSTTask_GetSOClaimedSlotTransform::GetSlotLocation(FTransform& OutTransform, FStateTreeExecutionContext& Context) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+
+	if (const USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(Context.GetWorld()); SmartObjectSubsystem != nullptr)
+	{
+		const TOptional<FTransform> GoalTransform = SmartObjectSubsystem->GetSlotTransform(InstanceData.SOClaimHandle);
+		if (GoalTransform.IsSet())
+		{
+			OutTransform = GoalTransform.GetValue();
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool FSTTask_GetSOClaimedSlotTransform::GetEntranceLocation(FTransform& OutTransform, FStateTreeExecutionContext& Context, AActor* UserActor) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+
+	if (const USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(Context.GetWorld()); SmartObjectSubsystem != nullptr)
+	{
+		FSmartObjectSlotEntranceLocationRequest& Request = InstanceData.EntranceRequest;
+		Request.UserActor = UserActor;
+		FSmartObjectSlotEntranceLocationResult Result;
+		if (SmartObjectSubsystem->FindEntranceLocationForSlot(InstanceData.SOClaimHandle.SlotHandle, Request, Result))
+		{
+			OutTransform = FTransform(Result.Rotation, Result.Location);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+#if WITH_EDITOR
+
+FText FSTTask_GetSOClaimedSlotTransform::GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting) const
+{
+	return FText(LOCTEXT("GetSlotTransform", "Get Slot Transform"));
+}
+#endif // WITH_EDITOR
+
+#undef LOCTEXT_NAMESPACE
+
+```
 
 ### 移动至并使用SO
 
 在申明到SO后，也就持有一个 有效的SOClaimHandle（`FSmartObjectClaimHandle`），而在**使用SO之前，通常需要移动到Slot附近**（Slot位置或Entrance位置）才执行 SO使用流程（尽管也是可以将移动流程 放到GameplayBehavior内，但其内对外部信息知之甚少、难以对诸如行为树Task进行流程控制。且 **若是移动过程被打断 也应当同时打断SO使用流程**，所以 **可将移动流程+SO使用流程 合并为一个流程节点**
 
 例如：**根据ClaimedHandle 移动到目标Slot/Entrance后进行使用的 行为树任务节点**
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260529172529459.png)
 
 ```c++
 // BTTask_MoveAndUseSmartObject.h
@@ -3360,7 +3576,398 @@ bool UBTTask_MoveAndUseSmartObject::GetEntranceLocation(FVector& OutLocation, co
 }
 ```
 
-![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260529172529459.png)
+例如：**根据ClaimedHandle 移动到目标Slot/Entrance后进行使用的 状态树任务**
+
+![](https://southbegonia.oss-cn-chengdu.aliyuncs.com/Pic/20260612173930237.png)
+
+```c++
+// STTask_MoveAndUseSmartObject.h
+#pragma once
+
+#include "AISystem.h"
+#include "NavFilters/NavigationQueryFilter.h"
+#include "StateTreeTaskBase.h"
+#include "SmartObjectSubsystem.h"
+#include "STTask_MoveAndUseSmartObject.generated.h"
+
+class AActor;
+class AAIController;
+class IGameplayTaskOwnerInterface;
+class UAITask_MoveTo;
+class UGameplayBehavior;
+struct FAIMoveRequest;
+
+USTRUCT()
+struct FStateTreeMoveAndUseSmartObjectInstanceData
+{
+	GENERATED_BODY()
+
+	#pragma region Input/Context
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	FSmartObjectClaimHandle SOClaimHandle;
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	FTransform SOGoalTransform;
+
+	UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<AAIController> AIController = nullptr;
+
+	#pragma endregion
+
+
+	#pragma region Parameter
+
+	/** fixed distance added to threshold between AI and goal location in destination reach test */
+	UPROPERTY(EditAnywhere, Category = Parameter, meta=(ClampMin = "0.0", UIMin="0.0"))
+	float AcceptableRadius = 15.f; //GET_AI_CONFIG_VAR(AcceptanceRadius);
+
+	/** "None" will result in default filter being used */
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	TSubclassOf<UNavigationQueryFilter> FilterClass;
+
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	bool bAllowStrafe = GET_AI_CONFIG_VAR(bAllowStrafing);
+
+	/** if set, use incomplete path when goal can't be reached */
+	//UPROPERTY(EditAnywhere, Category = Parameter)
+	bool bAllowPartialPath = false;//GET_AI_CONFIG_VAR(bAcceptPartialPaths);
+
+	/** if set, the goal location will need to be navigable */
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	bool bRequireNavigableEndLocation = true;
+
+	/** if set, goal location will be projected on navigation data (navmesh) before using */
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	bool bProjectGoalLocation = true;
+
+	/** if set, radius of AI's capsule will be added to threshold between AI and goal location in destination reach test  */
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	bool bReachTestIncludesAgentRadius = GET_AI_CONFIG_VAR(bFinishMoveOnGoalOverlap);
+
+	/** if set, radius of goal's capsule will be added to threshold between AI and goal location in destination reach test  */
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	bool bReachTestIncludesGoalRadius = GET_AI_CONFIG_VAR(bFinishMoveOnGoalOverlap);
+
+	#pragma endregion
+
+
+	UPROPERTY()
+	TObjectPtr<UGameplayBehavior> GameplayBehavior = nullptr;
+
+	bool bAbortTag;
+	bool bBehaviorFinished;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UAITask_MoveTo> MoveToTask = nullptr;
+
+	UPROPERTY(Transient)
+	TScriptInterface<IGameplayTaskOwnerInterface> TaskOwner = nullptr;
+
+	FDelegateHandle OnBehaviorFinishedNotifyHandle;
+	FDelegateHandle OnReceiveSmartObjectEventDelegateHandle;
+};
+
+USTRUCT(meta = (DisplayName = "Move And Use SmartObject", Category = "AI|SmartObject"))
+struct FSTTask_MoveAndUseSmartObject : public FStateTreeTaskCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FStateTreeMoveAndUseSmartObjectInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override { return FInstanceDataType::StaticStruct(); }
+
+	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+	virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
+	virtual void ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+
+	virtual UAITask_MoveTo* PrepareMoveToTask(FStateTreeExecutionContext& Context, AAIController& Controller, UAITask_MoveTo* ExistingTask, FAIMoveRequest& MoveRequest) const;
+	virtual EStateTreeRunStatus PerformMoveTask(FStateTreeExecutionContext& Context, AAIController& Controller) const;
+
+	virtual bool StartInteraction(FStateTreeExecutionContext& Context) const;
+
+#if WITH_EDITOR
+	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = Text) const override;
+	virtual FName GetIconName() const override
+	{
+		return FName("StateTreeEditorStyle|Node.Movement");
+	}
+	virtual FColor GetIconColor() const override
+	{
+		return UE::StateTree::Colors::Grey;
+	}
+#endif // WITH_EDITOR
+};
+```
+
+```c++
+// STTask_MoveAndUseSmartObject.cpp
+
+#include "STTask_MoveAndUseSmartObject.h"
+#include "AIController.h"
+#include "GameplayBehavior.h"
+#include "GameplayBehaviorConfig.h"
+#include "GameplayBehaviorSmartObjectBehaviorDefinition.h"
+#include "GameplayBehaviorSubsystem.h"
+#include "MotionWarpingComponent.h"
+#include "SmartObjectComponent.h"
+#include "StateTreeExecutionContext.h"
+#include "NavFilters/NavigationQueryFilter.h"
+#include "Tasks/AITask_MoveTo.h"
+
+
+#define LOCTEXT_NAMESPACE "GameplayStateTree"
+
+EStateTreeRunStatus FSTTask_MoveAndUseSmartObject::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+	if (!InstanceData.AIController)
+	{
+		UE_VLOG(Context.GetOwner(), LogStateTree, Error, TEXT("FSTTask_MoveAndUseSmartObject failed since AIController is missing."));
+		return EStateTreeRunStatus::Failed;
+	}
+
+	USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(Context.GetWorld());
+	if (SmartObjectSubsystem == nullptr)
+	{
+		UE_VLOG(Context.GetOwner(), LogStateTree, Error, TEXT("FSTTask_MoveAndUseSmartObject failed since SmartObjectSubsystem is null."));
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// Check ClaimHandle
+	const FSmartObjectClaimHandle& SOClaimHandle = InstanceData.SOClaimHandle;
+	if (!SOClaimHandle.IsValid() || !SmartObjectSubsystem->IsClaimedSmartObjectValid(SOClaimHandle))
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// Register SlotInvalidationEvent
+	// TODO : switch to a MulticastDelegate instead of OnSlotInvalidatedDelegate(Delegate)
+	SmartObjectSubsystem->RegisterSlotInvalidationCallback(SOClaimHandle, FOnSlotInvalidated::CreateLambda([InstanceDataRef = Context.GetInstanceDataStructRef(*this)](const FSmartObjectClaimHandle& InnerSOClaimHandle, ESmartObjectSlotState InnerSlotState)
+	{
+		if (FInstanceDataType* InnerInstanceData = InstanceDataRef.GetPtr())
+			InnerInstanceData->bAbortTag = true;
+	}));
+	// Register SmartObjectEvent
+	if (FOnSmartObjectEvent* SmartObjectDelegate = SmartObjectSubsystem->GetSlotEventDelegate(SOClaimHandle.SlotHandle))
+	{
+		InstanceData.OnReceiveSmartObjectEventDelegateHandle = SmartObjectDelegate->AddLambda([InstanceDataRef = Context.GetInstanceDataStructRef(*this)](const FSmartObjectEventData& InnerEvent)
+		{
+			if (InnerEvent.Reason == ESmartObjectChangeReason::OnSlotDisabled || InnerEvent.Reason == ESmartObjectChangeReason::OnObjectDisabled)
+			{
+				if (FInstanceDataType* InnerInstanceData = InstanceDataRef.GetPtr())
+					InnerInstanceData->bAbortTag = true;
+			}
+		});
+	}
+
+
+	InstanceData.TaskOwner = TScriptInterface<IGameplayTaskOwnerInterface>(InstanceData.AIController->FindComponentByInterface(UGameplayTaskOwnerInterface::StaticClass()));
+	if (!InstanceData.TaskOwner)
+	{
+		InstanceData.TaskOwner = InstanceData.AIController;
+	}
+
+	return PerformMoveTask(Context, *InstanceData.AIController);;
+}
+
+EStateTreeRunStatus FSTTask_MoveAndUseSmartObject::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+
+	// Abort (slot、SO being invalid
+	if (InstanceData.bAbortTag)
+		return EStateTreeRunStatus::Failed;
+
+	// Success (Behavior done
+	if (InstanceData.bBehaviorFinished)
+		return EStateTreeRunStatus::Succeeded;
+
+	if (InstanceData.MoveToTask)
+	{
+		if (InstanceData.MoveToTask->IsFinished())
+		{
+			if (InstanceData.MoveToTask->WasMoveSuccessful())
+			{
+				InstanceData.MoveToTask = nullptr;
+
+				if (StartInteraction(Context) == false)
+					return EStateTreeRunStatus::Failed;
+			}
+			else
+				return EStateTreeRunStatus::Failed;	// AutoMove Failed
+		}
+		else
+			return EStateTreeRunStatus::Running;	// AutoMoving
+	}
+
+	// still processing (Interacting
+	return EStateTreeRunStatus::Running;
+}
+
+void FSTTask_MoveAndUseSmartObject::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+
+	// Stop AutoMoveTask
+	if (InstanceData.MoveToTask)
+	{
+		UAITask_MoveTo* Task = InstanceData.MoveToTask;
+		InstanceData.MoveToTask = nullptr;
+		Task->ExternalCancel();
+	}
+
+	if (InstanceData.GameplayBehavior != nullptr)
+	{
+		// Unregister BehaviorFinishedEvent
+		if (InstanceData.OnBehaviorFinishedNotifyHandle.IsValid())
+			InstanceData.GameplayBehavior->GetOnBehaviorFinishedDelegate().Remove(InstanceData.OnBehaviorFinishedNotifyHandle);
+
+		// Stop Behavior
+		if (!InstanceData.bBehaviorFinished)
+		{
+			check(InstanceData.AIController);
+			check(InstanceData.AIController->GetPawn());
+			InstanceData.GameplayBehavior->AbortBehavior(*InstanceData.AIController->GetPawn());
+		}
+	}
+
+	FSmartObjectClaimHandle& SOClaimHandle = InstanceData.SOClaimHandle;
+	USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(Context.GetWorld());
+	if (SmartObjectSubsystem && SOClaimHandle.IsValid())
+	{
+		// Unregister SmartObjectEvent
+		if (InstanceData.OnReceiveSmartObjectEventDelegateHandle.IsValid())
+		{
+			if (FOnSmartObjectEvent* SmartObjectDelegate = SmartObjectSubsystem->GetSlotEventDelegate(SOClaimHandle.SlotHandle))
+				SmartObjectDelegate->Remove(InstanceData.OnReceiveSmartObjectEventDelegateHandle);
+			InstanceData.OnReceiveSmartObjectEventDelegateHandle.Reset();
+		}
+
+		// Unregister SlotInvalidationEvent
+		SmartObjectSubsystem->UnregisterSlotInvalidationCallback(SOClaimHandle);
+
+		// Free Slot
+		SmartObjectSubsystem->MarkSlotAsFree(SOClaimHandle);
+		SOClaimHandle.Invalidate();
+	}
+}
+
+bool FSTTask_MoveAndUseSmartObject::StartInteraction(FStateTreeExecutionContext& Context) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+
+	USmartObjectSubsystem* SmartObjectSubsystem = USmartObjectSubsystem::GetCurrent(Context.GetWorld());
+	if (!SmartObjectSubsystem)
+	{
+		return false;
+	}
+
+	// Check ClaimHandle
+	const FSmartObjectClaimHandle& SOClaimHandle = InstanceData.SOClaimHandle;
+	if (!SOClaimHandle.IsValid() || !SmartObjectSubsystem->IsClaimedSmartObjectValid(SOClaimHandle))
+	{
+		UE_VLOG(Context.GetOwner(), LogStateTree, Error, TEXT("FSTTask_MoveAndUseSmartObject StartInteraction failed since SOClaimHandle or SO is invalid."));
+		return false;
+	}
+
+	const UGameplayBehaviorSmartObjectBehaviorDefinition* SmartObjectGameplayBehaviorDefinition = SmartObjectSubsystem->MarkSlotAsOccupied<UGameplayBehaviorSmartObjectBehaviorDefinition>(SOClaimHandle);
+	const UGameplayBehaviorConfig* GameplayBehaviorConfig = SmartObjectGameplayBehaviorDefinition != nullptr ? SmartObjectGameplayBehaviorDefinition->GameplayBehaviorConfig : nullptr;
+	InstanceData.GameplayBehavior = GameplayBehaviorConfig != nullptr ? GameplayBehaviorConfig->GetBehavior(*Context.GetWorld()) : nullptr;
+	if (InstanceData.GameplayBehavior == nullptr)
+	{
+		UE_VLOG(Context.GetOwner(), LogStateTree, Error, TEXT("FSTTask_MoveAndUseSmartObject StartInteraction failed GameplayBehavior is null."));
+		return false;
+	}
+
+	const USmartObjectComponent* SmartObjectComponent = SmartObjectSubsystem->GetSmartObjectComponent(SOClaimHandle);
+	AActor& InteractorActor = *InstanceData.AIController->GetPawn();
+	AActor* InteracteeActor = SmartObjectComponent ? SmartObjectComponent->GetOwner() : nullptr;
+	const bool bBehaviorActive = UGameplayBehaviorSubsystem::TriggerBehavior(*InstanceData.GameplayBehavior, InteractorActor, GameplayBehaviorConfig, InteracteeActor);
+	// Behavior can be successfully triggered AND ended synchronously. We are only interested to register callback when still running
+	if (bBehaviorActive)
+	{
+		InstanceData.OnBehaviorFinishedNotifyHandle = InstanceData.GameplayBehavior->GetOnBehaviorFinishedDelegate().AddLambda([InstanceDataRef = Context.GetInstanceDataStructRef(*this)](UGameplayBehavior& InnerBehavior, AActor& InnerAvatar, const bool bInterrupted)
+		{
+			if (FInstanceDataType* InnerInstanceData = InstanceDataRef.GetPtr())
+			{
+				InnerBehavior.GetOnBehaviorFinishedDelegate().Remove(InnerInstanceData->OnBehaviorFinishedNotifyHandle);
+				InnerInstanceData->bBehaviorFinished = true;
+			}
+		});
+	}
+	else
+		UE_VLOG(Context.GetOwner(), LogStateTree, Error, TEXT("FSTTask_MoveAndUseSmartObject StartInteraction failed since activate Behavior failed."));
+
+	return bBehaviorActive;
+}
+
+
+UAITask_MoveTo* FSTTask_MoveAndUseSmartObject::PrepareMoveToTask(FStateTreeExecutionContext& Context, AAIController& Controller, UAITask_MoveTo* ExistingTask, FAIMoveRequest& MoveRequest) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+	UAITask_MoveTo* MoveTask = ExistingTask ? ExistingTask : UAITask::NewAITask<UAITask_MoveTo>(Controller, *InstanceData.TaskOwner);
+	if (MoveTask)
+	{
+		MoveTask->SetUp(&Controller, MoveRequest);
+	}
+
+	return MoveTask;
+}
+
+EStateTreeRunStatus FSTTask_MoveAndUseSmartObject::PerformMoveTask(FStateTreeExecutionContext& Context, AAIController& Controller) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+	FAIMoveRequest MoveReq;
+	MoveReq.SetNavigationFilter(InstanceData.FilterClass ? InstanceData.FilterClass : Controller.GetDefaultNavigationFilterClass())
+		.SetAllowPartialPath(InstanceData.bAllowPartialPath)
+		.SetAcceptanceRadius(InstanceData.AcceptableRadius)
+		.SetCanStrafe(InstanceData.bAllowStrafe)
+		.SetReachTestIncludesAgentRadius(InstanceData.bReachTestIncludesAgentRadius)
+		.SetReachTestIncludesGoalRadius(InstanceData.bReachTestIncludesGoalRadius)
+		.SetRequireNavigableEndLocation(InstanceData.bRequireNavigableEndLocation)
+		.SetProjectGoalLocation(InstanceData.bProjectGoalLocation)
+		.SetUsePathfinding(true);
+
+	MoveReq.SetGoalLocation(InstanceData.SOGoalTransform.GetLocation());
+
+	if (MoveReq.IsValid())
+	{
+		InstanceData.MoveToTask = PrepareMoveToTask(Context, Controller, InstanceData.MoveToTask, MoveReq);
+		if (InstanceData.MoveToTask)
+		{
+			if (InstanceData.MoveToTask->IsActive())
+			{
+				InstanceData.MoveToTask->ConditionalPerformMove();
+			}
+			else
+			{
+				InstanceData.MoveToTask->ReadyForActivation();
+			}
+
+			if (InstanceData.MoveToTask->GetState() == EGameplayTaskState::Finished)
+			{
+				return InstanceData.MoveToTask->WasMoveSuccessful() ? EStateTreeRunStatus::Succeeded : EStateTreeRunStatus::Failed;
+			}
+
+			return EStateTreeRunStatus::Running;
+		}
+	}
+
+	UE_VLOG(Context.GetOwner(), LogStateTree, Error, TEXT("FSTTask_MoveAndUseSmartObject failed because it doesn't have a destination."));
+	return EStateTreeRunStatus::Failed;
+}
+
+#if WITH_EDITOR
+
+FText FSTTask_MoveAndUseSmartObject::GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting) const
+{
+	return FText(LOCTEXT("MoveAndUseSmartObject", "Move And Use SmartObject"));
+}
+#endif // WITH_EDITOR
+
+#undef LOCTEXT_NAMESPACE
+```
 
 ## 参考文章
 
