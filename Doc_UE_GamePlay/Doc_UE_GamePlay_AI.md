@@ -2226,9 +2226,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = SmartObjects)
 	ESmartObjectClaimPriority ClaimPriority = ESmartObjectClaimPriority::Normal;
 
+	/** Used for smart object querying if EQSRequest is not configured */
+	UPROPERTY(EditAnywhere, Category = SmartObjects, meta=(DisplayName="QueryBoxRadius", UIMin = "0.0", EditCondition = "EQSRequest.QueryTemplate == nullptr"))
+	float Radius;
 
-	UPROPERTY(EditAnywhere, Category = SmartObjects)
+
+	UPROPERTY(EditAnywhere, Category = SmartObjects, meta=(EditCondition = "Radius == 0.0"))
 	FEQSParametrizedQueryExecutionRequest EQSRequest;
+
 
 	/** Used for smart object querying if EQSRequest is not configured */
 	UPROPERTY(EditAnywhere, Category = SmartObjects, meta=(DisplayName="Fallback Radius"))
@@ -2527,26 +2532,27 @@ struct FStateTreeFindSmartObjectInstanceData
 	UPROPERTY(EditAnywhere, Category = Parameter)
 	FGameplayTagQuery ActivityRequirements;
 
+
 	UPROPERTY(EditAnywhere, Category = Parameter)
 	ESmartObjectClaimPriority ClaimPriority = ESmartObjectClaimPriority::Normal;
 
+	/** Used for smart object querying if QueryTemplate is not configured */
+	UPROPERTY(EditAnywhere, Category = Parameter , meta=(DisplayName = "QueryBoxRadius", UIMin = "0.0", EditCondition = "QueryTemplate == nullptr"))
+	float Radius;
+
 
 	// The query template to run
-	UPROPERTY(EditAnywhere, Category = Parameter)
+	UPROPERTY(EditAnywhere, Category = Parameter, meta=(EditCondition = "Radius == 0.0"))
 	TObjectPtr<UEnvQuery> QueryTemplate;
 
 	// Query config associated with the query template.
-	UPROPERTY(EditAnywhere, EditFixedSize, Category = Parameter)
+	UPROPERTY(EditAnywhere, EditFixedSize, Category = Parameter, meta=(EditCondition = "QueryTemplate != nullptr", EditConditionHides))
 	TArray<FAIDynamicParam> QueryConfig;
 
 	/** determines which item will be stored (All = only first matching) */
-	UPROPERTY(EditAnywhere, Category = Parameter)
+	UPROPERTY(EditAnywhere, Category = Parameter, meta=(EditCondition = "QueryTemplate != nullptr", EditConditionHides))
 	TEnumAsByte<EEnvQueryRunMode::Type> RunMode = EEnvQueryRunMode::SingleResult;
 
-
-	/** Used for smart object querying if QueryTemplate is not configured */
-	UPROPERTY(EditAnywhere, Category = Parameter , meta=(DisplayName="Fallback Radius"))
-	float Radius;
 
 	#pragma endregion
 
@@ -2713,6 +2719,7 @@ EStateTreeRunStatus FSTTask_FindSmartObject::Tick(FStateTreeExecutionContext& Co
 							BB->SetValue<UBlackboardKeyType_SOClaimHandle>(FName(TEXT("SOClaimHandle")), ClaimHandle);*/
 
 						RunStatus = EStateTreeRunStatus::Succeeded;
+                        break;
 					}
 				}
 			}
