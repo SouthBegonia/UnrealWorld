@@ -2121,6 +2121,8 @@ bool USmartObjectSubsystem::RemoveRuntimeInstanceFromSimulation(FSmartObjectRunt
 
 ## 扩展用法
 
+> 本节更多内容 及 最新代码 可移步 [Demo_UE_SmartObject - SouthBegonia](https://github.com/SouthBegonia/Demo_UE_SmartObject)
+
 截止 UE 5.5版本，官方提供的SO相关的工具方法有：
 
 - BehaviorTree
@@ -2133,9 +2135,7 @@ bool USmartObjectSubsystem::RemoveRuntimeInstanceFromSimulation(FSmartObjectRunt
 但上述工具方法存在一些问题：
 
 - **移动逻辑固定** 且 **移动逻辑中的 GoalLocation固定为 SlotLocation**（源码位于 `UAITask_UseGameplayBehaviorSmartObject::Activate()`）。而实际应用场景中 Slot是可能包含 一个或多个Entrance的，且可能有需求 **需要移动到Entrance再对Slot进行交互的**（例如 驾驶汽车需要先移动至车门（Entrance），而后在交互的同时更新位置到驾驶座（Slot））
-- 除了节点自身 外界很难获取SO相关信息（ClaimHandle、Slot）
-
-
+- 除了节点自身 外界很难获取SO相关信息（ClaimHandle、Slot）：例如 GameplayBehavior触发事件 `UGameplayBehavior::Trigger(AActor& Avatar, const UGameplayBehaviorConfig* Config, AActor* SmartObjectOwner/* = nullptr*/)` 仅有这3个参数信息
 
 因此 **想实现细致化SO交互全流程 需要对流程（寻找SO、移动至SO、SO交互）进行功能拆分/融合**：
 
